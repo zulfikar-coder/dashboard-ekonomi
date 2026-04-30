@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Ekonomi Dinamis - Zulfikar</title>
+    <title>Dashboard Ekonomi - Zulfikar</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
@@ -11,8 +11,27 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .header { background: var(--orange); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .controls { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); }
-        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        
+        /* Container untuk membatasi ukuran grafik agar tidak terlalu besar */
+        .card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            border-top: 4px solid var(--orange);
+            max-width: 800px; /* Batas lebar maksimal */
+            margin: 0 auto;   /* Rata tengah */
+        }
+
+        /* Khusus untuk Grafik Pie agar tidak memenuhi layar */
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px; /* Batasi tinggi maksimal grafik */
+            width: 100%;
+        }
+
+        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
         select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; }
     </style>
@@ -36,29 +55,28 @@
     <div>
         <label id="labelFilter">Pilih Periode:</label>
         <select id="filterTahun" onchange="updateChart()">
-            </select>
+        </select>
     </div>
 </div>
 
 <div class="card">
     <h3 id="judulGrafik">Visualisasi Data</h3>
-    <canvas id="mainChart" height="120"></canvas>
+    <div class="chart-container">
+        <canvas id="mainChart"></canvas>
+    </div>
 </div>
 
 <script>
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
-
-    // Data simulasi 2011 - 2026
     const tahunLengkap = Array.from({length: 16}, (_, i) => (2011 + i).toString());
     
     function sesuaikanFilter() {
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
-        filter.innerHTML = ""; // Bersihkan pilihan
+        filter.innerHTML = ""; 
 
         if (menu === 'laju' || menu === 'nilai') {
-            // Pilihan Per 5 Tahun
             const opsi = [
                 {text: "2021 - 2026", val: "2021-2026"},
                 {text: "2016 - 2020", val: "2016-2020"},
@@ -69,12 +87,10 @@
                 el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
-            // Pilihan Per Satu Tahun
-            tahunLengkap.reverse().forEach(t => {
+            tahunLengkap.slice().reverse().forEach(t => {
                 let el = document.createElement("option");
                 el.text = t; el.value = t; filter.add(el);
             });
-            tahunLengkap.reverse(); // Kembalikan urutan
         }
         updateChart();
     }
@@ -88,12 +104,15 @@
         let config = {
             plugins: [ChartDataLabels],
             options: {
+                responsive: true,
+                maintainAspectRatio: false, // Memungkinkan kita mengatur tinggi lewat CSS
                 plugins: {
                     datalabels: {
                         anchor: 'end', align: 'top',
-                        formatter: (val) => val + (menu === 'laju' ? '%' : ''),
-                        font: { weight: 'bold' }
-                    }
+                        formatter: (val) => val + (menu === 'laju' || menu === 'distribusi' ? '%' : ''),
+                        font: { weight: 'bold', size: 12 }
+                    },
+                    legend: { position: 'bottom' }
                 }
             }
         };
@@ -106,14 +125,15 @@
                 labels: labels,
                 datasets: [{
                     label: 'Laju Pertumbuhan (%)',
-                    data: labels.map(() => (Math.random() * 5 + 2).toFixed(1)),
+                    data: labels.map(() => (Math.random() * 3 + 2).toFixed(1)),
                     borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                    fill: true, tension: 0.3, pointRadius: 5
+                    fill: true, tension: 0.3, pointRadius: 6
                 }]
             };
         } 
         else if (menu === 'nilai') {
-            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : ['2016','2017','2018','2019','2020'];
+            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
+                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
             config.type = 'bar';
             config.data = {
                 labels: labels,
@@ -126,16 +146,19 @@
         else if (menu === 'distribusi') {
             config.type = 'pie';
             config.data = {
-                labels: ['Tani', 'Industri', 'Jasa', 'Lainnya'],
+                labels: ['Pertanian', 'Industri', 'Jasa', 'Lainnya'],
                 datasets: [{ data: [25, 30, 20, 25], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }]
             };
-            config.options.plugins.datalabels.formatter = (val) => val + '%';
+            // Khusus Pie: label ada di tengah potongan
+            config.options.plugins.datalabels.anchor = 'center';
+            config.options.plugins.datalabels.align = 'center';
+            config.options.plugins.datalabels.color = '#fff';
         }
         else if (menu === 'sumber') {
             config.type = 'bar';
             config.data = {
-                labels: ['Konsumsi', 'Investasi', 'Ekspor'],
-                datasets: [{ label: 'Poin', data: [2.5, 1.8, 1.2], backgroundColor: '#FF8C00' }]
+                labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'],
+                datasets: [{ label: 'Kontribusi (Poin)', data: [2.5, 1.8, 1.2, 0.7], backgroundColor: '#FF8C00' }]
             };
         }
 
@@ -143,7 +166,6 @@
         document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    // Jalankan pertama kali
     sesuaikanFilter();
 </script>
 
