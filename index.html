@@ -3,126 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Ekonomi Interaktif - Zulfikar</title>
+    <title>Dashboard Ekonomi Dinamis - Zulfikar</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .header { background: var(--orange); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-        .filter-section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .header { background: var(--orange); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .controls { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); }
-        h3 { color: #333; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); width: 250px; font-weight: bold; margin-bottom: 10px; }
-        label { font-weight: bold; color: #555; }
+        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>Dashboard Statistik Ekonomi</h1>
+    <h1>Dashboard Statistik Ekonomi (2011 - 2026)</h1>
 </div>
 
-<div class="filter-section">
+<div class="controls">
     <div>
-        <label>1. Pilih Jenis Data:</label><br>
-        <select id="menuSelect" onchange="toggleFilter()">
-            <option value="laju">Laju Pertumbuhan Ekonomi (5 Tahunan)</option>
-            <option value="nilai">Nilai ADHB & ADHK (5 Tahunan)</option>
-            <option value="distribusi">Distribusi ADHB (Per Tahun)</option>
-            <option value="sumber">Sumber Pertumbuhan (Per Tahun)</option>
+        <label>Pilih Jenis Grafik:</label>
+        <select id="menuGrafik" onchange="sesuaikanFilter()">
+            <option value="laju">Laju Pertumbuhan Ekonomi (Garis)</option>
+            <option value="nilai">Nilai ADHB & ADHK (Batang)</option>
+            <option value="distribusi">Distribusi ADHB (Pie)</option>
+            <option value="sumber">Sumber Pertumbuhan (Batang)</option>
         </select>
     </div>
-    <div id="filterContainer">
-        <label>2. Pilih Periode/Tahun:</label><br>
-        <select id="dataFilter" onchange="updateDashboard()"></select>
+    <div>
+        <label id="labelFilter">Pilih Periode:</label>
+        <select id="filterTahun" onchange="updateChart()">
+            </select>
     </div>
 </div>
 
-<div class="grid-container">
-    <div class="card">
-        <h3 id="chartTitle">Visualisasi Data</h3>
-        <canvas id="mainChart"></canvas>
-    </div>
+<div class="card">
+    <h3 id="judulGrafik">Visualisasi Data</h3>
+    <canvas id="mainChart" height="120"></canvas>
 </div>
 
 <script>
+    const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
-    const menuSelect = document.getElementById('menuSelect');
-    const dataFilter = document.getElementById('dataFilter');
-    const chartTitle = document.getElementById('chartTitle');
 
-    // Database Data
-    const db = {
-        limaTahunan: {
-            '2021-2026': { laju: [3.5, 4.2, 5.0, 4.9, 5.3, 5.5], adhb: [1500, 1620, 1750, 1880, 2010, 2150], adhk: [1200, 1250, 1310, 1370, 1430, 1500], labels: ['2021','2022','2023','2024','2025','2026'] },
-            '2016-2020': { laju: [5.1, 5.0, 5.2, 5.0, -2.1], adhb: [1100, 1150, 1200, 1250, 1180], adhk: [900, 930, 960, 990, 950], labels: ['2016','2017','2018','2019','2020'] }
-        },
-        tahunan: {
-            '2021': { dist: [25, 30, 35, 10], sumber: [2.1, 1.5, 0.8, 0.6] },
-            '2022': { dist: [24, 31, 34, 11], sumber: [2.3, 1.4, 0.9, 0.5] },
-            '2023': { dist: [26, 29, 36, 9], sumber: [2.0, 1.6, 0.7, 0.7] }
-        }
-    };
+    // Data simulasi 2011 - 2026
+    const tahunLengkap = Array.from({length: 16}, (_, i) => (2011 + i).toString());
+    
+    function sesuaikanFilter() {
+        const menu = document.getElementById('menuGrafik').value;
+        const filter = document.getElementById('filterTahun');
+        filter.innerHTML = ""; // Bersihkan pilihan
 
-    function toggleFilter() {
-        const mode = menuSelect.value;
-        dataFilter.innerHTML = '';
-        
-        if (mode === 'laju' || mode === 'nilai') {
-            ['2021-2026', '2016-2020'].forEach(p => {
-                dataFilter.innerHTML += `<option value="${p}">${p}</option>`;
+        if (menu === 'laju' || menu === 'nilai') {
+            // Pilihan Per 5 Tahun
+            const opsi = [
+                {text: "2021 - 2026", val: "2021-2026"},
+                {text: "2016 - 2020", val: "2016-2020"},
+                {text: "2011 - 2015", val: "2011-2015"}
+            ];
+            opsi.forEach(o => {
+                let el = document.createElement("option");
+                el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
-            ['2021', '2022', '2023'].forEach(t => {
-                dataFilter.innerHTML += `<option value="${t}">Tahun ${t}</option>`;
+            // Pilihan Per Satu Tahun
+            tahunLengkap.reverse().forEach(t => {
+                let el = document.createElement("option");
+                el.text = t; el.value = t; filter.add(el);
             });
+            tahunLengkap.reverse(); // Kembalikan urutan
         }
-        updateDashboard();
+        updateChart();
     }
 
-    function updateDashboard() {
-        const mode = menuSelect.value;
-        const key = dataFilter.value;
+    function updateChart() {
+        const menu = document.getElementById('menuGrafik').value;
+        const periode = document.getElementById('filterTahun').value;
+        
         if (currentChart) currentChart.destroy();
 
-        const ctx = document.getElementById('mainChart').getContext('2d');
-
-        if (mode === 'laju') {
-            chartTitle.innerText = "Laju Pertumbuhan Ekonomi (Grafik Garis)";
-            currentChart = new Chart(ctx, {
-                type: 'line',
-                data: { labels: db.limaTahunan[key].labels, datasets: [{ label: '% Pertumbuhan', data: db.limaTahunan[key].laju, borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true }] }
-            });
-        } else if (mode === 'nilai') {
-            chartTitle.innerText = "Nilai ADHB & ADHK (Grafik Batang)";
-            currentChart = new Chart(ctx, {
-                type: 'bar',
-                data: { 
-                    labels: db.limaTahunan[key].labels, 
-                    datasets: [
-                        { label: 'ADHB', data: db.limaTahunan[key].adhb, backgroundColor: '#FF8C00' },
-                        { label: 'ADHK', data: db.limaTahunan[key].adhk, backgroundColor: '#27ae60' }
-                    ] 
+        let config = {
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        anchor: 'end', align: 'top',
+                        formatter: (val) => val + (menu === 'laju' ? '%' : ''),
+                        font: { weight: 'bold' }
+                    }
                 }
-            });
-        } else if (mode === 'distribusi') {
-            chartTitle.innerText = `Distribusi ADHB Tahun ${key} (Grafik Pie)`;
-            currentChart = new Chart(ctx, {
-                type: 'pie',
-                data: { labels: ['Pertanian', 'Industri', 'Jasa', 'Lain'], datasets: [{ data: db.tahunan[key].dist, backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }] }
-            });
-        } else if (mode === 'sumber') {
-            chartTitle.innerText = `Sumber Pertumbuhan Tahun ${key} (Grafik Batang)`;
-            currentChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'], datasets: [{ label: 'Poin Kontribusi', data: db.tahunan[key].sumber, backgroundColor: '#FF8C00' }] }
-            });
+            }
+        };
+
+        if (menu === 'laju') {
+            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
+                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
+            config.type = 'line';
+            config.data = {
+                labels: labels,
+                datasets: [{
+                    label: 'Laju Pertumbuhan (%)',
+                    data: labels.map(() => (Math.random() * 5 + 2).toFixed(1)),
+                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    fill: true, tension: 0.3, pointRadius: 5
+                }]
+            };
+        } 
+        else if (menu === 'nilai') {
+            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : ['2016','2017','2018','2019','2020'];
+            config.type = 'bar';
+            config.data = {
+                labels: labels,
+                datasets: [
+                    { label: 'ADHB', data: labels.map(() => Math.floor(Math.random() * 500 + 1500)), backgroundColor: '#FF8C00' },
+                    { label: 'ADHK', data: labels.map(() => Math.floor(Math.random() * 500 + 1000)), backgroundColor: '#27ae60' }
+                ]
+            };
         }
+        else if (menu === 'distribusi') {
+            config.type = 'pie';
+            config.data = {
+                labels: ['Tani', 'Industri', 'Jasa', 'Lainnya'],
+                datasets: [{ data: [25, 30, 20, 25], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }]
+            };
+            config.options.plugins.datalabels.formatter = (val) => val + '%';
+        }
+        else if (menu === 'sumber') {
+            config.type = 'bar';
+            config.data = {
+                labels: ['Konsumsi', 'Investasi', 'Ekspor'],
+                datasets: [{ label: 'Poin', data: [2.5, 1.8, 1.2], backgroundColor: '#FF8C00' }]
+            };
+        }
+
+        currentChart = new Chart(ctx, config);
+        document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    // Inisialisasi pertama kali
-    toggleFilter();
+    // Jalankan pertama kali
+    sesuaikanFilter();
 </script>
 
 </body>
