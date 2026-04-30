@@ -3,65 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Ekonomi - Zulfikar</title>
+    <title>DASHBOARD STATISTIK EKONOMI - ZULFIKAR</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .header { background: var(--orange); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .controls { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; }
         
-        /* Container untuk membatasi ukuran grafik agar tidak terlalu besar */
-        .card { 
-            background: white; 
-            padding: 20px; 
+        /* Header dengan 3 Kolom untuk Logo */
+        .header { 
+            background: var(--orange); 
+            color: white; 
+            padding: 15px 30px; 
             border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            border-top: 4px solid var(--orange);
-            max-width: 800px; /* Batas lebar maksimal */
-            margin: 0 auto;   /* Rata tengah */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 20px; 
         }
 
-        /* Khusus untuk Grafik Pie agar tidak memenuhi layar */
-        .chart-container {
-            position: relative;
-            margin: auto;
-            height: 400px; /* Batasi tinggi maksimal grafik */
-            width: 100%;
+        .header h1 { 
+            text-transform: uppercase; 
+            font-size: 1.5rem; 
+            margin: 0; 
+            text-align: center; 
+            flex-grow: 1; 
+            letter-spacing: 1px;
         }
 
-        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
+        .logo { 
+            height: 70px; /* Ukuran tinggi logo */
+            width: auto; 
+            background: white;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .controls { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); max-width: 900px; margin: 0 auto; }
+        .chart-container { position: relative; margin: auto; height: 420px; width: 100%; }
+        
+        h3 { text-transform: uppercase; color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; font-size: 1.1rem; }
+        label { text-transform: uppercase; font-weight: bold; font-size: 0.8rem; color: var(--green); display: block; margin-bottom: 5px; }
         select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>Dashboard Pertumbuhan Ekonomi Kota Palu</h1>
-    <p>Periode (2011-2026)</p>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/2/28/Lambang_Badan_Pusat_Statistik_%28BPS%29_Indonesia.svg" alt="Logo BPS" class="logo">
+    
+    <h1>DASHBOARD STATISTIK EKONOMI</h1>
+    
+    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Coat_of_arms_of_Central_Sulawesi.svg" alt="Logo Sulawesi Tengah" class="logo">
 </div>
 
 <div class="controls">
     <div>
-        <label>Pilih Jenis Grafik:</label>
+        <label>PILIH JENIS GRAFIK:</label>
         <select id="menuGrafik" onchange="sesuaikanFilter()">
-            <option value="laju">Laju Pertumbuhan Ekonomi (Garis)</option>
-            <option value="nilai">Nilai ADHB & ADHK (Batang)</option>
-            <option value="distribusi">Distribusi ADHB (Pie)</option>
-            <option value="sumber">Sumber Pertumbuhan (Batang)</option>
+            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
+            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
+            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+            <option value="sumber">SUMBER PERTUMBUHAN (BATANG)</option>
         </select>
     </div>
     <div>
-        <label id="labelFilter">Pilih Periode:</label>
-        <select id="filterTahun" onchange="updateChart()">
-        </select>
+        <label id="labelFilter">PILIH PERIODE:</label>
+        <select id="filterTahun" onchange="updateChart()"></select>
     </div>
 </div>
 
 <div class="card">
-    <h3 id="judulGrafik">Visualisasi Data</h3>
+    <h3 id="judulGrafik">VISUALISASI DATA</h3>
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
@@ -88,7 +103,7 @@
                 el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
-            tahunLengkap.slice().reverse().forEach(t => {
+            [...tahunLengkap].reverse().forEach(t => {
                 let el = document.createElement("option");
                 el.text = t; el.value = t; filter.add(el);
             });
@@ -99,14 +114,13 @@
     function updateChart() {
         const menu = document.getElementById('menuGrafik').value;
         const periode = document.getElementById('filterTahun').value;
-        
         if (currentChart) currentChart.destroy();
 
         let config = {
             plugins: [ChartDataLabels],
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Memungkinkan kita mengatur tinggi lewat CSS
+                maintainAspectRatio: false,
                 plugins: {
                     datalabels: {
                         anchor: 'end', align: 'top',
@@ -118,6 +132,7 @@
             }
         };
 
+        // ... (Logika data tetap sama seperti sebelumnya) ...
         if (menu === 'laju') {
             const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
                            periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
@@ -125,7 +140,7 @@
             config.data = {
                 labels: labels,
                 datasets: [{
-                    label: 'Laju Pertumbuhan (%)',
+                    label: 'LAJU PERTUMBUHAN (%)',
                     data: labels.map(() => (Math.random() * 3 + 2).toFixed(1)),
                     borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
                     fill: true, tension: 0.3, pointRadius: 6
@@ -147,10 +162,9 @@
         else if (menu === 'distribusi') {
             config.type = 'pie';
             config.data = {
-                labels: ['Pertanian', 'Industri', 'Jasa', 'Lainnya'],
+                labels: ['PERTANIAN', 'INDUSTRI', 'JASA', 'LAINNYA'],
                 datasets: [{ data: [25, 30, 20, 25], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }]
             };
-            // Khusus Pie: label ada di tengah potongan
             config.options.plugins.datalabels.anchor = 'center';
             config.options.plugins.datalabels.align = 'center';
             config.options.plugins.datalabels.color = '#fff';
@@ -158,8 +172,8 @@
         else if (menu === 'sumber') {
             config.type = 'bar';
             config.data = {
-                labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'],
-                datasets: [{ label: 'Kontribusi (Poin)', data: [2.5, 1.8, 1.2, 0.7], backgroundColor: '#FF8C00' }]
+                labels: ['KONSUMSI', 'INVESTASI', 'EKSPOR', 'PEMERINTAH'],
+                datasets: [{ label: 'KONTRIBUSI (POIN)', data: [2.5, 1.8, 1.2, 0.7], backgroundColor: '#FF8C00' }]
             };
         }
 
