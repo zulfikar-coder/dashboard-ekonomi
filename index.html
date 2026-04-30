@@ -2,100 +2,125 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Ekonomi Kota Palu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Statistik Ekonomi - Zulfikar</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 20px; }
-        .header { text-align: center; margin-bottom: 30px; background: #1a2a6c; color: white; padding: 20px; border-radius: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #1a2a6c; font-size: 1.2rem; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        :root { --navy: #000080; --dark: #1a1a1a; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .header { background: var(--navy); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .filter-section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h3 { color: var(--navy); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
+        @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Dashboard Statistik Ekonomi Kota Palu</h1>
-        <p>Data Berdasarkan Publikasi BPS Kota Palu (Audit E-MEP)</p>
+
+<div class="header">
+    <h1>Dashboard Statistik Ekonomi</h1>
+</div>
+
+<div class="filter-section">
+    <label><strong>Pilih Periode Tahun:</strong></label><br><br>
+    <select id="tahunFilter">
+        <option>2021 - 2026</option>
+        <option>2016 - 2020</option>
+        <option>2011 - 2015</option>
+    </select>
+</div>
+
+<div class="grid-container">
+    <div class="card">
+        <h3>Laju Pertumbuhan Ekonomi (Grafik Garis)</h3>
+        <canvas id="chartLaju"></canvas>
     </div>
 
-    <div class="grid">
-        <div class="card">
-            <h2>Laju Pertumbuhan Ekonomi (%)</h2>
-            <canvas id="lineChart"></canvas>
-        </div>
-
-        <div class="card">
-            <h2>Nilai PDRB: ADHB vs ADHK (Miliar Rp)</h2>
-            <canvas id="barValue"></canvas>
-        </div>
-
-        <div class="card">
-            <h2>Distribusi Sektor Ekonomi</h2>
-            <canvas id="pieChart"></canvas>
-        </div>
-
-        <div class="card">
-            <h2>Sumber Pertumbuhan Utama</h2>
-            <canvas id="barSource"></canvas>
-        </div>
+    <div class="card">
+        <h3>Distribusi ADHB (Grafik PIE)</h3>
+        <canvas id="chartDistribusi"></canvas>
     </div>
 
-    <script>
-        const labelsYear = ['2019', '2020', '2021', '2022', '2023'];
+    <div class="card">
+        <h3>Sumber Pertumbuhan (Grafik Batang)</h3>
+        <canvas id="chartSumber"></canvas>
+    </div>
 
-        // 1. Laju Pertumbuhan (Data dari File: Pertumbuhan PDRB Kota Palu)
-        new Chart(document.getElementById('lineChart'), {
-            type: 'line',
-            data: { 
-                labels: labelsYear, 
-                datasets: [{ 
-                    label: '% Pertumbuhan', 
-                    data: [5.93, -4.54, 5.97, 6.65, 7.12], // Data real: Penurunan di 2020 (Covid), lalu bangkit
-                    borderColor: '#e74c3c', 
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    fill: true,
-                    tension: 0.3 
-                }] 
-            }
-        });
+    <div class="card">
+        <h3>Nilai ADHB & ADHK (Grafik Batang)</h3>
+        <canvas id="chartNilai"></canvas>
+    </div>
+</div>
 
-        // 2. ADHB & ADHK (Miliar Rupiah)
-        new Chart(document.getElementById('barValue'), {
-            type: 'bar',
-            data: { 
-                labels: labelsYear, 
-                datasets: [
-                    { label: 'ADHB', data: [24000, 23500, 26000, 29500, 32000], backgroundColor: '#1a2a6c' },
-                    { label: 'ADHK', data: [17500, 16800, 17800, 19000, 20500], backgroundColor: '#b2bec3' }
-                ] 
-            }
-        });
+<script>
+    const labelsTahun = ['2021', '2022', '2023', '2024', '2025', '2026'];
 
-        // 3. Distribusi PDRB (Visualisasi Pie)
-        new Chart(document.getElementById('pieChart'), {
-            type: 'pie',
-            data: { 
-                labels: ['Konstruksi', 'Perdagangan', 'Industri', 'Lainnya'], 
-                datasets: [{ 
-                    data: [25, 20, 15, 40], 
-                    backgroundColor: ['#f1c40f', '#2ecc71', '#3498db', '#95a5a6'] 
-                }] 
-            }
-        });
+    // --- 1. Laju Pertumbuhan (Garis) ---
+    new Chart(document.getElementById('chartLaju'), {
+        type: 'line',
+        data: {
+            labels: labelsTahun,
+            datasets: [{
+                label: 'Persentase Pertumbuhan',
+                data: [3.5, 4.2, 5.0, 4.9, 5.3, 5.5],
+                borderColor: '#000080',
+                backgroundColor: 'rgba(0, 0, 128, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        }
+    });
 
-        // 4. Sumber Pertumbuhan
-        new Chart(document.getElementById('barSource'), {
-            type: 'bar',
-            data: { 
-                labels: ['Pertanian', 'Industri', 'Perdagangan', 'Jasa'], 
-                datasets: [{ 
-                    label: 'Indeks Kontribusi', 
-                    data: [15, 12, 28, 22], 
-                    backgroundColor: '#1a2a6c' 
-                }] 
-            }
-        });
-    </script>
+    // --- 2. Distribusi ADHB (Pie) ---
+    new Chart(document.getElementById('chartDistribusi'), {
+        type: 'pie',
+        data: {
+            labels: ['Sektor Pertanian', 'Sektor Industri', 'Sektor Jasa', 'Lainnya'],
+            datasets: [{
+                data: [25, 30, 35, 10],
+                backgroundColor: ['#000080', '#1a1a1a', '#4a4a4a', '#8e8e8e']
+            }]
+        }
+    });
+
+    // --- 3. Sumber Pertumbuhan (Batang) ---
+    new Chart(document.getElementById('chartSumber'), {
+        type: 'bar',
+        data: {
+            labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'],
+            datasets: [{
+                label: 'Kontribusi Pertumbuhan',
+                data: [2.1, 1.5, 0.8, 0.6],
+                backgroundColor: '#1a1a1a'
+            }]
+        }
+    });
+
+    // --- 4. Nilai ADHB & ADHK (Batang Gabungan) ---
+    new Chart(document.getElementById('chartNilai'), {
+        type: 'bar',
+        data: {
+            labels: labelsTahun,
+            datasets: [
+                {
+                    label: 'Nilai ADHB',
+                    data: [1500, 1620, 1750, 1880, 2010, 2150],
+                    backgroundColor: '#000080'
+                },
+                {
+                    label: 'Nilai ADHK',
+                    data: [1200, 1250, 1310, 1370, 1430, 1500],
+                    backgroundColor: '#8e8e8e'
+                }
+            ]
+        },
+        options: {
+            scales: { y: { beginAtZero: false } }
+        }
+    });
+</script>
+
 </body>
 </html>
