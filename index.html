@@ -3,17 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Statistik Ekonomi - Zulfikar</title>
+    <title>Dashboard Ekonomi - Orange & Hijau</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --dark Orange: #333; --dark: #1a1a1a; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .header { background: var(--orange); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
-        .filter-section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        h3 { color: var(--navy); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 200px; }
+        :root { 
+            --orange: #FF8C00; 
+            --green: #27ae60;
+            --light-bg: #fff5e6;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light-bg); margin: 0; padding: 20px; }
+        
+        /* Header dengan warna Orange */
+        .header { 
+            background: var(--orange); 
+            color: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Bagian Filter Tahun */
+        .filter-section { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            border-left: 5px solid var(--green);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .grid-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); 
+            gap: 25px; 
+        }
+
+        .card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--orange);
+        }
+
+        h3 { color: #333; margin-top: 0; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); width: 220px; outline: none; }
+        
         @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -57,48 +94,48 @@
 <script>
     const labelsTahun = ['2021', '2022', '2023', '2024', '2025', '2026'];
 
-    // --- 1. Laju Pertumbuhan (Garis) ---
+    // 1. Laju Pertumbuhan (Garis Hijau)
     new Chart(document.getElementById('chartLaju'), {
         type: 'line',
         data: {
             labels: labelsTahun,
             datasets: [{
-                label: 'Persentase Pertumbuhan',
+                label: '% Pertumbuhan',
                 data: [3.5, 4.2, 5.0, 4.9, 5.3, 5.5],
-                borderColor: '#000080',
-                backgroundColor: 'rgba(0, 0, 128, 0.1)',
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39, 174, 96, 0.1)',
                 fill: true,
                 tension: 0.4
             }]
         }
     });
 
-    // --- 2. Distribusi ADHB (Pie) ---
+    // 2. Distribusi ADHB (Pie Orange & Hijau)
     new Chart(document.getElementById('chartDistribusi'), {
         type: 'pie',
         data: {
             labels: ['Sektor Pertanian', 'Sektor Industri', 'Sektor Jasa', 'Lainnya'],
             datasets: [{
                 data: [25, 30, 35, 10],
-                backgroundColor: ['#000080', '#1a1a1a', '#4a4a4a', '#8e8e8e']
+                backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71']
             }]
         }
     });
 
-    // --- 3. Sumber Pertumbuhan (Batang) ---
+    // 3. Sumber Pertumbuhan (Batang Orange)
     new Chart(document.getElementById('chartSumber'), {
         type: 'bar',
         data: {
             labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'],
             datasets: [{
-                label: 'Kontribusi Pertumbuhan',
+                label: 'Kontribusi',
                 data: [2.1, 1.5, 0.8, 0.6],
-                backgroundColor: '#1a1a1a'
+                backgroundColor: '#FF8C00'
             }]
         }
     });
 
-    // --- 4. Nilai ADHB & ADHK (Batang Gabungan) ---
+    // 4. Nilai ADHB & ADHK (Batang Orange vs Hijau)
     new Chart(document.getElementById('chartNilai'), {
         type: 'bar',
         data: {
@@ -107,17 +144,14 @@
                 {
                     label: 'Nilai ADHB',
                     data: [1500, 1620, 1750, 1880, 2010, 2150],
-                    backgroundColor: '#000080'
+                    backgroundColor: '#FF8C00'
                 },
                 {
                     label: 'Nilai ADHK',
                     data: [1200, 1250, 1310, 1370, 1430, 1500],
-                    backgroundColor: '#8e8e8e'
+                    backgroundColor: '#27ae60'
                 }
             ]
-        },
-        options: {
-            scales: { y: { beginAtZero: false } }
         }
     });
 </script>
