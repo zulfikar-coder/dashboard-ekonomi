@@ -35,12 +35,41 @@
         select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; }
     </style>
+    .header { 
+    background: #FF8C00; 
+    color: white; 
+    padding: 15px 30px; 
+    border-radius: 12px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.logo-container {
+    background: white;
+    padding: 5px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.logo-img { 
+    height: 70px; /* Atur tinggi logo di sini */
+    width: auto; 
+}
 </head>
 <body>
 
-<div class="header">
+    <div class="header">
+    <div class="logo-container">
+        <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
+    </div>
     <h1>Dashboard Statistik Ekonomi Kota Palu</h1>
     <h1>Periode (2011 - 2026)</h1>
+</div>
+ <div class="logo-container">
+        <img src="logo-sulteng.png" alt="LOGO SULTENG" class="logo-img">
+    </div>
 </div>
 
 <div class="controls">
