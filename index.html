@@ -3,55 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Ekonomi - Orange & Hijau</title>
+    <title>Dashboard Ekonomi Interaktif - Zulfikar</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { 
-            --orange: #FF8C00; 
-            --green: #27ae60;
-            --light-bg: #fff5e6;
-        }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light-bg); margin: 0; padding: 20px; }
-        
-        /* Header dengan warna Orange */
-        .header { 
-            background: var(--orange); 
-            color: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 25px; 
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        /* Bagian Filter Tahun */
-        .filter-section { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 25px; 
-            border-left: 5px solid var(--green);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .grid-container { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); 
-            gap: 25px; 
-        }
-
-        .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-top: 4px solid var(--orange);
-        }
-
-        h3 { color: #333; margin-top: 0; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); width: 220px; outline: none; }
-        
-        @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
+        :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .header { background: var(--orange); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .filter-section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); }
+        h3 { color: #333; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); width: 250px; font-weight: bold; margin-bottom: 10px; }
+        label { font-weight: bold; color: #555; }
     </style>
 </head>
 <body>
@@ -61,99 +24,105 @@
 </div>
 
 <div class="filter-section">
-    <label><strong>Pilih Periode Tahun:</strong></label><br><br>
-    <select id="tahunFilter">
-        <option>2021 - 2026</option>
-        <option>2016 - 2020</option>
-        <option>2011 - 2015</option>
-    </select>
+    <div>
+        <label>1. Pilih Jenis Data:</label><br>
+        <select id="menuSelect" onchange="toggleFilter()">
+            <option value="laju">Laju Pertumbuhan Ekonomi (5 Tahunan)</option>
+            <option value="nilai">Nilai ADHB & ADHK (5 Tahunan)</option>
+            <option value="distribusi">Distribusi ADHB (Per Tahun)</option>
+            <option value="sumber">Sumber Pertumbuhan (Per Tahun)</option>
+        </select>
+    </div>
+    <div id="filterContainer">
+        <label>2. Pilih Periode/Tahun:</label><br>
+        <select id="dataFilter" onchange="updateDashboard()"></select>
+    </div>
 </div>
 
 <div class="grid-container">
     <div class="card">
-        <h3>Laju Pertumbuhan Ekonomi (Grafik Garis)</h3>
-        <canvas id="chartLaju"></canvas>
-    </div>
-
-    <div class="card">
-        <h3>Distribusi ADHB (Grafik PIE)</h3>
-        <canvas id="chartDistribusi"></canvas>
-    </div>
-
-    <div class="card">
-        <h3>Sumber Pertumbuhan (Grafik Batang)</h3>
-        <canvas id="chartSumber"></canvas>
-    </div>
-
-    <div class="card">
-        <h3>Nilai ADHB & ADHK (Grafik Batang)</h3>
-        <canvas id="chartNilai"></canvas>
+        <h3 id="chartTitle">Visualisasi Data</h3>
+        <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-    const labelsTahun = ['2021', '2022', '2023', '2024', '2025', '2026'];
+    let currentChart;
+    const menuSelect = document.getElementById('menuSelect');
+    const dataFilter = document.getElementById('dataFilter');
+    const chartTitle = document.getElementById('chartTitle');
 
-    // 1. Laju Pertumbuhan (Garis Hijau)
-    new Chart(document.getElementById('chartLaju'), {
-        type: 'line',
-        data: {
-            labels: labelsTahun,
-            datasets: [{
-                label: '% Pertumbuhan',
-                data: [3.5, 4.2, 5.0, 4.9, 5.3, 5.5],
-                borderColor: '#27ae60',
-                backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
+    // Database Data
+    const db = {
+        limaTahunan: {
+            '2021-2026': { laju: [3.5, 4.2, 5.0, 4.9, 5.3, 5.5], adhb: [1500, 1620, 1750, 1880, 2010, 2150], adhk: [1200, 1250, 1310, 1370, 1430, 1500], labels: ['2021','2022','2023','2024','2025','2026'] },
+            '2016-2020': { laju: [5.1, 5.0, 5.2, 5.0, -2.1], adhb: [1100, 1150, 1200, 1250, 1180], adhk: [900, 930, 960, 990, 950], labels: ['2016','2017','2018','2019','2020'] }
+        },
+        tahunan: {
+            '2021': { dist: [25, 30, 35, 10], sumber: [2.1, 1.5, 0.8, 0.6] },
+            '2022': { dist: [24, 31, 34, 11], sumber: [2.3, 1.4, 0.9, 0.5] },
+            '2023': { dist: [26, 29, 36, 9], sumber: [2.0, 1.6, 0.7, 0.7] }
         }
-    });
+    };
 
-    // 2. Distribusi ADHB (Pie Orange & Hijau)
-    new Chart(document.getElementById('chartDistribusi'), {
-        type: 'pie',
-        data: {
-            labels: ['Sektor Pertanian', 'Sektor Industri', 'Sektor Jasa', 'Lainnya'],
-            datasets: [{
-                data: [25, 30, 35, 10],
-                backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71']
-            }]
+    function toggleFilter() {
+        const mode = menuSelect.value;
+        dataFilter.innerHTML = '';
+        
+        if (mode === 'laju' || mode === 'nilai') {
+            ['2021-2026', '2016-2020'].forEach(p => {
+                dataFilter.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+        } else {
+            ['2021', '2022', '2023'].forEach(t => {
+                dataFilter.innerHTML += `<option value="${t}">Tahun ${t}</option>`;
+            });
         }
-    });
+        updateDashboard();
+    }
 
-    // 3. Sumber Pertumbuhan (Batang Orange)
-    new Chart(document.getElementById('chartSumber'), {
-        type: 'bar',
-        data: {
-            labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'],
-            datasets: [{
-                label: 'Kontribusi',
-                data: [2.1, 1.5, 0.8, 0.6],
-                backgroundColor: '#FF8C00'
-            }]
-        }
-    });
+    function updateDashboard() {
+        const mode = menuSelect.value;
+        const key = dataFilter.value;
+        if (currentChart) currentChart.destroy();
 
-    // 4. Nilai ADHB & ADHK (Batang Orange vs Hijau)
-    new Chart(document.getElementById('chartNilai'), {
-        type: 'bar',
-        data: {
-            labels: labelsTahun,
-            datasets: [
-                {
-                    label: 'Nilai ADHB',
-                    data: [1500, 1620, 1750, 1880, 2010, 2150],
-                    backgroundColor: '#FF8C00'
-                },
-                {
-                    label: 'Nilai ADHK',
-                    data: [1200, 1250, 1310, 1370, 1430, 1500],
-                    backgroundColor: '#27ae60'
+        const ctx = document.getElementById('mainChart').getContext('2d');
+
+        if (mode === 'laju') {
+            chartTitle.innerText = "Laju Pertumbuhan Ekonomi (Grafik Garis)";
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: db.limaTahunan[key].labels, datasets: [{ label: '% Pertumbuhan', data: db.limaTahunan[key].laju, borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true }] }
+            });
+        } else if (mode === 'nilai') {
+            chartTitle.innerText = "Nilai ADHB & ADHK (Grafik Batang)";
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: { 
+                    labels: db.limaTahunan[key].labels, 
+                    datasets: [
+                        { label: 'ADHB', data: db.limaTahunan[key].adhb, backgroundColor: '#FF8C00' },
+                        { label: 'ADHK', data: db.limaTahunan[key].adhk, backgroundColor: '#27ae60' }
+                    ] 
                 }
-            ]
+            });
+        } else if (mode === 'distribusi') {
+            chartTitle.innerText = `Distribusi ADHB Tahun ${key} (Grafik Pie)`;
+            currentChart = new Chart(ctx, {
+                type: 'pie',
+                data: { labels: ['Pertanian', 'Industri', 'Jasa', 'Lain'], datasets: [{ data: db.tahunan[key].dist, backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }] }
+            });
+        } else if (mode === 'sumber') {
+            chartTitle.innerText = `Sumber Pertumbuhan Tahun ${key} (Grafik Batang)`;
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: ['Konsumsi', 'Investasi', 'Ekspor', 'Pemerintah'], datasets: [{ label: 'Poin Kontribusi', data: db.tahunan[key].sumber, backgroundColor: '#FF8C00' }] }
+            });
         }
-    });
+    }
+
+    // Inisialisasi pertama kali
+    toggleFilter();
 </script>
 
 </body>
