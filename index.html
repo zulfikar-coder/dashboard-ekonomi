@@ -10,17 +10,18 @@
         :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-transform: uppercase; }
         
+        /* Header dengan satu logo di kiri */
         .header { 
             background: var(--orange); 
             color: white; 
             padding: 15px 30px; 
             border-radius: 12px; 
             display: flex; 
-            justify-content: flex-start; 
+            justify-content: flex-start; /* Logo di kiri, teks di sebelahnya */
             align-items: center; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
             margin-bottom: 20px; 
-            gap: 20px; 
+            gap: 20px; /* Jarak antara logo dan teks */
         }
 
         .header-text { text-align: left; }
@@ -28,23 +29,53 @@
         .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
 
         .logo-container {
-            background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white;
+            padding: 8px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .logo-img { height: 75px; width: auto; }
+        .logo-img { 
+            height: 75px; /* Sedikit diperbesar agar pas dengan judul */
+            width: auto; 
+        }
 
+        /* PERBAIKAN: Menghilangkan garis hijau (border-left) */
         .controls { 
-            background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Shadow tetap ada */
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+            /* border-left dihapus di sini */
         }
 
         .card { 
-            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); max-width: 900px; margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+            border-top: 4px solid var(--orange);
+            max-width: 900px; 
+            margin: 0 auto; 
         }
 
-        .chart-container { position: relative; margin: auto; height: 400px; width: 100%; }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px;
+            width: 100%;
+        }
 
         h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
         select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; text-transform: uppercase; cursor: pointer; }
+        
+        /* PERBAIKAN WARNA LABEL: Ganti hijau jadi orange agar serasi */
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--orange); }
 
         @media (max-width: 768px) {
@@ -60,9 +91,10 @@
     <div class="logo-container">
         <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
     </div>
+
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>SUMBER DATA: GOOGLE SHEETS (REAL-TIME)</h2>
+        <h2>PERIODE (2011 - 2026)</h2>
     </div>
 </div>
 
@@ -78,221 +110,18 @@
     </div>
     <div>
         <label id="labelFilter">PILIH PERIODE:</label>
-        <select id="filterTahun" onchange="ambilDataSheets()"></select>
+        <select id="filterTahun" onchange="updateChart()"></select>
     </div>
 </div>
 
 <div class="card">
-    <h3 id="judulGrafik">MEMUAT DATA...</h3>
+    <h3 id="judulGrafik">VISUALISASI DATA</h3>
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-    // --- GANTI LINK DI BAWAH INI DENGAN LINK CSV GOOGLE SHEETS ANDA ---
-    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQ8n2IQab0NIw-kNTKNSbMgtynX9o8WKiOTJO4VwzoKSirFDYxldiBuX6jY8qEu7sKXe-1WlWLfApT/pub?output=csv';
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DASHBOARD STATISTIK EKONOMI KOTA PALU</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <style>
-        :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-transform: uppercase; }
-        
-        .header { 
-            background: var(--orange); 
-            color: white; 
-            padding: 15px 30px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: flex-start; 
-            align-items: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            margin-bottom: 20px; 
-            gap: 20px; 
-        }
-
-        .header-text { text-align: left; }
-        .header h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; }
-        .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
-
-        .logo-container {
-            background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .logo-img { height: 75px; width: auto; }
-
-        .controls { 
-            background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; 
-        }
-
-        .card { 
-            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); max-width: 900px; margin: 0 auto; 
-        }
-
-        .chart-container { position: relative; margin: auto; height: 400px; width: 100%; }
-
-        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; text-transform: uppercase; cursor: pointer; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--orange); }
-
-        @media (max-width: 768px) {
-            .header h1 { font-size: 1rem; }
-            .logo-img { height: 50px; }
-            .header-text { text-align: center; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="header">
-    <div class="logo-container">
-        <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
-    </div>
-    <div class="header-text">
-        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>SUMBER DATA: GOOGLE SHEETS (REAL-TIME)</h2>
-    </div>
-</div>
-
-<div class="controls">
-    <div>
-        <label>PILIH JENIS GRAFIK:</label>
-        <select id="menuGrafik" onchange="sesuaikanFilter()">
-            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
-            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
-            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
-            <option value="sumber">SUMBER PERTUMBUHAN (BATANG)</option>
-        </select>
-    </div>
-    <div>
-        <label id="labelFilter">PILIH PERIODE:</label>
-        <select id="filterTahun" onchange="ambilDataSheets()"></select>
-    </div>
-</div>
-
-<div class="card">
-    <h3 id="judulGrafik">MEMUAT DATA...</h3>
-    <div class="chart-container">
-        <canvas id="mainChart"></canvas>
-    </div>
-</div>
-
-<script>
-    // --- GANTI LINK DI BAWAH INI DENGAN LINK CSV GOOGLE SHEETS ANDA ---
-    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQ8n2IQab0NIw-kNTKNSbMgtynX9o8WKiOTJO4VwzoKSirFDYxldiBuX6jY8qEu7sKXe-1WlWLfApT/pub?output=csv';
-
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    let currentChart;
-    const tahunLengkap = Array.from({length: 16}, (_, i) => (2011 + i).toString());
-    
-    function sesuaikanFilter() {
-        const menu = document.getElementById('menuGrafik').value;
-        const filter = document.getElementById('filterTahun');
-        filter.innerHTML = ""; 
-
-        if (menu === 'laju' || menu === 'nilai') {
-            const opsi = [
-                {text: "2021 - 2026", val: "2021-2026"},
-                {text: "2016 - 2020", val: "2016-2020"},
-                {text: "2011 - 2015", val: "2011-2015"} 
-            ];
-            opsi.forEach(o => {
-                let el = document.createElement("option");
-                el.text = o.text; el.value = o.val; filter.add(el);
-            });
-        } else {
-            [...tahunLengkap].reverse().forEach(t => {
-                let el = document.createElement("option");
-                el.text = t; el.value = t; filter.add(el);
-            });
-        }
-        ambilDataSheets();
-    }
-
-    async function ambilDataSheets() {
-        const menu = document.getElementById('menuGrafik').value;
-        const periode = document.getElementById('filterTahun').value;
-        
-        try {
-            // Jika link CSV belum diisi, gunakan data simulasi agar tidak error
-            let dataFinal;
-            if (URL_CSV === 'MASUKKAN_LINK_CSV_GOOGLE_SHEETS_DISINI') {
-                dataFinal = generateDummyData(menu, periode);
-            } else {
-                const response = await fetch(URL_CSV);
-                const csvText = await response.text();
-                dataFinal = prosesCSV(csvText, menu, periode);
-            }
-            renderChart(menu, periode, dataFinal);
-        } catch (e) {
-            console.error("Gagal memuat data sheets", e);
-            renderChart(menu, periode, generateDummyData(menu, periode));
-        }
-    }
-
-    // Fungsi simulasi data (jika Sheets belum siap)
-    function generateDummyData(menu, periode) {
-        if (menu === 'laju' || menu === 'nilai') {
-            const count = periode === "2021-2026" ? 6 : 5;
-            return Array.from({length: count}, () => (Math.random() * 5 + 2).toFixed(1));
-        }
-        return [25, 30, 20, 25]; // Data pie
-    }
-
-    function renderChart(menu, periode, dataValues) {
-        if (currentChart) currentChart.destroy();
-        
-        let labels = [];
-        if (menu === 'laju' || menu === 'nilai') {
-            labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
-                     periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
-        } else {
-            labels = menu === 'distribusi' ? ['PERTANIAN', 'INDUSTRI', 'JASA', 'LAINNYA'] : ['KONSUMSI', 'INVESTASI', 'EKSPOR', 'PEMERINTAH'];
-        }
-
-        let config = {
-            plugins: [ChartDataLabels],
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        anchor: 'end', align: 'top',
-                        formatter: (val) => val + (menu === 'laju' || menu === 'distribusi' ? '%' : ''),
-                        font: { weight: 'bold' }
-                    },
-                    legend: { position: 'bottom' }
-                }
-            }
-        };
-
-        if (menu === 'laju') {
-            config.type = 'line';
-            config.data = { labels, datasets: [{ label: 'LAJU PERTUMBUHAN (%)', data: dataValues, borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] };
-        } else if (menu === 'nilai') {
-            config.type = 'bar';
-            config.data = { labels, datasets: [{ label: 'ADHB', data: dataValues, backgroundColor: '#FF8C00' }] };
-        } else if (menu === 'distribusi') {
-            config.type = 'pie';
-            config.data = { labels, datasets: [{ data: dataValues, backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }] };
-        } else {
-            config.type = 'bar';
-            config.data = { labels, datasets: [{ label: 'POIN', data: dataValues, backgroundColor: '#FF8C00' }] };
-        }
-
-        currentChart = new Chart(ctx, config);
-        document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
-    }
-
-    sesuaikanFilter();
-</script>
-</body>
-</html>';
-
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
     const tahunLengkap = Array.from({length: 16}, (_, i) => (2011 + i).toString());
@@ -318,59 +147,25 @@
                 el.text = t; el.value = t; filter.add(el);
             });
         }
-        ambilDataSheets();
+        updateChart();
     }
 
-    async function ambilDataSheets() {
+    function updateChart() {
         const menu = document.getElementById('menuGrafik').value;
         const periode = document.getElementById('filterTahun').value;
         
-        try {
-            // Jika link CSV belum diisi, gunakan data simulasi agar tidak error
-            let dataFinal;
-            if (URL_CSV === 'MASUKKAN_LINK_CSV_GOOGLE_SHEETS_DISINI') {
-                dataFinal = generateDummyData(menu, periode);
-            } else {
-                const response = await fetch(URL_CSV);
-                const csvText = await response.text();
-                dataFinal = prosesCSV(csvText, menu, periode);
-            }
-            renderChart(menu, periode, dataFinal);
-        } catch (e) {
-            console.error("Gagal memuat data sheets", e);
-            renderChart(menu, periode, generateDummyData(menu, periode));
-        }
-    }
-
-    // Fungsi simulasi data (jika Sheets belum siap)
-    function generateDummyData(menu, periode) {
-        if (menu === 'laju' || menu === 'nilai') {
-            const count = periode === "2021-2026" ? 6 : 5;
-            return Array.from({length: count}, () => (Math.random() * 5 + 2).toFixed(1));
-        }
-        return [25, 30, 20, 25]; // Data pie
-    }
-
-    function renderChart(menu, periode, dataValues) {
         if (currentChart) currentChart.destroy();
-        
-        let labels = [];
-        if (menu === 'laju' || menu === 'nilai') {
-            labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
-                     periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
-        } else {
-            labels = menu === 'distribusi' ? ['PERTANIAN', 'INDUSTRI', 'JASA', 'LAINNYA'] : ['KONSUMSI', 'INVESTASI', 'EKSPOR', 'PEMERINTAH'];
-        }
 
         let config = {
             plugins: [ChartDataLabels],
             options: {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     datalabels: {
                         anchor: 'end', align: 'top',
                         formatter: (val) => val + (menu === 'laju' || menu === 'distribusi' ? '%' : ''),
-                        font: { weight: 'bold' }
+                        font: { weight: 'bold', size: 11 }
                     },
                     legend: { position: 'bottom' }
                 }
@@ -378,17 +173,47 @@
         };
 
         if (menu === 'laju') {
+            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
+                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
             config.type = 'line';
-            config.data = { labels, datasets: [{ label: 'LAJU PERTUMBUHAN (%)', data: dataValues, borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3 }] };
-        } else if (menu === 'nilai') {
+            config.data = {
+                labels: labels,
+                datasets: [{
+                    label: 'LAJU PERTUMBUHAN (%)',
+                    data: labels.map(() => (Math.random() * 3 + 2).toFixed(1)),
+                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                    fill: true, tension: 0.3, pointRadius: 6
+                }]
+            };
+        } 
+        else if (menu === 'nilai') {
+            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
+                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
             config.type = 'bar';
-            config.data = { labels, datasets: [{ label: 'ADHB', data: dataValues, backgroundColor: '#FF8C00' }] };
-        } else if (menu === 'distribusi') {
+            config.data = {
+                labels: labels,
+                datasets: [
+                    { label: 'ADHB', data: labels.map(() => Math.floor(Math.random() * 500 + 1500)), backgroundColor: '#FF8C00' },
+                    { label: 'ADHK', data: labels.map(() => Math.floor(Math.random() * 500 + 1000)), backgroundColor: '#27ae60' }
+                ]
+            };
+        }
+        else if (menu === 'distribusi') {
             config.type = 'pie';
-            config.data = { labels, datasets: [{ data: dataValues, backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }] };
-        } else {
+            config.data = {
+                labels: ['PERTANIAN', 'INDUSTRI', 'JASA', 'LAINNYA'],
+                datasets: [{ data: [25, 30, 20, 25], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }]
+            };
+            config.options.plugins.datalabels.anchor = 'center';
+            config.options.plugins.datalabels.align = 'center';
+            config.options.plugins.datalabels.color = '#fff';
+        }
+        else if (menu === 'sumber') {
             config.type = 'bar';
-            config.data = { labels, datasets: [{ label: 'POIN', data: dataValues, backgroundColor: '#FF8C00' }] };
+            config.data = {
+                labels: ['KONSUMSI', 'INVESTASI', 'EKSPOR', 'PEMERINTAH'],
+                datasets: [{ label: 'KONTRIBUSI (POIN)', data: [2.5, 1.8, 1.2, 0.7], backgroundColor: '#FF8C00' }]
+            };
         }
 
         currentChart = new Chart(ctx, config);
@@ -397,5 +222,6 @@
 
     sesuaikanFilter();
 </script>
+
 </body>
 </html>
