@@ -23,15 +23,14 @@
             gap: 20px; 
         }
 
-        .header-text { text-align: left; }
-        .header h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; }
-        .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
-
         .logo-container {
             background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .logo-img { height: 75px; width: auto; }
+
+        .header-text h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; }
+        .header-text h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
 
         .controls { 
             background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; 
@@ -62,7 +61,7 @@
     </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>INTEGRASI DATA REAL-TIME GOOGLE SHEETS</h2>
+        <h2>INTEGRASI DATA GOOGLE SHEETS</h2>
     </div>
 </div>
 
@@ -70,28 +69,28 @@
     <div>
         <label>PILIH JENIS DATA:</label>
         <select id="menuGrafik" onchange="muatDataDariSheets()">
-            <option value="1">LAJU PERTUMBUHAN EKONOMI (%)</option>
-            <option value="2">PDRB ADHB (MILIAR RUPIAH)</option>
+            <option value="1">PDRB ADHB (MILAR RP)</option>
+            <option value="2">PDRB ADHK (MILIAR RP)</option>
+            <option value="3">LAJU PERTUMBUHAN (%)</option>
         </select>
     </div>
     <div>
         <label>PILIH RENTANG:</label>
-        <select id="filterTahun" onchange="muatDataDariSheets()">
-            <option value="baru">PERIODE TERBARU</option>
+        <select id="filterTahun">
+            <option value="terbaru">PERIODE 2018 - 2025</option>
         </select>
     </div>
 </div>
 
 <div class="card">
-    <h3 id="judulGrafik">MEMUAT DATA DARI GOOGLE SHEETS...</h3>
+    <h3 id="judulGrafik">MENGHUBUNGKAN KE DATABASE...</h3>
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-    // Link CSV yang Anda berikan
-    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYPVJNLVhBK6fbcuZ20-S9hHOVa4Z0Dnxici2jFwulptHPL_Ev9OjBlThESIkQdA/pub?output=csv';
+    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv';
 
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
@@ -104,21 +103,18 @@
             const csvText = await response.text();
             const barisData = csvText.split('\n');
 
-            // Mengambil data dari baris sesuai pilihan menu (Baris 1 atau Baris 2)
-            // Memisahkan dengan koma dan mengambil angka (mulai dari kolom ke-2)
-            const rowData = barisData[parseInt(barisPilihan)].split(',');
-            const labelData = rowData[0]; // Nama kategori
-            const values = rowData.slice(1).map(val => parseFloat(val.replace(',', '.')) || 0);
+            // Baris 0 = Header Tahun, Baris 1 = ADHB, Baris 2 = ADHK, Baris 3 = Laju
+            const labelTahun = barisData[3].split(',').slice(1); 
+            const rowData = barisData[parseInt(barisPilihan) + 3].split(',');
+            const datasetLabel = rowData[0];
+            const values = rowData.slice(1).map(val => parseFloat(val) || 0);
 
-            // Label tahun (Disesuaikan dengan jumlah kolom di Sheets Anda)
-            const labels = ['2021', '2022', '2023', '2024', '2025', '2026'];
-
-            updateChart(labelData, labels, values);
-            document.getElementById('judulGrafik').innerText = "VISUALISASI " + labelData;
+            updateChart(datasetLabel, labelTahun, values);
+            document.getElementById('judulGrafik').innerText = "VISUALISASI " + datasetLabel;
 
         } catch (e) {
             console.error("Gagal menarik data:", e);
-            document.getElementById('judulGrafik').innerText = "GAGAL MEMUAT DATA. CEK KONEKSI/LINK.";
+            document.getElementById('judulGrafik').innerText = "KONEKSI GOOGLE SHEETS GAGAL";
         }
     }
 
@@ -126,7 +122,7 @@
         if (currentChart) currentChart.destroy();
 
         currentChart = new Chart(ctx, {
-            type: datasetLabel.includes('LAJU') ? 'line' : 'bar',
+            type: datasetLabel.includes('%') ? 'line' : 'bar',
             plugins: [ChartDataLabels],
             data: {
                 labels: labels,
@@ -134,7 +130,7 @@
                     label: datasetLabel,
                     data: dataValues,
                     borderColor: '#FF8C00',
-                    backgroundColor: datasetLabel.includes('LAJU') ? 'rgba(255, 140, 0, 0.1)' : '#FF8C00',
+                    backgroundColor: datasetLabel.includes('%') ? 'rgba(255, 140, 0, 0.1)' : '#FF8C00',
                     fill: true,
                     tension: 0.3,
                     pointRadius: 6
@@ -150,15 +146,13 @@
                         font: { weight: 'bold' },
                         formatter: (val) => val.toLocaleString('id-ID')
                     },
-                    legend: { position: 'bottom' }
+                    legend: { display: false }
                 }
             }
         });
     }
 
-    // Jalankan fungsi saat halaman dibuka
     muatDataDariSheets();
 </script>
-
 </body>
 </html>
