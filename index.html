@@ -62,7 +62,7 @@
     </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>PERIODE DATA: 2011 - 2025</h2>
+        <h2>PERIODE DATA: 2011 - 2026</h2>
     </div>
 </div>
 
@@ -91,11 +91,11 @@
 
 <script>
     // LINK GOOGLE SHEETS ASLI MILIK ANDA
-    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv';
+    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYPVJNLVhBK6fbcuZ20-S9hHOVa4Z0Dnxici2jFwulptHPL_Ev9OjBlThESIkQdA/pub?output=csv';
 
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
-    const tahunLengkap = ["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024*", "2025**"];
+    const tahunLengkap = ["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025, "2026"];
     
     function sesuaikanFilter() {
         const menu = document.getElementById('menuGrafik').value;
