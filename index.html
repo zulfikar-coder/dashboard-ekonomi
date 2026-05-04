@@ -61,91 +61,90 @@
 <script>
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
-    // Inisialisasi database kosong
     let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
     
-    // Link CSV dari Google Sheets Anda
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
-    // 1. Fungsi Utama Mengambil Data
     async function fetchData() {
         try {
             const response = await fetch(sheetUrl);
-            if (!response.ok) throw new Error('Gagal mengambil data');
-            
             const csvText = await response.text();
-            // Deteksi pemisah (koma atau titik koma)
-            const separator = csvText.includes(';') ? ';' : ',';
-            const rows = csvText.split('\n').filter(row => row.trim() !== '').map(row => row.split(separator));
+            
+            // Membersihkan karakter carriage return (\r) agar tidak merusak parsing
+            const rows = csvText.split('\n').map(row => row.replace('\r', ''));
+            
+            // Deteksi pemisah (separator) secara dinamis
+            const separator = rows.find(r => r.includes('2011')).includes(';') ? ';' : ',';
+            const dataMatrix = rows.map(row => row.split(separator));
             
             let listTahun = [];
+            database.laju = {}; database.adhb = {}; database.adhk = {}; database.sumber = {};
 
-            // Fungsi untuk membersihkan format angka Indonesia (koma ke titik)
             const cleanNum = (val) => {
-                if (!val || val.trim() === "-" || val.trim() === "n.a") return 0;
+                if (!val || val.trim() === "" || val.trim() === "-" || val.trim() === "n.a") return 0;
                 let s = val.trim();
+                // Jika titik digunakan sebagai pemisah ribuan (contoh: 10.452,12), hapus titiknya
                 if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
+                // Ganti koma desimal Indonesia menjadi titik agar dikenali sistem
                 s = s.replace(',', '.');
                 return parseFloat(s) || 0;
             };
 
-            for (let i = 0; i < rows.length; i++) {
-                const cols = rows[i];
+            dataMatrix.forEach((cols) => {
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
 
-                // Cari baris tahun (Baris 3 di spreadsheet Anda)
-                if (cellA.includes("INDIKATOR") || (cols[1] && cols[1].trim().includes("2011"))) {
-                    listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
-                    continue;
+                // Menemukan baris Tahun (Biasanya baris ke-3 atau ke-4 di Sheet Anda)
+                if (cols.some(c => c.trim() === "2011")) {
+                    listTahun = cols.slice(1).map(t => t.trim().replace(/\*/g, ''));
                 }
 
-                // Ambil data berdasarkan teks di Kolom A
-                if (cellA.includes("LAJU")) {
-                    listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
+                // Pengisian data berdasarkan kata kunci di Kolom A
+                if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN EKONOMI (%)")) {
+                    listTahun.forEach((thn, idx) => { if(thn) database.laju[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("ADHB")) {
-                    listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
+                    listTahun.forEach((thn, idx) => { if(thn) database.adhb[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("ADHK")) {
-                    listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
+                    listTahun.forEach((thn, idx) => { if(thn) database.adhk[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("SUMBER")) {
-                    listTahun.forEach((thn, idx) => { database.sumber[thn] = cleanNum(cols[idx + 1]); });
+                    listTahun.forEach((thn, idx) => { if(thn) database.sumber[thn] = cleanNum(cols[idx + 1]); });
                 }
-            }
+            });
+
+            // Data Distribusi (Bisa diambil dari Sheet atau statis sesuai gambar)
+            database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
 
             document.getElementById('judulGrafik').innerText = "VISUALISASI DATA BERHASIL DIMUAT";
             sesuaikanFilter();
         } catch (error) {
             console.error("Fetch error:", error);
-            document.getElementById('judulGrafik').innerText = "KONEKSI GAGAL / DATA TIDAK DITEMUKAN";
+            document.getElementById('judulGrafik').innerText = "KONEKSI GAGAL / DATA KOSONG";
         }
     }
 
-    // 2. Fungsi Filter Tahun
     function sesuaikanFilter() {
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
         filter.innerHTML = ""; 
-        
         const opsi = [
             {text: "2021 - 2026", val: "2021-2026"},
             {text: "2016 - 2020", val: "2016-2020"},
             {text: "2011 - 2015", val: "2011-2015"}
         ];
-
         if (menu === 'laju' || menu === 'nilai') {
             opsi.forEach(o => {
                 let el = document.createElement("option");
                 el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
-            // Untuk Distribusi/Sumber tampilkan tahun tunggal
             Object.keys(database.adhb).reverse().forEach(t => {
-                if(t) { let el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); }
+                if(t && t.length === 4) { 
+                    let el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); 
+                }
             });
         }
         updateChart();
     }
 
-    // 3. Fungsi Gambar Grafik
     function updateChart() {
         const menu = document.getElementById('menuGrafik').value;
         const periode = document.getElementById('filterTahun').value;
@@ -164,10 +163,13 @@
                 plugins: {
                     datalabels: {
                         anchor: 'end', align: 'top',
-                        formatter: (val) => val + (menu === 'laju' ? '%' : ''),
+                        formatter: (val) => val.toLocaleString('id-ID') + (menu === 'laju' ? '%' : ''),
                         font: { weight: 'bold', size: 10 }
                     },
                     legend: { position: 'bottom' }
+                },
+                scales: {
+                    y: { beginAtZero: false } // Biarkan Chart.js mengatur skala otomatis agar grafik tidak flat
                 }
             }
         };
@@ -193,11 +195,10 @@
                 ]
             };
         } else if (menu === 'distribusi') {
-            // Data distribusi diambil secara statis atau bisa Anda kembangkan untuk baca baris Pertanian/Industri
             config.type = 'pie';
             config.data = {
-                labels: ['PERTANIAN', 'INDUSTRI', 'KONSTRUKSI', 'PERDAGANGAN', 'JASA'],
-                datasets: [{ data: [11.9, 11.3, 18.8, 25.5, 32.5], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB'] }]
+                labels: Object.keys(database.distribusi),
+                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB'] }]
             };
         } else if (menu === 'sumber') {
             config.type = 'bar';
@@ -206,11 +207,9 @@
                 datasets: [{ label: 'SUMBER PERTUMBUHAN (POIN)', data: labels.map(t => database.sumber[t] || 0), backgroundColor: '#FF8C00' }]
             };
         }
-
         currentChart = new Chart(ctx, config);
         document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    // Eksekusi pertama kali
     fetchData();
 </script>
