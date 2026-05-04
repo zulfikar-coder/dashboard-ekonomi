@@ -59,6 +59,70 @@
 </div>
 
 <script>
+    <!-- ... bagian kode HTML lainnya ... -->
+
+<script>
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    let currentChart;
+    let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
+    
+    // Link CSV Google Sheets Anda
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
+
+    // MASUKKAN FUNGSI fetchData DI SINI (Ganti yang lama)
+    async function fetchData() {
+        try {
+            const response = await fetch(sheetUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const csvText = await response.text();
+            const separator = csvText.includes(';') ? ';' : ',';
+            const rows = csvText.split('\n').filter(row => row.trim() !== '').map(row => row.split(separator));
+            
+            let listTahun = [];
+            database.laju = {}; database.adhb = {}; database.adhk = {};
+
+            for (let i = 0; i < rows.length; i++) {
+                const cols = rows[i];
+                const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
+
+                if (cols[1] && cols[1].trim().includes("2011") && listTahun.length === 0) {
+                    listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
+                    continue;
+                }
+
+                const cleanNum = (val) => {
+                    if (!val || val.trim() === "-" || val.trim() === "n.a") return 0;
+                    let s = val.trim().replace(/\./g, '').replace(',', '.');
+                    return parseFloat(s) || 0;
+                };
+
+                if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
+                    listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
+                } else if (cellA.includes("ADHB")) {
+                    listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
+                } else if (cellA.includes("ADHK")) {
+                    listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
+                }
+            }
+
+            database.distribusi = { "PERTANIAN": 12.45, "INDUSTRI": 18.32, "JASA": 45.67, "LAINNYA": 23.56 };
+            database.sumber = { "KONSUMSI": 2.85, "INVESTASI": 1.42, "EKSPOR": 1.15, "PEMERINTAH": 0.67 };
+
+            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA BERHASIL";
+            sesuaikanFilter();
+        } catch (error) {
+            console.error("Fetch error:", error);
+            document.getElementById('judulGrafik').innerText = "KONEKSI GAGAL / TIME OUT";
+        }
+    }
+
+    // Pastikan fungsi sesuaikanFilter(), updateChart(), dan fetchData() tetap dipanggil
+    function sesuaikanFilter() { ... }
+    function updateChart() { ... }
+    
+    fetchData(); // Panggilan utama agar data dimuat saat web dibuka
+    
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
     let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} }; 
