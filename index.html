@@ -122,106 +122,179 @@
 </div>
 
 <script>
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    let currentChart;
-    const tahunLengkap = Array.from({length: 16}, (_, i) => (2011 + i).toString());
-    
-    function sesuaikanFilter() {
-        const menu = document.getElementById('menuGrafik').value;
-        const filter = document.getElementById('filterTahun');
-        filter.innerHTML = ""; 
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv";
 
-        if (menu === 'laju' || menu === 'nilai') {
-            const opsi = [
-                {text: "2021 - 2026", val: "2021-2026"},
-                {text: "2016 - 2020", val: "2016-2020"},
-                {text: "2011 - 2015", val: "2011-2015"}
-            ];
-            opsi.forEach(o => {
-                let el = document.createElement("option");
-                el.text = o.text; el.value = o.val; filter.add(el);
-            });
-        } else {
-            [...tahunLengkap].reverse().forEach(t => {
-                let el = document.createElement("option");
-                el.text = t; el.value = t; filter.add(el);
-            });
-        }
-        updateChart();
+const ctx = document.getElementById('mainChart').getContext('2d');
+let currentChart;
+let dataSheet = [];
+
+function formatAngka(angka) {
+    return new Intl.NumberFormat('id-ID').format(angka);
+}
+
+// 🔥 AMBIL DATA
+async function ambilDataSheet() {
+    try {
+        document.getElementById("loading")?.remove();
+
+        const res = await fetch(sheetURL);
+        const text = await res.text();
+
+        const rows = text.split("\n").slice(1);
+
+        dataSheet = rows.map(row => {
+            const cols = row.split(",");
+            return {
+                tahun: cols[0],
+                adhb: parseFloat(cols[1]),
+                adhk: parseFloat(cols[2])
+            };
+        });
+
+        sesuaikanFilter();
+
+    } catch (err) {
+        alert("Gagal ambil data dari Google Sheets");
     }
+}
 
-    function updateChart() {
-        const menu = document.getElementById('menuGrafik').value;
-        const periode = document.getElementById('filterTahun').value;
-        
-        if (currentChart) currentChart.destroy();
+// 🔥 HITUNG LAJU
+function hitungLaju(data) {
+    let hasil = [];
+    for (let i = 1; i < data.length; i++) {
+        let laju = ((data[i].adhk - data[i-1].adhk) / data[i-1].adhk) * 100;
+        hasil.push(parseFloat(laju.toFixed(2)));
+    }
+    return hasil;
+}
 
-        let config = {
-            plugins: [ChartDataLabels],
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        anchor: 'end', align: 'top',
-                        formatter: (val) => val + (menu === 'laju' || menu === 'distribusi' ? '%' : ''),
-                        font: { weight: 'bold', size: 11 }
-                    },
-                    legend: { position: 'bottom' }
-                }
+function sesuaikanFilter() {
+    const menu = document.getElementById('menuGrafik').value;
+    const filter = document.getElementById('filterTahun');
+    filter.innerHTML = ""; 
+
+    const opsi = [
+        {text: "2021 - 2026", val: "2021-2026"},
+        {text: "2016 - 2020", val: "2016-2020"},
+        {text: "2011 - 2015", val: "2011-2015"}
+    ];
+
+    opsi.forEach(o => {
+        let el = document.createElement("option");
+        el.text = o.text;
+        el.value = o.val;
+        filter.add(el);
+    });
+
+    updateChart();
+}
+
+function updateChart() {
+    const menu = document.getElementById('menuGrafik').value;
+    const periode = document.getElementById('filterTahun').value;
+
+    if (currentChart) currentChart.destroy();
+
+    let labels = [];
+    if (periode === "2021-2026") labels = ['2021','2022','2023','2024','2025','2026'];
+    else if (periode === "2016-2020") labels = ['2016','2017','2018','2019','2020'];
+    else labels = ['2011','2012','2013','2014','2015'];
+
+    const filtered = dataSheet.filter(d => labels.includes(d.tahun));
+
+    let config = {
+        plugins: [ChartDataLabels],
+        options: {
+            responsive: true,
+            animation: { duration: 800 },
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (val) => formatAngka(val),
+                    font: { weight: 'bold' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ": " + formatAngka(ctx.raw)
+                    }
+                },
+                legend: { position: 'bottom' }
             }
+        }
+    };
+
+    // 🔹 LAJU
+    if (menu === 'laju') {
+        const lajuData = hitungLaju(filtered);
+
+        config.type = 'line';
+        config.data = {
+            labels: labels.slice(1),
+            datasets: [{
+                label: 'LAJU (%)',
+                data: lajuData,
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39,174,96,0.1)',
+                fill: true,
+                tension: 0.3
+            }]
         };
-
-        if (menu === 'laju') {
-            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
-                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
-            config.type = 'line';
-            config.data = {
-                labels: labels,
-                datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)',
-                    data: labels.map(() => (Math.random() * 3 + 2).toFixed(1)),
-                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                    fill: true, tension: 0.3, pointRadius: 6
-                }]
-            };
-        } 
-        else if (menu === 'nilai') {
-            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
-                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
-            config.type = 'bar';
-            config.data = {
-                labels: labels,
-                datasets: [
-                    { label: 'ADHB', data: labels.map(() => Math.floor(Math.random() * 500 + 1500)), backgroundColor: '#FF8C00' },
-                    { label: 'ADHK', data: labels.map(() => Math.floor(Math.random() * 500 + 1000)), backgroundColor: '#27ae60' }
-                ]
-            };
-        }
-        else if (menu === 'distribusi') {
-            config.type = 'pie';
-            config.data = {
-                labels: ['PERTANIAN', 'INDUSTRI', 'JASA', 'LAINNYA'],
-                datasets: [{ data: [25, 30, 20, 25], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }]
-            };
-            config.options.plugins.datalabels.anchor = 'center';
-            config.options.plugins.datalabels.align = 'center';
-            config.options.plugins.datalabels.color = '#fff';
-        }
-        else if (menu === 'sumber') {
-            config.type = 'bar';
-            config.data = {
-                labels: ['KONSUMSI', 'INVESTASI', 'EKSPOR', 'PEMERINTAH'],
-                datasets: [{ label: 'KONTRIBUSI (POIN)', data: [2.5, 1.8, 1.2, 0.7], backgroundColor: '#FF8C00' }]
-            };
-        }
-
-        currentChart = new Chart(ctx, config);
-        document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    sesuaikanFilter();
-</script>
+    // 🔹 NILAI
+    else if (menu === 'nilai') {
+        config.type = 'bar';
+        config.data = {
+            labels: filtered.map(d => d.tahun),
+            datasets: [
+                {
+                    label: 'ADHB',
+                    data: filtered.map(d => d.adhb),
+                    backgroundColor: '#FF8C00'
+                },
+                {
+                    label: 'ADHK',
+                    data: filtered.map(d => d.adhk),
+                    backgroundColor: '#27ae60'
+                }
+            ]
+        };
+    }
 
+    // 🔹 DISTRIBUSI (masih manual)
+    else if (menu === 'distribusi') {
+        config.type = 'pie';
+        config.data = {
+            labels: ['PERTANIAN','INDUSTRI','JASA','LAINNYA'],
+            datasets: [{
+                data: [25,30,20,25],
+                backgroundColor: ['#FF8C00','#27ae60','#F39C12','#2ECC71']
+            }]
+        };
+    }
+
+    // 🔹 SUMBER (manual)
+    else if (menu === 'sumber') {
+        config.type = 'bar';
+        config.data = {
+            labels: ['KONSUMSI','INVESTASI','EKSPOR','PEMERINTAH'],
+            datasets: [{
+                label: 'KONTRIBUSI',
+                data: [2.5,1.8,1.2,0.7],
+                backgroundColor: '#FF8C00'
+            }]
+        };
+    }
+
+    currentChart = new Chart(ctx, config);
+
+    document.getElementById('judulGrafik').innerText =
+        document.getElementById('menuGrafik').selectedOptions[0].text + " (" + periode + ")";
+}
+
+// 🚀 START
+ambilDataSheet();
+</script>
 </body>
 </html>
