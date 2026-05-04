@@ -30,7 +30,7 @@
         .logo-img { height: 75px; width: auto; }
 
         .header-text h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; }
-        .header-text h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
+        .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; color: white; }
 
         .controls { 
             background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; 
@@ -43,7 +43,7 @@
         .chart-container { position: relative; margin: auto; height: 400px; width: 100%; }
 
         h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; text-transform: uppercase; cursor: pointer; }
+        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 250px; text-transform: uppercase; cursor: pointer; }
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--orange); }
 
         @media (max-width: 768px) {
@@ -61,68 +61,75 @@
     </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>INTEGRASI DATA GOOGLE SHEETS</h2>
+        <h2>SUMBER DATA: BPS KOTA PALU (PROYEKSI 2025)</h2>
     </div>
 </div>
 
 <div class="controls">
     <div>
-        <label>PILIH JENIS DATA:</label>
+        <label>PILIH INDIKATOR EKONOMI:</label>
         <select id="menuGrafik" onchange="muatDataDariSheets()">
-            <option value="1">PDRB ADHB (MILAR RP)</option>
-            <option value="2">PDRB ADHK (MILIAR RP)</option>
-            <option value="3">LAJU PERTUMBUHAN (%)</option>
+            <option value="4">PDRB ADHB (MILIAR RUPIAH)</option>
+            <option value="5">PDRB ADHK (MILIAR RUPIAH)</option>
+            <option value="6">LAJU PERTUMBUHAN EKONOMI (%)</option>
+            <option value="7">PDRB PER KAPITA (JUTA RUPIAH)</option>
         </select>
     </div>
     <div>
-        <label>PILIH RENTANG:</label>
+        <label>PERIODE DATA:</label>
         <select id="filterTahun">
-            <option value="terbaru">PERIODE 2018 - 2025</option>
+            <option value="all">2018 - 2025 (LENGKAP)</option>
         </select>
     </div>
 </div>
 
 <div class="card">
-    <h3 id="judulGrafik">MENGHUBUNGKAN KE DATABASE...</h3>
+    <h3 id="judulGrafik">MENYINKRONKAN DATA GOOGLE SHEETS...</h3>
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
+    // URL CSV Google Sheets Anda
     const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv';
 
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
 
     async function muatDataDariSheets() {
-        const barisPilihan = document.getElementById('menuGrafik').value;
+        const barisIndex = document.getElementById('menuGrafik').value;
         
         try {
             const response = await fetch(URL_CSV);
             const csvText = await response.text();
             const barisData = csvText.split('\n');
 
-            // Baris 0 = Header Tahun, Baris 1 = ADHB, Baris 2 = ADHK, Baris 3 = Laju
+            // Ambil label tahun dari baris ke-4 (Index 3)
             const labelTahun = barisData[3].split(',').slice(1); 
-            const rowData = barisData[parseInt(barisPilihan) + 3].split(',');
+            
+            // Ambil data angka dari baris yang dipilih user
+            const rowData = barisData[parseInt(barisIndex)].split(',');
             const datasetLabel = rowData[0];
             const values = rowData.slice(1).map(val => parseFloat(val) || 0);
 
             updateChart(datasetLabel, labelTahun, values);
-            document.getElementById('judulGrafik').innerText = "VISUALISASI " + datasetLabel;
+            document.getElementById('judulGrafik').innerText = datasetLabel;
 
         } catch (e) {
-            console.error("Gagal menarik data:", e);
-            document.getElementById('judulGrafik').innerText = "KONEKSI GOOGLE SHEETS GAGAL";
+            console.error("Error:", e);
+            document.getElementById('judulGrafik').innerText = "GAGAL TERHUBUNG KE GOOGLE SHEETS";
         }
     }
 
     function updateChart(datasetLabel, labels, dataValues) {
         if (currentChart) currentChart.destroy();
 
+        // Tipe grafik otomatis: Line untuk % atau per kapita, Bar untuk nilai Miliar
+        const isLine = datasetLabel.includes('%') || datasetLabel.includes('Kapita');
+
         currentChart = new Chart(ctx, {
-            type: datasetLabel.includes('%') ? 'line' : 'bar',
+            type: isLine ? 'line' : 'bar',
             plugins: [ChartDataLabels],
             data: {
                 labels: labels,
@@ -130,10 +137,11 @@
                     label: datasetLabel,
                     data: dataValues,
                     borderColor: '#FF8C00',
-                    backgroundColor: datasetLabel.includes('%') ? 'rgba(255, 140, 0, 0.1)' : '#FF8C00',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 6
+                    backgroundColor: isLine ? 'rgba(255, 140, 0, 0.1)' : '#FF8C00',
+                    fill: isLine,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    borderWidth: 3
                 }]
             },
             options: {
@@ -143,16 +151,22 @@
                     datalabels: {
                         anchor: 'end',
                         align: 'top',
-                        font: { weight: 'bold' },
-                        formatter: (val) => val.toLocaleString('id-ID')
+                        font: { weight: 'bold', size: 12 },
+                        formatter: (val) => val.toLocaleString('id-ID') + (datasetLabel.includes('%') ? '%' : '')
                     },
                     legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: false, grid: { color: '#f0f0f0' } },
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
+    // Load data pertama kali
     muatDataDariSheets();
 </script>
+
 </body>
 </html>
