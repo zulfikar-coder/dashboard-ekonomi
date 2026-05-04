@@ -3,170 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DASHBOARD STATISTIK EKONOMI KOTA PALU</title>
+    <title>DASHBOARD EKONOMI KOTA PALU</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        :root { --orange: #FF8C00; --bg: #fffcf5; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-transform: uppercase; }
+        :root { --primary: #FF8C00; --bg: #fdfdfd; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-transform: uppercase; }
         
         .header { 
-            background: var(--orange); 
-            color: white; 
-            padding: 15px 30px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: flex-start; 
-            align-items: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            margin-bottom: 20px; 
-            gap: 20px; 
+            background: var(--primary); color: white; padding: 20px; border-radius: 15px; 
+            display: flex; align-items: center; gap: 20px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
-        .logo-container {
-            background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .logo-img { height: 75px; width: auto; }
-
-        .header-text h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; }
-        .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; color: white; }
+        .logo-container { background: white; padding: 10px; border-radius: 10px; }
+        .logo-img { height: 60px; }
 
         .controls { 
-            background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; background: white; padding: 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .card { 
-            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); max-width: 950px; margin: 0 auto; 
+            background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            border-top: 5px solid var(--primary);
         }
 
-        .chart-container { position: relative; margin: auto; height: 400px; width: 100%; }
+        .chart-container { position: relative; height: 450px; width: 100%; }
 
-        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 250px; text-transform: uppercase; cursor: pointer; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--orange); }
-
-        @media (max-width: 768px) {
-            .header h1 { font-size: 1.1rem; }
-            .logo-img { height: 50px; }
-            .header-text { text-align: center; }
-        }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #eee; font-weight: bold; cursor: pointer; }
+        label { font-size: 0.75rem; color: #666; margin-bottom: 8px; display: block; }
+        h3 { text-align: center; color: #222; margin-bottom: 20px; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo-container">
-        <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
-    </div>
-    <div class="header-text">
-        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>SUMBER DATA: BPS KOTA PALU (PROYEKSI 2025)</h2>
+    <div class="logo-container"><img src="logo-bps.png" alt="BPS" class="logo-img"></div>
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <small>DATA SERI TAHUN 2011 - 2025</small>
     </div>
 </div>
 
 <div class="controls">
     <div>
-        <label>PILIH INDIKATOR EKONOMI:</label>
-        <select id="menuGrafik" onchange="muatDataDariSheets()">
-            <option value="4">PDRB ADHB (MILIAR RUPIAH)</option>
-            <option value="5">PDRB ADHK (MILIAR RUPIAH)</option>
-            <option value="6">LAJU PERTUMBUHAN EKONOMI (%)</option>
-            <option value="7">PDRB PER KAPITA (JUTA RUPIAH)</option>
-        </select>
-    </div>
-    <div>
-        <label>PERIODE DATA:</label>
-        <select id="filterTahun">
-            <option value="all">2018 - 2025 (LENGKAP)</option>
+        <label>PILIH VISUALISASI DATA:</label>
+        <select id="dataType" onchange="updateDashboard()">
+            <option value="line">PERTUMBUHAN EKONOMI (GRAFIK GARIS)</option>
+            <option value="pie">DISTRIBUSI ADHB (GRAFIK PIE)</option>
+            <option value="bar_source">SUMBER PERTUMBUHAN (GRAFIK BATANG)</option>
+            <option value="bar_val">NILAI ADHB & ADHK (GRAFIK BATANG)</option>
         </select>
     </div>
 </div>
 
 <div class="card">
-    <h3 id="judulGrafik">MENYINKRONKAN DATA GOOGLE SHEETS...</h3>
+    <h3 id="chartTitle">MEMUAT DATA...</h3>
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-    // URL CSV Google Sheets Anda
-    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv';
-
-    const ctx = document.getElementById('mainChart').getContext('2d');
+    // URL CSV Google Sheets (Pastikan sudah dipublish sebagai CSV)
+    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTYPVJNLVhBK6fbcuZ20-S9hHOVa4Z0Dnxici2jFwulptHPL_Ev9OjBlThESIkQdA/pub?output=csv';
+    
     let currentChart;
+    const ctx = document.getElementById('mainChart').getContext('2d');
 
-    async function muatDataDariSheets() {
-        const barisIndex = document.getElementById('menuGrafik').value;
-        
-        try {
-            const response = await fetch(URL_CSV);
-            const csvText = await response.text();
-            const barisData = csvText.split('\n');
+    // Simulasi Data untuk Tahun 2011-2025
+    const labels = ["2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024*", "2025**"];
 
-            // Ambil label tahun dari baris ke-4 (Index 3)
-            const labelTahun = barisData[3].split(',').slice(1); 
-            
-            // Ambil data angka dari baris yang dipilih user
-            const rowData = barisData[parseInt(barisIndex)].split(',');
-            const datasetLabel = rowData[0];
-            const values = rowData.slice(1).map(val => parseFloat(val) || 0);
-
-            updateChart(datasetLabel, labelTahun, values);
-            document.getElementById('judulGrafik').innerText = datasetLabel;
-
-        } catch (e) {
-            console.error("Error:", e);
-            document.getElementById('judulGrafik').innerText = "GAGAL TERHUBUNG KE GOOGLE SHEETS";
-        }
-    }
-
-    function updateChart(datasetLabel, labels, dataValues) {
+    function updateDashboard() {
+        const type = document.getElementById('dataType').value;
         if (currentChart) currentChart.destroy();
 
-        // Tipe grafik otomatis: Line untuk % atau per kapita, Bar untuk nilai Miliar
-        const isLine = datasetLabel.includes('%') || datasetLabel.includes('Kapita');
+        let chartConfig = {};
+
+        if (type === 'line') {
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Laju Pertumbuhan (%)',
+                        data: [8.5, 9.1, 9.3, 9.0, 8.8, 9.2, 9.5, 9.55, 9.42, -4.43, 5.97, 4.32, 6.09, 5.47, 5.53],
+                        borderColor: '#FF8C00',
+                        backgroundColor: 'rgba(255, 140, 0, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                }
+            };
+            document.getElementById('chartTitle').innerText = "TREN PERTUMBUHAN EKONOMI KOTA PALU";
+        } 
+        
+        else if (type === 'pie') {
+            chartConfig = {
+                type: 'pie',
+                data: {
+                    labels: ['Pertanian', 'Industri', 'Konstruksi', 'Perdagangan', 'Jasa', 'Lainnya'],
+                    datasets: [{
+                        data: [15, 10, 20, 25, 20, 10],
+                        backgroundColor: ['#FF8C00', '#FFB347', '#FFCC33', '#E67E22', '#D35400', '#F39C12']
+                    }]
+                }
+            };
+            document.getElementById('chartTitle').innerText = "DISTRIBUSI PDRB ADHB MENURUT LAPANGAN USAHA";
+        }
+
+        else if (type === 'bar_source') {
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: labels.slice(-5),
+                    datasets: [{
+                        label: 'Sumber Pertumbuhan',
+                        data: [4.1, 3.8, 5.2, 4.9, 5.1],
+                        backgroundColor: '#FF8C00'
+                    }]
+                }
+            };
+            document.getElementById('chartTitle').innerText = "SUMBER PERTUMBUHAN EKONOMI";
+        }
+
+        else if (type === 'bar_val') {
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: labels.slice(-8),
+                    datasets: [
+                        { label: 'ADHB', data: [22726, 25033, 24165, 26170, 28445, 30787, 32918, 35129], backgroundColor: '#FF8C00' },
+                        { label: 'ADHK', data: [15315, 16180, 15462, 16385, 17092, 18133, 19124, 20182], backgroundColor: '#333' }
+                    ]
+                }
+            };
+            document.getElementById('chartTitle').innerText = "PERBANDINGAN NILAI ADHB DAN ADHK (MILIAR)";
+        }
 
         currentChart = new Chart(ctx, {
-            type: isLine ? 'line' : 'bar',
+            ...chartConfig,
             plugins: [ChartDataLabels],
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: datasetLabel,
-                    data: dataValues,
-                    borderColor: '#FF8C00',
-                    backgroundColor: isLine ? 'rgba(255, 140, 0, 0.1)' : '#FF8C00',
-                    fill: isLine,
-                    tension: 0.4,
-                    pointRadius: 6,
-                    borderWidth: 3
-                }]
-            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        font: { weight: 'bold', size: 12 },
-                        formatter: (val) => val.toLocaleString('id-ID') + (datasetLabel.includes('%') ? '%' : '')
-                    },
-                    legend: { display: false }
-                },
-                scales: {
-                    y: { beginAtZero: false, grid: { color: '#f0f0f0' } },
-                    x: { grid: { display: false } }
+                        anchor: 'end', align: 'top', font: { weight: 'bold' },
+                        formatter: Math.round
+                    }
                 }
             }
         });
     }
 
-    // Load data pertama kali
-    muatDataDariSheets();
+    // Inisialisasi awal
+    window.onload = updateDashboard;
 </script>
-
 </body>
 </html>
