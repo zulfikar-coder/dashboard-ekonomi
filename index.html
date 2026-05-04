@@ -60,160 +60,178 @@
 </div>
 
 <script>
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    let currentChart;
-    let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
-    
-    // URL CSV Google Sheets Anda
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv';
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv";
 
-    async function fetchData() {
-        try {
-            const response = await fetch(sheetUrl);
-            const csvText = await response.text();
-            
-            // Pembersihan karakter dan deteksi pemisah
-            const rows = csvText.split('\n').map(row => row.replace('\r', ''));
-            const firstDataRow = rows.find(r => r.includes('2011'));
-            const separator = firstDataRow && firstDataRow.includes(';') ? ';' : ',';
-            const dataMatrix = rows.map(row => row.split(separator));
-            
-            let listTahun = [];
-            const cleanNum = (val) => {
-                if (!val || ["", "-", "n.a"].includes(val.trim())) return 0;
-                let s = val.trim();
-                if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
-                s = s.replace(',', '.');
-                return parseFloat(s) || 0;
-            };
+const ctx = document.getElementById('mainChart').getContext('2d');
+let currentChart;
+let dataSheet = [];
 
-            dataMatrix.forEach((cols) => {
-                const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
-                // Deteksi baris tahun
-                if (cols.some(c => c.trim().includes("2011")) && listTahun.length === 0) {
-                    listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
-                }
-                // Pemetaan data berdasarkan Indikator di Kolom A
-                if (cellA.includes("LAJU")) {
-                    listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("ADHB")) {
-                    listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("ADHK")) {
-                    listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("SUMBER")) {
-                    listTahun.forEach((thn, idx) => { database.sumber[thn] = cleanNum(cols[idx + 1]); });
-                }
-            });
+function formatAngka(angka) {
+    return new Intl.NumberFormat('id-ID').format(angka);
+}
 
-            // Data Distribusi (Bisa disesuaikan statis atau dinamis)
-            database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
-            
-            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA BERHASIL";
-            sesuaikanFilter();
-        } catch (error) {
-            document.getElementById('judulGrafik').innerText = "KONEKSI GAGAL";
-            console.error(error);
-        }
+// 🔥 AMBIL DATA DARI GOOGLE SHEETS
+async function ambilDataSheet() {
+    try {
+        const res = await fetch(sheetURL);
+        const text = await res.text();
+
+        const rows = text.trim().split("\n").slice(1);
+
+        dataSheet = rows
+            .map(r => r.split(","))
+            .filter(r => r.length >= 3)
+            .map(r => ({
+                tahun: r[0].trim(),
+                adhb: parseFloat(r[1]) || 0,
+                adhk: parseFloat(r[2]) || 0
+            }));
+
+        sesuaikanFilter();
+
+    } catch (e) {
+        alert("Gagal ambil data dari Google Sheets");
     }
+}
 
-    function sesuaikanFilter() {
-        const menu = document.getElementById('menuGrafik').value;
-        const filter = document.getElementById('filterTahun');
-        filter.innerHTML = ""; 
-        if (menu === 'laju' || menu === 'nilai' || menu === 'sumber') {
-            const opsi = [
-                {text: "2021 - 2026", val: "2021-2026"}, 
-                {text: "2016 - 2020", val: "2016-2020"}, 
-                {text: "2011 - 2015", val: "2011-2015"}
-            ];
-            opsi.forEach(o => { 
-                let el = document.createElement("option"); 
-                el.text = o.text; el.value = o.val; 
-                filter.add(el); 
-            });
-        } else {
-            Object.keys(database.adhb).reverse().forEach(t => { 
-                if(t && t.length === 4) { 
-                    let el = document.createElement("option"); 
-                    el.text = t; el.value = t; 
-                    filter.add(el); 
-                } 
-            });
-        }
-        updateChart();
+// 🔥 HITUNG LAJU
+function hitungLaju(data) {
+    let hasil = [];
+    for (let i = 1; i < data.length; i++) {
+        let prev = data[i-1].adhk;
+        let curr = data[i].adhk;
+        let val = prev === 0 ? 0 : ((curr - prev) / prev) * 100;
+        hasil.push(parseFloat(val.toFixed(2)));
     }
+    return hasil;
+}
 
-    function updateChart() {
-        const menu = document.getElementById('menuGrafik').value;
-        const periode = document.getElementById('filterTahun').value;
-        if (currentChart) currentChart.destroy();
-        
-        let labels = [];
-        if (periode.includes("-")) {
-            const [start, end] = periode.split("-").map(Number);
-            for(let i=start; i<=end; i++) labels.push(i.toString());
-        } else { labels = [periode]; }
+// 🔥 FILTER DROPDOWN
+function sesuaikanFilter() {
+    const filter = document.getElementById('filterTahun');
+    filter.innerHTML = "";
 
-        let config = {
-            plugins: [ChartDataLabels],
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        anchor: 'end', align: 'top',
-                        formatter: (val) => val.toLocaleString('id-ID') + (menu === 'laju' ? '%' : ''),
-                        font: { weight: 'bold', size: 10 }
-                    },
-                    legend: { position: 'bottom' }
-                }
+    const opsi = [
+        {text: "2021 - 2026", val: "2021-2026"},
+        {text: "2016 - 2020", val: "2016-2020"},
+        {text: "2011 - 2015", val: "2011-2015"}
+    ];
+
+    opsi.forEach(o => {
+        let opt = document.createElement("option");
+        opt.value = o.val;
+        opt.text = o.text;
+        filter.appendChild(opt);
+    });
+
+    updateChart();
+}
+
+// 🔥 UPDATE CHART
+function updateChart() {
+    const menu = document.getElementById('menuGrafik').value;
+    const periode = document.getElementById('filterTahun').value;
+
+    if (currentChart) currentChart.destroy();
+
+    let labels = [];
+    if (periode === "2021-2026") labels = ['2021','2022','2023','2024','2025','2026'];
+    else if (periode === "2016-2020") labels = ['2016','2017','2018','2019','2020'];
+    else labels = ['2011','2012','2013','2014','2015'];
+
+    const filtered = dataSheet.filter(d => labels.includes(d.tahun));
+
+    let config = {
+        plugins: [ChartDataLabels],
+        options: {
+            responsive: true,
+            animation: { duration: 800 },
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: (val) => formatAngka(val),
+                    font: { weight: 'bold' }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ": " + formatAngka(ctx.raw)
+                    }
+                },
+                legend: { position: 'bottom' }
             }
-        };
-
-        if (menu === 'laju') {
-            config.type = 'line';
-            config.data = { 
-                labels: labels, 
-                datasets: [{ 
-                    label: 'LAJU PERTUMBUHAN (%)', 
-                    data: labels.map(t => database.laju[t] || 0), 
-                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', 
-                    fill: true, tension: 0.3, pointRadius: 5 
-                }] 
-            };
-        } else if (menu === 'nilai') {
-            config.type = 'bar';
-            config.data = { 
-                labels: labels, 
-                datasets: [
-                    { label: 'ADHB (Miliar)', data: labels.map(t => database.adhb[t] || 0), backgroundColor: '#FF8C00' }, 
-                    { label: 'ADHK (Miliar)', data: labels.map(t => database.adhk[t] || 0), backgroundColor: '#27ae60' }
-                ] 
-            };
-        } else if (menu === 'distribusi') {
-            config.type = 'pie';
-            config.data = { 
-                labels: Object.keys(database.distribusi), 
-                datasets: [{ 
-                    data: Object.values(database.distribusi), 
-                    backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB'] 
-                }] 
-            };
-        } else if (menu === 'sumber') {
-            config.type = 'bar';
-            config.data = { 
-                labels: labels, 
-                datasets: [{ 
-                    label: 'SUMBER PERTUMBUHAN (POIN)', 
-                    data: labels.map(t => database.sumber[t] || 0), 
-                    backgroundColor: '#FF8C00' 
-                }] 
-            };
         }
-        currentChart = new Chart(ctx, config);
-        document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
+    };
+
+    // 🔹 LAJU
+    if (menu === 'laju') {
+        const lajuData = hitungLaju(filtered);
+
+        config.type = 'line';
+        config.data = {
+            labels: labels.slice(1),
+            datasets: [{
+                label: 'LAJU (%)',
+                data: lajuData,
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39,174,96,0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        };
     }
-    
-    fetchData();
+
+    // 🔹 NILAI
+    else if (menu === 'nilai') {
+        config.type = 'bar';
+        config.data = {
+            labels: filtered.map(d => d.tahun),
+            datasets: [
+                {
+                    label: 'ADHB',
+                    data: filtered.map(d => d.adhb),
+                    backgroundColor: '#FF8C00'
+                },
+                {
+                    label: 'ADHK',
+                    data: filtered.map(d => d.adhk),
+                    backgroundColor: '#27ae60'
+                }
+            ]
+        };
+    }
+
+    // 🔹 DISTRIBUSI (masih manual)
+    else if (menu === 'distribusi') {
+        config.type = 'pie';
+        config.data = {
+            labels: ['PERTANIAN','INDUSTRI','JASA','LAINNYA'],
+            datasets: [{
+                data: [25,30,20,25],
+                backgroundColor: ['#FF8C00','#27ae60','#F39C12','#2ECC71']
+            }]
+        };
+    }
+
+    // 🔹 SUMBER (manual)
+    else if (menu === 'sumber') {
+        config.type = 'bar';
+        config.data = {
+            labels: ['KONSUMSI','INVESTASI','EKSPOR','PEMERINTAH'],
+            datasets: [{
+                label: 'KONTRIBUSI',
+                data: [2.5,1.8,1.2,0.7],
+                backgroundColor: '#FF8C00'
+            }]
+        };
+    }
+
+    currentChart = new Chart(ctx, config);
+
+    document.getElementById('judulGrafik').innerText =
+        document.getElementById('menuGrafik').selectedOptions[0].text + " (" + periode + ")";
+}
+
+// 🚀 START
+ambilDataSheet();
 </script>
-</body>
-</html>
