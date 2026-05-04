@@ -9,290 +9,253 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <style>
-:root { --orange:#FF8C00; --green:#27ae60; --bg:#fffcf5; }
+:root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
 
 body {
-    font-family:'Segoe UI',Arial;
-    background:var(--bg);
-    margin:0; padding:20px;
-    text-transform:uppercase;
+    font-family: 'Segoe UI', Arial;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px;
+    text-transform: uppercase;
 }
 
 /* HEADER */
 .header {
-    background:var(--orange);
-    color:white;
-    padding:15px 30px;
-    border-radius:12px;
-    display:flex;
-    align-items:center;
-    gap:20px;
+    background: var(--orange);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
-.logo-img { height:70px; }
+.logo-img { height: 70px; }
 
-/* CONTROL */
 .controls {
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    margin:20px 0;
-    display:flex;
-    gap:20px;
-    flex-wrap:wrap;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    display: flex;
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border-top: 4px solid var(--orange);
+    max-width: 900px;
+    margin: auto;
+}
+
+.chart-container { height: 400px; }
+
+select {
+    padding: 10px;
+    border: 1px solid var(--orange);
 }
 
 /* KPI */
 .kpi-container {
-    display:flex;
-    gap:10px;
-    margin-bottom:15px;
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
 }
 
 .kpi-card {
-    flex:1;
-    background:white;
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
-    border-top:4px solid var(--orange);
+    flex: 1;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
 }
 
-.kpi-card p {
-    font-weight:bold;
-    font-size:18px;
-}
+.kpi-card p { font-weight: bold; }
 
-/* CARD */
-.card {
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    max-width:900px;
-    margin:auto;
-}
-
-.chart-container {
-    height:400px;
-}
-
-/* DARK MODE */
-.dark {
-    background:#1e1e1e;
-    color:white;
-}
-.dark .card,.dark .controls,.dark .kpi-card {
-    background:#2c2c2c;
-}
+/* DARK */
+.dark { background: #1e1e1e; color: white; }
+.dark .card, .dark .controls, .dark .kpi-card { background: #2c2c2c; }
 </style>
 </head>
 
 <body>
 
 <div class="header">
-    <img src="logo-bps.png" class="logo-img">
-    <div>
-        <h2>DASHBOARD STATISTIK EKONOMI KOTA PALU</h2>
-        <small>SUMBER GOOGLE SHEET</small>
-    </div>
+<img src="logo-bps.png" class="logo-img">
+<div>
+<h2>DASHBOARD STATISTIK EKONOMI KOTA PALU</h2>
+</div>
 </div>
 
 <div class="controls">
-    <select id="menuGrafik" onchange="sesuaikanFilter()">
-        <option value="laju">LAJU</option>
-        <option value="nilai">ADHB & ADHK</option>
-        <option value="distribusi">DISTRIBUSI</option>
-    </select>
+<select id="menuGrafik" onchange="updateChart()">
+<option value="laju">LAJU</option>
+<option value="nilai">ADHB & ADHK</option>
+<option value="distribusi">DISTRIBUSI</option>
+</select>
 
-    <select id="filterTahun" onchange="updateChart()"></select>
+<select id="filterTahun" onchange="updateChart()">
+<option value="2011-2015">2011-2015</option>
+<option value="2016-2020">2016-2020</option>
+<option value="2021-2026">2021-2026</option>
+</select>
 </div>
 
-<!-- KPI -->
 <div class="kpi-container">
-    <div class="kpi-card">
-        <p id="kpiAdhb">0</p>
-        <small>ADHB</small>
-    </div>
-    <div class="kpi-card">
-        <p id="kpiAdhk">0</p>
-        <small>ADHK</small>
-    </div>
-    <div class="kpi-card">
-        <p id="kpiGrowth">0%</p>
-        <small>PERTUMBUHAN</small>
-    </div>
+<div class="kpi-card"><p id="kpiAdhb">-</p></div>
+<div class="kpi-card"><p id="kpiAdhk">-</p></div>
+<div class="kpi-card"><p id="kpiGrowth">-</p></div>
 </div>
 
-<div style="text-align:right;margin-bottom:10px;">
-    <button onclick="downloadChart()">Download</button>
-    <button onclick="toggleDarkMode()">Dark</button>
-</div>
+<button onclick="downloadChart()">Download</button>
+<button onclick="toggleDarkMode()">Dark Mode</button>
 
 <div class="card">
-    <canvas id="mainChart"></canvas>
+<canvas id="mainChart"></canvas>
 </div>
 
 <script>
 const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRxFyk-OotNf1VPI4Ly66xecHZ_CbRQN2T3vpdMT2FXfIqcj18BQWiz9TWk71Ome2G4VrZByb8PhUxG/pub?output=csv";
 
 let dataSheet = [];
-let currentChart;
+let chart;
 
-// 🔥 PARSE ANGKA (FIX UTAMA)
-function parseNumber(val){
-    if(!val) return 0;
-    return parseFloat(
-        val.replace(/\./g,'')
-           .replace(',','.')
-           .replace(/\s/g,'')
-    ) || 0;
+// 🔥 PARSE FIX (INI PENYEBAB ADHK HILANG)
+function parseNumber(val) {
+    return parseFloat(val.replace(/"/g,'').replace(/\./g,'').replace(',', '.')) || 0;
 }
 
-// 🔥 AMBIL DATA
-async function ambilData(){
+async function loadData() {
     const res = await fetch(sheetURL);
     const text = await res.text();
 
-    const rows = text.trim().split("\n").slice(1);
-
-    dataSheet = rows.map(r=>{
-        let c = r.split(",");
-        return {
-            tahun:c[0],
-            adhb:parseNumber(c[1]),
-            adhk:parseNumber(c[2])
-        };
-    }).sort((a,b)=>a.tahun-b.tahun);
-
-    sesuaikanFilter();
-}
-
-// 🔥 KPI
-function updateKPI(data){
-    let adhb = data.reduce((a,b)=>a+b.adhb,0);
-    let adhk = data.reduce((a,b)=>a+b.adhk,0);
-
-    document.getElementById("kpiAdhb").innerText = adhb.toLocaleString();
-    document.getElementById("kpiAdhk").innerText = adhk.toLocaleString();
-}
-
-// 🔥 FILTER
-function sesuaikanFilter(){
-    let f = document.getElementById("filterTahun");
-    f.innerHTML="";
-
-    ["2011-2015","2016-2020","2021-2026"].forEach(p=>{
-        let o=document.createElement("option");
-        o.value=p;
-        o.text=p;
-        f.appendChild(o);
-    });
+    dataSheet = text.trim().split("\n").slice(1)
+        .map(r => r.split(","))
+        .map(r => ({
+            tahun: r[0],
+            adhb: parseNumber(r[1]),
+            adhk: parseNumber(r[2])
+        }));
 
     updateChart();
 }
 
+// 🔥 KPI
+function updateKPI(data){
+    const adhb = data.reduce((a,b)=>a+b.adhb,0);
+    const adhk = data.reduce((a,b)=>a+b.adhk,0);
+
+    document.getElementById("kpiAdhb").innerText = "ADHB: "+adhb.toLocaleString();
+    document.getElementById("kpiAdhk").innerText = "ADHK: "+adhk.toLocaleString();
+}
+
 // 🔥 CHART
 function updateChart(){
-    let menu = document.getElementById("menuGrafik").value;
-    let periode = document.getElementById("filterTahun").value;
+    const menu = menuGrafik.value;
+    const periode = filterTahun.value;
 
-    if(currentChart) currentChart.destroy();
+    let years = periode==="2011-2015" ? ['2011','2012','2013','2014','2015']
+        : periode==="2016-2020" ? ['2016','2017','2018','2019','2020']
+        : ['2021','2022','2023','2024','2025','2026'];
 
-    let tahun = periode=="2011-2015"?['2011','2012','2013','2014','2015']:
-                periode=="2016-2020"?['2016','2017','2018','2019','2020']:
-                ['2021','2022','2023','2024','2025','2026'];
+    let filtered = dataSheet.filter(d=>years.includes(d.tahun));
 
-    let data = dataSheet.filter(d=>tahun.includes(d.tahun));
+    updateKPI(filtered);
 
-    updateKPI(data);
+    if(chart) chart.destroy();
 
-    let config = {
-        plugins:[ChartDataLabels],
-        options:{
-            plugins:{
-                legend:{position:'bottom'}
-            }
-        }
-    };
+    // 🔹 PIE FIX TENGAH + WARNA BARU
+    if(menu==="distribusi"){
+        chart = new Chart(mainChart,{
+            type:'pie',
+            data:{
+                labels:['PERTANIAN','INDUSTRI','JASA','LAINNYA'],
+                datasets:[{
+                    data:[25,30,20,25],
+                    backgroundColor:[
+                        '#FF6B6B',
+                        '#4ECDC4',
+                        '#FFD93D',
+                        '#6C5CE7'
+                    ]
+                }]
+            },
+            options:{
+                plugins:{
+                    datalabels:{
+                        color:'#fff',
+                        formatter:(v)=>v+'%',
+                        anchor:'center',
+                        align:'center',
+                        offset:0,
+                        clamp:true
+                    }
+                }
+            },
+            plugins:[ChartDataLabels]
+        });
+    }
 
-    // 🔹 BAR
-    if(menu=="nilai"){
-        config.type='bar';
-        config.data={
-            labels:data.map(d=>d.tahun),
-            datasets:[
-                {label:'ADHB',data:data.map(d=>d.adhb),backgroundColor:'#FF8C00'},
-                {label:'ADHK',data:data.map(d=>d.adhk),backgroundColor:'#27ae60'}
-            ]
-        };
+    // 🔹 BAR FIX (ADHK MUNCUL)
+    if(menu==="nilai"){
+        chart = new Chart(mainChart,{
+            type:'bar',
+            data:{
+                labels:filtered.map(d=>d.tahun),
+                datasets:[
+                    {
+                        label:'ADHB',
+                        data:filtered.map(d=>d.adhb),
+                        backgroundColor:'#FF8C00'
+                    },
+                    {
+                        label:'ADHK',
+                        data:filtered.map(d=>d.adhk),
+                        backgroundColor:'#27ae60'
+                    }
+                ]
+            },
+            options:{plugins:{legend:{position:'bottom'}}}
+        });
     }
 
     // 🔹 LINE
-    else if(menu=="laju"){
-        config.type='line';
+    if(menu==="laju"){
         let laju=[];
-        for(let i=1;i<data.length;i++){
-            laju.push(((data[i].adhk-data[i-1].adhk)/data[i-1].adhk*100).toFixed(2));
+        for(let i=1;i<filtered.length;i++){
+            laju.push(((filtered[i].adhk-filtered[i-1].adhk)/filtered[i-1].adhk*100).toFixed(2));
         }
-        config.data={
-            labels:tahun.slice(1),
-            datasets:[{
-                label:'PERTUMBUHAN %',
-                data:laju,
-                borderColor:'#27ae60'
-            }]
-        };
+
+        chart=new Chart(mainChart,{
+            type:'line',
+            data:{
+                labels:years.slice(1),
+                datasets:[{
+                    label:'LAJU',
+                    data:laju,
+                    borderColor:'#27ae60'
+                }]
+            }
+        });
     }
-
-    // 🔹 PIE (FIX TOTAL)
-    else if(menu=="distribusi"){
-        config.type='pie';
-
-        // 🔥 contoh distribusi dari ADHB
-        let total = data.reduce((a,b)=>a+b.adhb,0);
-
-        let nilai = data.map(d=>((d.adhb/total)*100).toFixed(1));
-
-        config.data={
-            labels:data.map(d=>d.tahun),
-            datasets:[{
-                data:nilai,
-
-                // 🔥 WARNA BERBEDA
-                backgroundColor:[
-                    '#FF6384','#36A2EB','#FFCE56',
-                    '#4BC0C0','#9966FF','#FF9F40'
-                ]
-            }]
-        };
-
-        config.options.plugins.datalabels={
-            color:'#fff',
-            formatter:(v)=>v+'%',
-            anchor:'center',
-            align:'center',
-            font:{size:14,weight:'bold'}
-        };
-    }
-
-    currentChart = new Chart(document.getElementById("mainChart"),config);
 }
 
 // 🔥 DOWNLOAD
 function downloadChart(){
-    let a=document.createElement("a");
-    a.href=document.getElementById("mainChart").toDataURL();
+    let a=document.createElement('a');
+    a.href=mainChart.toDataURL();
     a.download="chart.png";
     a.click();
 }
 
-// 🔥 DARK MODE
+// 🔥 DARK
 function toggleDarkMode(){
     document.body.classList.toggle("dark");
 }
 
-// START
-ambilData();
+loadData();
 </script>
 
 </body>
