@@ -128,33 +128,54 @@ const ctx = document.getElementById('mainChart').getContext('2d');
 let currentChart;
 let dataSheet = [];
 
+// 🔥 FORMAT ANGKA
 function formatAngka(angka) {
     return new Intl.NumberFormat('id-ID').format(angka);
 }
 
-// 🔥 AMBIL DATA
+// 🔥 AMBIL DATA (VERSI AMAN)
 async function ambilDataSheet() {
     try {
-        document.getElementById("loading")?.remove();
+        tampilLoading(true);
 
         const res = await fetch(sheetURL);
         const text = await res.text();
 
-        const rows = text.split("\n").slice(1);
+        const rows = text.trim().split("\n").slice(1);
 
-        dataSheet = rows.map(row => {
-            const cols = row.split(",");
-            return {
-                tahun: cols[0],
-                adhb: parseFloat(cols[1]),
-                adhk: parseFloat(cols[2])
-            };
-        });
+        dataSheet = rows
+            .map(row => row.split(","))
+            .filter(cols => cols.length >= 3 && cols[0]) // buang baris kosong
+            .map(cols => ({
+                tahun: cols[0].trim(),
+                adhb: parseFloat(cols[1]) || 0,
+                adhk: parseFloat(cols[2]) || 0
+            }));
 
+        tampilLoading(false);
         sesuaikanFilter();
 
     } catch (err) {
+        tampilLoading(false);
         alert("Gagal ambil data dari Google Sheets");
+    }
+}
+
+// 🔥 LOADING
+function tampilLoading(status) {
+    let el = document.getElementById("loading");
+
+    if (status) {
+        if (!el) {
+            el = document.createElement("div");
+            el.id = "loading";
+            el.innerHTML = "MEMUAT DATA...";
+            el.style.textAlign = "center";
+            el.style.fontWeight = "bold";
+            document.body.appendChild(el);
+        }
+    } else {
+        el?.remove();
     }
 }
 
@@ -162,16 +183,19 @@ async function ambilDataSheet() {
 function hitungLaju(data) {
     let hasil = [];
     for (let i = 1; i < data.length; i++) {
-        let laju = ((data[i].adhk - data[i-1].adhk) / data[i-1].adhk) * 100;
-        hasil.push(parseFloat(laju.toFixed(2)));
+        if (data[i-1].adhk === 0) {
+            hasil.push(0);
+        } else {
+            let laju = ((data[i].adhk - data[i-1].adhk) / data[i-1].adhk) * 100;
+            hasil.push(parseFloat(laju.toFixed(2)));
+        }
     }
     return hasil;
 }
 
 function sesuaikanFilter() {
-    const menu = document.getElementById('menuGrafik').value;
     const filter = document.getElementById('filterTahun');
-    filter.innerHTML = ""; 
+    filter.innerHTML = "";
 
     const opsi = [
         {text: "2021 - 2026", val: "2021-2026"},
@@ -262,31 +286,6 @@ function updateChart() {
         };
     }
 
-    // 🔹 DISTRIBUSI (masih manual)
-    else if (menu === 'distribusi') {
-        config.type = 'pie';
-        config.data = {
-            labels: ['PERTANIAN','INDUSTRI','JASA','LAINNYA'],
-            datasets: [{
-                data: [25,30,20,25],
-                backgroundColor: ['#FF8C00','#27ae60','#F39C12','#2ECC71']
-            }]
-        };
-    }
-
-    // 🔹 SUMBER (manual)
-    else if (menu === 'sumber') {
-        config.type = 'bar';
-        config.data = {
-            labels: ['KONSUMSI','INVESTASI','EKSPOR','PEMERINTAH'],
-            datasets: [{
-                label: 'KONTRIBUSI',
-                data: [2.5,1.8,1.2,0.7],
-                backgroundColor: '#FF8C00'
-            }]
-        };
-    }
-
     currentChart = new Chart(ctx, config);
 
     document.getElementById('judulGrafik').innerText =
@@ -296,5 +295,3 @@ function updateChart() {
 // 🚀 START
 ambilDataSheet();
 </script>
-</body>
-</html>
