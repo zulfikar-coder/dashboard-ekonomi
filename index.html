@@ -81,13 +81,11 @@
 
 <div class="header">
     <div class="logo-container">
-        <!-- Pastikan file logo-bps.png ada di folder yang sama atau ganti dengan link URL gambar -->
         <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
     </div>
-
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>SUMBER DATA: GOOGLE SPREADSHEET (REAL-TIME)</h2>
+        <h2>SUMBER DATA: GOOGLE SPREADSHEET (2011-2026)</h2>
     </div>
 </div>
 
@@ -102,7 +100,7 @@
         </select>
     </div>
     <div>
-        <label id="labelFilter">PILIH PERIODE/TAHUN:</label>
+        <label id="labelFilter">PILIH PERIODE:</label>
         <select id="filterTahun" onchange="updateChart()"></select>
     </div>
 </div>
@@ -118,39 +116,53 @@
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
     let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
-    const tahunLengkap = Array.from({length: 16}, (_, i) => (2011 + i).toString());
-
-    // Link CSV dari Google Sheets Anda
+    
+    // Link CSV Anda
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
-    // Fungsi mengambil data dari Google Sheets
     async function fetchData() {
         try {
             const response = await fetch(sheetUrl);
             const csvText = await response.text();
             
-            // Parsing baris CSV
-            const rows = csvText.split('\n').map(row => row.split(','));
+            const separator = csvText.includes(';') ? ';' : ',';
+            const rows = csvText.split('\n').map(row => row.split(separator));
             
-            // Mapping data (Asumsi: Kolom 0=Tahun, 1=Laju, 2=ADHB, 3=ADHK)
-            rows.forEach((cols, index) => {
-                if (index > 0 && cols[0]) { // Lewati header
-                    const tahun = cols[0].trim();
-                    database.laju[tahun] = parseFloat(cols[1]) || 0;
-                    database.adhb[tahun] = parseFloat(cols[2]) || 0;
-                    database.adhk[tahun] = parseFloat(cols[3]) || 0;
+            // Header tahun ada di baris pertama, mulai kolom index 1 (B) sampai 16 (Q)
+            const listTahun = rows[0].slice(1, 17).map(t => t.trim().replace('*','').replace('**',''));
+
+            const cleanNum = (val) => {
+                if (!val) return 0;
+                return parseFloat(val.trim().replace(',', '.')) || 0;
+            };
+
+            // Loop setiap baris untuk mencari indikator
+            rows.forEach(cols => {
+                const indikator = cols[0] ? cols[0].toUpperCase() : "";
+                
+                // Cari Baris Laju Pertumbuhan
+                if (indikator.includes("LAJU")) {
+                    listTahun.forEach((thn, i) => { database.laju[thn] = cleanNum(cols[i+1]); });
+                }
+                // Cari Baris ADHB
+                if (indikator.includes("ADHB")) {
+                    listTahun.forEach((thn, i) => { database.adhb[thn] = cleanNum(cols[i+1]); });
+                }
+                // Cari Baris ADHK
+                if (indikator.includes("ADHK")) {
+                    listTahun.forEach((thn, i) => { database.adhk[thn] = cleanNum(cols[i+1]); });
                 }
             });
 
-            // Data dummy tambahan untuk Distribusi & Sumber (bisa dipindah ke Sheet jika mau)
+            // Data Dummy untuk Pie Chart (Bisa ditambahkan di baris lain di Sheet jika perlu)
             database.distribusi = { "PERTANIAN": 12.45, "INDUSTRI": 18.32, "JASA": 45.67, "LAINNYA": 23.56 };
             database.sumber = { "KONSUMSI": 2.85, "INVESTASI": 1.42, "EKSPOR": 1.15, "PEMERINTAH": 0.67 };
 
-            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA";
+            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA BERHASIL DIMUAT";
             sesuaikanFilter();
         } catch (error) {
             console.error("Error Fetching Data:", error);
-            document.getElementById('judulGrafik').innerText = "GAGAL MEMUAT DATA";
+            document.getElementById('judulGrafik').innerText = "GAGAL MEMUAT DATA DARI SHEET";
         }
     }
 
@@ -170,7 +182,8 @@
                 el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
-            [...tahunLengkap].reverse().forEach(t => {
+            // Untuk Pie Chart tampilkan pilihan tahun tunggal
+            Object.keys(database.adhb).reverse().forEach(t => {
                 let el = document.createElement("option");
                 el.text = t; el.value = t; filter.add(el);
             });
@@ -200,9 +213,16 @@
             }
         };
 
+        let labels = [];
+        if (periode.includes("-")) {
+            const start = parseInt(periode.split("-")[0]);
+            const end = parseInt(periode.split("-")[1]);
+            for(let i=start; i<=end; i++) labels.push(i.toString());
+        } else {
+            labels = [periode];
+        }
+
         if (menu === 'laju') {
-            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
-                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
             config.type = 'line';
             config.data = {
                 labels: labels,
@@ -215,8 +235,6 @@
             };
         } 
         else if (menu === 'nilai') {
-            const labels = periode === "2021-2026" ? ['2021','2022','2023','2024','2025','2026'] : 
-                           periode === "2016-2020" ? ['2016','2017','2018','2019','2020'] : ['2011','2012','2013','2014','2015'];
             config.type = 'bar';
             config.data = {
                 labels: labels,
@@ -243,20 +261,15 @@
             config.type = 'bar';
             config.data = {
                 labels: Object.keys(database.sumber),
-                datasets: [{ 
-                    label: 'KONTRIBUSI (POIN)', 
-                    data: Object.values(database.sumber), 
-                    backgroundColor: '#FF8C00' 
-                }]
+                datasets: [{ label: 'KONTRIBUSI (POIN)', data: Object.values(database.sumber), backgroundColor: '#FF8C00' }]
             };
         }
 
         currentChart = new Chart(ctx, config);
-        const menuText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
-        document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
+        const menuTitle = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
+        document.getElementById('judulGrafik').innerText = menuTitle + " (" + periode + ")";
     }
 
-    // Jalankan pengambilan data pertama kali
     fetchData();
 </script>
 
