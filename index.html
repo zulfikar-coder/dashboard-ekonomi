@@ -61,28 +61,29 @@
 <script>
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
+    // Inisialisasi database kosong
     let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
     
-    // Link CSV Google Sheets Anda
+    // Link CSV dari Google Sheets Anda
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
     // 1. Fungsi Utama Mengambil Data
     async function fetchData() {
         try {
             const response = await fetch(sheetUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) throw new Error('Gagal mengambil data');
             
             const csvText = await response.text();
+            // Deteksi pemisah (koma atau titik koma)
             const separator = csvText.includes(';') ? ';' : ',';
             const rows = csvText.split('\n').filter(row => row.trim() !== '').map(row => row.split(separator));
             
             let listTahun = [];
-            database.laju = {}; database.adhb = {}; database.adhk = {};
 
+            // Fungsi untuk membersihkan format angka Indonesia (koma ke titik)
             const cleanNum = (val) => {
                 if (!val || val.trim() === "-" || val.trim() === "n.a") return 0;
                 let s = val.trim();
-                // Deteksi jika ada banyak titik (pemisah ribuan)
                 if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
                 s = s.replace(',', '.');
                 return parseFloat(s) || 0;
@@ -92,29 +93,29 @@
                 const cols = rows[i];
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
 
-                // Cari baris tahun (mencari angka 2011 di kolom B)
-                if (cols[1] && cols[1].trim().includes("2011") && listTahun.length === 0) {
+                // Cari baris tahun (Baris 3 di spreadsheet Anda)
+                if (cellA.includes("INDIKATOR") || (cols[1] && cols[1].trim().includes("2011"))) {
                     listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
                     continue;
                 }
 
-                if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
+                // Ambil data berdasarkan teks di Kolom A
+                if (cellA.includes("LAJU")) {
                     listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("ADHB")) {
                     listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("ADHK")) {
                     listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
+                } else if (cellA.includes("SUMBER")) {
+                    listTahun.forEach((thn, idx) => { database.sumber[thn] = cleanNum(cols[idx + 1]); });
                 }
             }
 
-            database.distribusi = { "PERTANIAN": 12.45, "INDUSTRI": 18.32, "JASA": 45.67, "LAINNYA": 23.56 };
-            database.sumber = { "KONSUMSI": 2.85, "INVESTASI": 1.42, "EKSPOR": 1.15, "PEMERINTAH": 0.67 };
-
-            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA BERHASIL";
+            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA BERHASIL DIMUAT";
             sesuaikanFilter();
         } catch (error) {
             console.error("Fetch error:", error);
-            document.getElementById('judulGrafik').innerText = "KONEKSI GAGAL / TIME OUT";
+            document.getElementById('judulGrafik').innerText = "KONEKSI GAGAL / DATA TIDAK DITEMUKAN";
         }
     }
 
@@ -123,17 +124,20 @@
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
         filter.innerHTML = ""; 
+        
         const opsi = [
             {text: "2021 - 2026", val: "2021-2026"},
             {text: "2016 - 2020", val: "2016-2020"},
             {text: "2011 - 2015", val: "2011-2015"}
         ];
+
         if (menu === 'laju' || menu === 'nilai') {
             opsi.forEach(o => {
                 let el = document.createElement("option");
                 el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
+            // Untuk Distribusi/Sumber tampilkan tahun tunggal
             Object.keys(database.adhb).reverse().forEach(t => {
                 if(t) { let el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); }
             });
@@ -184,27 +188,29 @@
             config.data = {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB', data: labels.map(t => database.adhb[t] || 0), backgroundColor: '#FF8C00' },
-                    { label: 'ADHK', data: labels.map(t => database.adhk[t] || 0), backgroundColor: '#27ae60' }
+                    { label: 'ADHB (Miliar)', data: labels.map(t => database.adhb[t] || 0), backgroundColor: '#FF8C00' },
+                    { label: 'ADHK (Miliar)', data: labels.map(t => database.adhk[t] || 0), backgroundColor: '#27ae60' }
                 ]
             };
         } else if (menu === 'distribusi') {
+            // Data distribusi diambil secara statis atau bisa Anda kembangkan untuk baca baris Pertanian/Industri
             config.type = 'pie';
             config.data = {
-                labels: Object.keys(database.distribusi),
-                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71'] }]
+                labels: ['PERTANIAN', 'INDUSTRI', 'KONSTRUKSI', 'PERDAGANGAN', 'JASA'],
+                datasets: [{ data: [11.9, 11.3, 18.8, 25.5, 32.5], backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB'] }]
             };
         } else if (menu === 'sumber') {
             config.type = 'bar';
-            config.data = { 
-                labels: Object.keys(database.sumber),
-                datasets: [{ label: 'KONTRIBUSI', data: Object.values(database.sumber), backgroundColor: '#FF8C00' }]
+            config.data = {
+                labels: labels,
+                datasets: [{ label: 'SUMBER PERTUMBUHAN (POIN)', data: labels.map(t => database.sumber[t] || 0), backgroundColor: '#FF8C00' }]
             };
         }
+
         currentChart = new Chart(ctx, config);
         document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    // Jalankan pertama kali
+    // Eksekusi pertama kali
     fetchData();
 </script>
