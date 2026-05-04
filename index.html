@@ -7,21 +7,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
+        :root { --orange: #FF8C00; --bg: #fffcf5; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-transform: uppercase; }
         
-        /* Header dengan satu logo di kiri */
         .header { 
             background: var(--orange); 
             color: white; 
-            padding: 15px 30px;
+            padding: 15px 30px; 
             border-radius: 12px; 
             display: flex; 
-            justify-content: flex-start; /* Logo di kiri, teks di sebelahnya */
+            justify-content: flex-start; 
             align-items: center; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
             margin-bottom: 20px; 
-            gap: 20px; /* Jarak antara logo dan teks */
+            gap: 20px; 
         }
 
         .header-text { text-align: left; }
@@ -29,57 +28,27 @@
         .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
 
         .logo-container {
-            background: white;
-            padding: 8px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .logo-img { 
-            height: 75px; /* Sedikit diperbesar agar pas dengan judul */
-            width: auto; 
-        }
+        .logo-img { height: 75px; width: auto; }
 
-        /* PERBAIKAN: Menghilangkan garis hijau (border-left) */
         .controls { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Shadow tetap ada */
-            display: flex; 
-            gap: 20px; 
-            flex-wrap: wrap; 
-            /* border-left dihapus di sini */
+            background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 20px; flex-wrap: wrap; 
         }
 
         .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            border-top: 4px solid var(--orange);
-            max-width: 900px; 
-            margin: 0 auto; 
+            background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange); max-width: 950px; margin: 0 auto; 
         }
 
-        .chart-container {
-            position: relative;
-            margin: auto;
-            height: 400px;
-            width: 100%;
-        }
+        .chart-container { position: relative; margin: auto; height: 400px; width: 100%; }
 
         h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
         select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; text-transform: uppercase; cursor: pointer; }
-        
-        /* PERBAIKAN WARNA LABEL: Ganti hijau jadi orange agar serasi */
         label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--orange); }
 
         @media (max-width: 768px) {
-            .header h1 { font-size: 1rem; }
+            .header h1 { font-size: 1.1rem; }
             .logo-img { height: 50px; }
             .header-text { text-align: center; }
         }
@@ -91,207 +60,105 @@
     <div class="logo-container">
         <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
     </div>
-
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>PERIODE (2011 - 2026)</h2>
+        <h2>INTEGRASI DATA REAL-TIME GOOGLE SHEETS</h2>
     </div>
 </div>
 
 <div class="controls">
     <div>
-        <label>PILIH JENIS GRAFIK:</label>
-        <select id="menuGrafik" onchange="sesuaikanFilter()">
-            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
-            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
-            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
-            <option value="sumber">SUMBER PERTUMBUHAN (BATANG)</option>
+        <label>PILIH JENIS DATA:</label>
+        <select id="menuGrafik" onchange="muatDataDariSheets()">
+            <option value="1">LAJU PERTUMBUHAN EKONOMI (%)</option>
+            <option value="2">PDRB ADHB (MILIAR RUPIAH)</option>
         </select>
     </div>
     <div>
-        <label id="labelFilter">PILIH PERIODE:</label>
-        <select id="filterTahun" onchange="updateChart()"></select>
+        <label>PILIH RENTANG:</label>
+        <select id="filterTahun" onchange="muatDataDariSheets()">
+            <option value="baru">PERIODE TERBARU</option>
+        </select>
     </div>
 </div>
 
 <div class="card">
-    <h3 id="judulGrafik">VISUALISASI DATA</h3>
+    <h3 id="judulGrafik">MEMUAT DATA DARI GOOGLE SHEETS...</h3>
     <div class="chart-container">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv";
+    // Link CSV yang Anda berikan
+    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRI7NAsXk7i6MBGcgb2gZTM1KY-LqR9cpYD0QiDtR-Kr0ax1Vsaf8z8DIARr2e9pw/pub?output=csv';
 
-const ctx = document.getElementById('mainChart').getContext('2d');
-let currentChart;
-let dataSheet = [];
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    let currentChart;
 
-// 🔥 FORMAT ANGKA
-function formatAngka(angka) {
-    return new Intl.NumberFormat('id-ID').format(angka);
-}
+    async function muatDataDariSheets() {
+        const barisPilihan = document.getElementById('menuGrafik').value;
+        
+        try {
+            const response = await fetch(URL_CSV);
+            const csvText = await response.text();
+            const barisData = csvText.split('\n');
 
-// 🔥 AMBIL DATA (VERSI AMAN)
-async function ambilDataSheet() {
-    try {
-        tampilLoading(true);
+            // Mengambil data dari baris sesuai pilihan menu (Baris 1 atau Baris 2)
+            // Memisahkan dengan koma dan mengambil angka (mulai dari kolom ke-2)
+            const rowData = barisData[parseInt(barisPilihan)].split(',');
+            const labelData = rowData[0]; // Nama kategori
+            const values = rowData.slice(1).map(val => parseFloat(val.replace(',', '.')) || 0);
 
-        const res = await fetch(sheetURL);
-        const text = await res.text();
+            // Label tahun (Disesuaikan dengan jumlah kolom di Sheets Anda)
+            const labels = ['2021', '2022', '2023', '2024', '2025', '2026'];
 
-        const rows = text.trim().split("\n").slice(1);
+            updateChart(labelData, labels, values);
+            document.getElementById('judulGrafik').innerText = "VISUALISASI " + labelData;
 
-        dataSheet = rows
-            .map(row => row.split(","))
-            .filter(cols => cols.length >= 3 && cols[0]) // buang baris kosong
-            .map(cols => ({
-                tahun: cols[0].trim(),
-                adhb: parseFloat(cols[1]) || 0,
-                adhk: parseFloat(cols[2]) || 0
-            }));
-
-        tampilLoading(false);
-        sesuaikanFilter();
-
-    } catch (err) {
-        tampilLoading(false);
-        alert("Gagal ambil data dari Google Sheets");
-    }
-}
-
-// 🔥 LOADING
-function tampilLoading(status) {
-    let el = document.getElementById("loading");
-
-    if (status) {
-        if (!el) {
-            el = document.createElement("div");
-            el.id = "loading";
-            el.innerHTML = "MEMUAT DATA...";
-            el.style.textAlign = "center";
-            el.style.fontWeight = "bold";
-            document.body.appendChild(el);
-        }
-    } else {
-        el?.remove();
-    }
-}
-
-// 🔥 HITUNG LAJU
-function hitungLaju(data) {
-    let hasil = [];
-    for (let i = 1; i < data.length; i++) {
-        if (data[i-1].adhk === 0) {
-            hasil.push(0);
-        } else {
-            let laju = ((data[i].adhk - data[i-1].adhk) / data[i-1].adhk) * 100;
-            hasil.push(parseFloat(laju.toFixed(2)));
+        } catch (e) {
+            console.error("Gagal menarik data:", e);
+            document.getElementById('judulGrafik').innerText = "GAGAL MEMUAT DATA. CEK KONEKSI/LINK.";
         }
     }
-    return hasil;
-}
 
-function sesuaikanFilter() {
-    const filter = document.getElementById('filterTahun');
-    filter.innerHTML = "";
+    function updateChart(datasetLabel, labels, dataValues) {
+        if (currentChart) currentChart.destroy();
 
-    const opsi = [
-        {text: "2021 - 2026", val: "2021-2026"},
-        {text: "2016 - 2020", val: "2016-2020"},
-        {text: "2011 - 2015", val: "2011-2015"}
-    ];
-
-    opsi.forEach(o => {
-        let el = document.createElement("option");
-        el.text = o.text;
-        el.value = o.val;
-        filter.add(el);
-    });
-
-    updateChart();
-}
-
-function updateChart() {
-    const menu = document.getElementById('menuGrafik').value;
-    const periode = document.getElementById('filterTahun').value;
-
-    if (currentChart) currentChart.destroy();
-
-    let labels = [];
-    if (periode === "2021-2026") labels = ['2021','2022','2023','2024','2025','2026'];
-    else if (periode === "2016-2020") labels = ['2016','2017','2018','2019','2020'];
-    else labels = ['2011','2012','2013','2014','2015'];
-
-    const filtered = dataSheet.filter(d => labels.includes(d.tahun));
-
-    let config = {
-        plugins: [ChartDataLabels],
-        options: {
-            responsive: true,
-            animation: { duration: 800 },
-            plugins: {
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    formatter: (val) => formatAngka(val),
-                    font: { weight: 'bold' }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => ctx.dataset.label + ": " + formatAngka(ctx.raw)
-                    }
-                },
-                legend: { position: 'bottom' }
-            }
-        }
-    };
-
-    // 🔹 LAJU
-    if (menu === 'laju') {
-        const lajuData = hitungLaju(filtered);
-
-        config.type = 'line';
-        config.data = {
-            labels: labels.slice(1),
-            datasets: [{
-                label: 'LAJU (%)',
-                data: lajuData,
-                borderColor: '#27ae60',
-                backgroundColor: 'rgba(39,174,96,0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        };
-    }
-
-    // 🔹 NILAI
-    else if (menu === 'nilai') {
-        config.type = 'bar';
-        config.data = {
-            labels: filtered.map(d => d.tahun),
-            datasets: [
-                {
-                    label: 'ADHB',
-                    data: filtered.map(d => d.adhb),
-                    backgroundColor: '#FF8C00'
-                },
-                {
-                    label: 'ADHK',
-                    data: filtered.map(d => d.adhk),
-                    backgroundColor: '#27ae60'
+        currentChart = new Chart(ctx, {
+            type: datasetLabel.includes('LAJU') ? 'line' : 'bar',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: datasetLabel,
+                    data: dataValues,
+                    borderColor: '#FF8C00',
+                    backgroundColor: datasetLabel.includes('LAJU') ? 'rgba(255, 140, 0, 0.1)' : '#FF8C00',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: 'bold' },
+                        formatter: (val) => val.toLocaleString('id-ID')
+                    },
+                    legend: { position: 'bottom' }
                 }
-            ]
-        };
+            }
+        });
     }
 
-    currentChart = new Chart(ctx, config);
-
-    document.getElementById('judulGrafik').innerText =
-        document.getElementById('menuGrafik').selectedOptions[0].text + " (" + periode + ")";
-}
-
-// 🚀 START
-ambilDataSheet();
+    // Jalankan fungsi saat halaman dibuka
+    muatDataDariSheets();
 </script>
+
+</body>
+</html>
