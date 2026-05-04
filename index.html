@@ -89,22 +89,22 @@
 
                 // 2. Deteksi Baris Data
                 const cleanNum = (val) => {
-                    if (!val) return 0;
-                    let s = val.trim().replace(/\./g, '').replace(',', '.');
-                    return parseFloat(s) || 0;
-                };
-
-                if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
-                    listTahun.forEach((thn, i) => { database.laju[thn] = cleanNum(cols[i+1]); });
-                }
-                else if (cellA.includes("ADHB")) {
-                    listTahun.forEach((thn, i) => { database.adhb[thn] = cleanNum(cols[i+1]); });
-                }
-                else if (cellA.includes("ADHK")) {
-                    listTahun.forEach((thn, i) => { database.adhk[thn] = cleanNum(cols[i+1]); });
-                }
-            });
-
+    if (val === undefined || val === null || val.trim() === "" || val.trim() === "-") return 0;
+    
+    let s = val.trim();
+    
+    // Hilangkan semua titik (asumsi titik adalah pemisah ribuan: 26.170 -> 26170)
+    // Tapi jika titik adalah desimal, gunakan logika di bawah
+    if ((s.match(/\./g) || []).length > 1) {
+        s = s.replace(/\./g, ''); 
+    }
+    
+    // Ubah koma desimal menjadi titik agar dibaca sistem (Indonesia: 5,5 -> 5.5)
+    s = s.replace(',', '.');
+    
+    const hasil = parseFloat(s);
+    return isNaN(hasil) ? 0 : hasil;
+};
             // Data dummy tambahan
             database.distribusi = { "PERTANIAN": 12.45, "INDUSTRI": 18.32, "JASA": 45.67, "LAINNYA": 23.56 };
             database.sumber = { "KONSUMSI": 2.85, "INVESTASI": 1.42, "EKSPOR": 1.15, "PEMERINTAH": 0.67 };
