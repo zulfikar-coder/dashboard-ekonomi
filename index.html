@@ -59,9 +59,6 @@
 </div>
 
 <script>
-    <!-- ... bagian kode HTML lainnya ... -->
-
-<script>
     const ctx = document.getElementById('mainChart').getContext('2d');
     let currentChart;
     let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
@@ -69,7 +66,7 @@
     // Link CSV Google Sheets Anda
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
-    // MASUKKAN FUNGSI fetchData DI SINI (Ganti yang lama)
+    // 1. Fungsi Utama Mengambil Data
     async function fetchData() {
         try {
             const response = await fetch(sheetUrl);
@@ -82,20 +79,24 @@
             let listTahun = [];
             database.laju = {}; database.adhb = {}; database.adhk = {};
 
+            const cleanNum = (val) => {
+                if (!val || val.trim() === "-" || val.trim() === "n.a") return 0;
+                let s = val.trim();
+                // Deteksi jika ada banyak titik (pemisah ribuan)
+                if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
+                s = s.replace(',', '.');
+                return parseFloat(s) || 0;
+            };
+
             for (let i = 0; i < rows.length; i++) {
                 const cols = rows[i];
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
 
+                // Cari baris tahun (mencari angka 2011 di kolom B)
                 if (cols[1] && cols[1].trim().includes("2011") && listTahun.length === 0) {
                     listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
                     continue;
                 }
-
-                const cleanNum = (val) => {
-                    if (!val || val.trim() === "-" || val.trim() === "n.a") return 0;
-                    let s = val.trim().replace(/\./g, '').replace(',', '.');
-                    return parseFloat(s) || 0;
-                };
 
                 if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
                     listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
@@ -117,71 +118,7 @@
         }
     }
 
-    // Pastikan fungsi sesuaikanFilter(), updateChart(), dan fetchData() tetap dipanggil
-    function sesuaikanFilter() { ... }
-    function updateChart() { ... }
-    
-    fetchData(); // Panggilan utama agar data dimuat saat web dibuka
-    
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    let currentChart;
-    let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} }; 
-    
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
-
-    async function fetchData() {
-        try {
-            const response = await fetch(sheetUrl);
-            const csvText = await response.text();
-            
-            const separator = csvText.includes(';') ? ';' : ',';
-            const rows = csvText.split('\n').map(row => row.split(separator));
-            
-            // MENCARI BARIS TAHUN & BARIS DATA SECARA DINAMIS
-            let listTahun = [];
-            database.laju = {}; database.adhb = {}; database.adhk = {};
-
-            rows.forEach((cols) => {
-                const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
-
-                // 1. Deteksi Baris Tahun (Cari baris yang kolom B-nya berisi angka tahun)
-                if (cellA.includes("INDIKATOR") || (cols[1] && cols[1].trim().startsWith("20"))) {
-                    if (listTahun.length === 0) {
-                        listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
-                    }
-                }
-
-                // 2. Deteksi Baris Data
-                const cleanNum = (val) => {
-    if (val === undefined || val === null || val.trim() === "" || val.trim() === "-") return 0;
-    
-    let s = val.trim();
-    
-    // Hilangkan semua titik (asumsi titik adalah pemisah ribuan: 26.170 -> 26170)
-    // Tapi jika titik adalah desimal, gunakan logika di bawah
-    if ((s.match(/\./g) || []).length > 1) {
-        s = s.replace(/\./g, ''); 
-    }
-    
-    // Ubah koma desimal menjadi titik agar dibaca sistem (Indonesia: 5,5 -> 5.5)
-    s = s.replace(',', '.');
-    
-    const hasil = parseFloat(s);
-    return isNaN(hasil) ? 0 : hasil;
-};
-            // Data dummy tambahan
-            database.distribusi = { "PERTANIAN": 12.45, "INDUSTRI": 18.32, "JASA": 45.67, "LAINNYA": 23.56 };
-            database.sumber = { "KONSUMSI": 2.85, "INVESTASI": 1.42, "EKSPOR": 1.15, "PEMERINTAH": 0.67 };
-
-            document.getElementById('judulGrafik').innerText = "VISUALISASI DATA";
-            sesuaikanFilter();
-        } catch (error) {
-            console.error(error);
-            document.getElementById('judulGrafik').innerText = "GAGAL MEMUAT DATA";
-        }
-    }
-
-    // Fungsi sesuaikanFilter() dan updateChart() tetap sama seperti sebelumnya
+    // 2. Fungsi Filter Tahun
     function sesuaikanFilter() {
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
@@ -204,10 +141,12 @@
         updateChart();
     }
 
+    // 3. Fungsi Gambar Grafik
     function updateChart() {
         const menu = document.getElementById('menuGrafik').value;
         const periode = document.getElementById('filterTahun').value;
         if (currentChart) currentChart.destroy();
+        
         let labels = [];
         if (periode.includes("-")) {
             const [start, end] = periode.split("-").map(Number);
@@ -257,7 +196,7 @@
             };
         } else if (menu === 'sumber') {
             config.type = 'bar';
-            config.data = {
+            config.data = { 
                 labels: Object.keys(database.sumber),
                 datasets: [{ label: 'KONTRIBUSI', data: Object.values(database.sumber), backgroundColor: '#FF8C00' }]
             };
@@ -266,5 +205,6 @@
         document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
+    // Jalankan pertama kali
     fetchData();
 </script>
