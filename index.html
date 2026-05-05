@@ -40,7 +40,9 @@
 
 <div class="header">
     <div class="logo-container"><img src="logo-bps.png" alt="BPS" class="logo-img"></div>
-    <div class="header-text"><h1>DASHBOARD EKONOMI KOTA PALU</h1><small id="status">MEMUAT DATABASE...</small></div>
+    <div class="header-text"><h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <h3>Periode 2011-2026</h3>
+        <small id="status">MEMUAT DATABASE...</small></div>
 </div>
 
 <div class="controls">
@@ -81,23 +83,21 @@
             const response = await fetch(sheetUrl);
             const csvText = await response.text();
             
-            // Perbaikan: Membersihkan karakter \r (carriage return) yang sering merusak parsing CSV
+            // PERBAIKAN UTAMA: Membersihkan karakter tersembunyi (\r) yang merusak kolom ganjil
             const rows = csvText.split('\n').map(row => row.replace('\r', '').trim()).filter(row => row !== "");
             
-            // Deteksi pemisah secara dinamis (titik koma atau koma)
+            // Deteksi pemisah secara dinamis
             const headerRow = rows.find(r => r.includes('2011')) || rows[0];
             const separator = headerRow.includes(';') ? ';' : ',';
             const dataMatrix = rows.map(row => row.split(separator));
             
             let listTahun = [];
             
-            // Fungsi pembersih angka: Menangani format Indonesia (Titik ribuan, Koma desimal)
+            // Fungsi pembersih angka untuk format Indonesia
             const cleanNum = (val) => {
                 if (!val || ["", "-", "n.a"].includes(val.trim())) return 0;
                 let s = val.trim();
-                // Jika titik muncul lebih dari sekali, itu pemisah ribuan
                 if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
-                // Jika hanya satu titik tapi ada koma, titik itu ribuan
                 else if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '');
                 
                 s = s.replace(',', '.');
@@ -107,13 +107,12 @@
             dataMatrix.forEach((cols) => {
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
                 
-                // Cari Baris Tahun (Contoh: Indikator, 2011, 2012, ...)
+                // Cari Baris Tahun
                 if (cols.some(c => c.trim() === "2011") && listTahun.length === 0) {
-                    // Ambil kolom B sampai Q (Tahun 2011-2026)
                     listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
                 }
 
-                // Pemetaan Data Berdasarkan Teks di Kolom A
+                // Pemetaan Data
                 if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN EKONOMI")) {
                     listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("ADHB")) {
@@ -123,7 +122,6 @@
                 } else if (cellA.includes("SUMBER")) {
                     listTahun.forEach((thn, idx) => { database.sumber[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("DISTRIBUSI")) {
-                    // Ambil kategori distribusi (Pertanian, Industri, dll)
                     const kategori = cellA.replace("DISTRIBUSI", "").replace("(%)", "").trim();
                     if (!database.distribusi[kategori]) database.distribusi[kategori] = {};
                     listTahun.forEach((thn, idx) => { database.distribusi[kategori][thn] = cleanNum(cols[idx + 1]); });
@@ -134,7 +132,6 @@
             sesuaikanFilter();
         } catch (error) {
             document.getElementById('status').innerText = "KONEKSI GAGAL";
-            console.error(error);
         }
     }
 
@@ -142,19 +139,13 @@
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
         filter.innerHTML = ""; 
-        const opsiRentang = [
-            {text: "2021 - 2026", val: "2021-2026"},
-            {text: "2016 - 2020", val: "2016-2020"},
-            {text: "2011 - 2015", val: "2011-2015"}
-        ];
         
         if (menu !== 'distribusi') {
+            const opsiRentang = [{text: "2021 - 2026", val: "2021-2026"}, {text: "2016 - 2020", val: "2016-2020"}, {text: "2011 - 2015", val: "2011-2015"}];
             opsiRentang.forEach(o => {
-                let el = document.createElement("option");
-                el.text = o.text; el.value = o.val; filter.add(el);
+                let el = document.createElement("option"); el.text = o.text; el.value = o.val; filter.add(el);
             });
         } else {
-            // Untuk Pie Chart, pilih tahun tunggal secara menurun
             Object.keys(database.adhb).reverse().forEach(t => {
                 if(t) { let el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); }
             });
@@ -166,14 +157,13 @@
         const menu = document.getElementById('menuGrafik').value;
         const periode = document.getElementById('filterTahun').value;
         const isDark = document.body.classList.contains('dark');
-        
         if (currentChart) currentChart.destroy();
         
-        let labels = [];
+        let labels = periode.includes("-") ? [] : [periode];
         if (periode.includes("-")) {
             const [start, end] = periode.split("-").map(Number);
             for(let i=start; i<=end; i++) labels.push(i.toString());
-        } else { labels = [periode]; }
+        }
 
         let config = {
             plugins: [ChartDataLabels],
@@ -184,18 +174,28 @@
                         color: isDark ? '#fff' : '#444',
                         font: { weight: 'bold', size: 10 },
                         formatter: (val) => val.toLocaleString('id-ID') + (menu === 'laju' || menu === 'distribusi' ? '%' : ''),
-                        // Sembunyikan label jika nilainya 0 agar tidak berantakan
-                        display: (context) => context.dataset.data[context.dataIndex] !== 0
+                        display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== 0
                     },
-                    legend: { 
-                        position: 'bottom',
-                        labels: { color: isDark ? '#eee' : '#333', padding: 20 }
-                    }
+                    legend: { labels: { color: isDark ? '#eee' : '#333' }, position: 'bottom' }
                 }
             }
         };
 
-        if (menu === 'nilai') {
+        if (menu === 'distribusi') {
+            config.type = 'pie';
+            const thn = periode;
+            const kategoriList = Object.keys(database.distribusi);
+            const dataPie = kategoriList.map(kat => database.distribusi[kat][thn] || 0);
+            config.data = {
+                labels: kategoriList,
+                datasets: [{ 
+                    data: dataPie, 
+                    backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB', '#9B59B6'] 
+                }]
+            };
+            config.options.plugins.datalabels.color = '#fff';
+            config.options.plugins.datalabels.anchor = 'center';
+        } else if (menu === 'nilai') {
             config.type = 'bar';
             config.data = {
                 labels: labels,
@@ -209,36 +209,15 @@
             config.data = {
                 labels: labels,
                 datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)',
-                    data: labels.map(t => database.laju[t] || 0),
-                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                    fill: true, tension: 0.3, pointRadius: 5
+                    label: 'LAJU (%)', data: labels.map(t => database.laju[t] || 0),
+                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3
                 }]
             };
-        } else if (menu === 'distribusi') {
-            config.type = 'pie';
-            const thn = periode;
-            const kategoriList = Object.keys(database.distribusi);
-            const dataPie = kategoriList.map(kat => database.distribusi[kat][thn] || 0);
-            
-            config.data = {
-                labels: kategoriList,
-                datasets: [{ 
-                    data: dataPie, 
-                    backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB', '#9B59B6'] 
-                }]
-            };
-            config.options.plugins.datalabels.color = '#fff'; // Putih agar kontras di dalam pie
-            config.options.plugins.datalabels.anchor = 'center';
         } else if (menu === 'sumber') {
             config.type = 'bar';
             config.data = {
                 labels: labels,
-                datasets: [{ 
-                    label: 'SUMBER PERTUMBUHAN (POIN)', 
-                    data: labels.map(t => database.sumber[t] || 0), 
-                    backgroundColor: '#FF8C00' 
-                }]
+                datasets: [{ label: 'SUMBER (POIN)', data: labels.map(t => database.sumber[t] || 0), backgroundColor: '#FF8C00' }]
             };
         }
 
@@ -246,16 +225,11 @@
         document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    // Fungsi Tambahan: Download & Dark Mode
-    function toggleDarkMode() {
-        document.body.classList.toggle("dark");
-        updateChart(); // Gambar ulang chart dengan warna teks yang sesuai
-    }
-
+    function toggleDarkMode() { document.body.classList.toggle("dark"); updateChart(); }
     function downloadChart() {
         const link = document.createElement('a');
         link.href = document.getElementById('mainChart').toDataURL('image/png');
-        link.download = `Grafik_Ekonomi_Palu_${new Date().getTime()}.png`;
+        link.download = `Ekonomi_Palu_${new Date().getTime()}.png`;
         link.click();
     }
 
