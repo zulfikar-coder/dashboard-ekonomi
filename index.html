@@ -84,16 +84,15 @@
             const response = await fetch(sheetUrl);
             const csvText = await response.text();
             
-            // 1. Pecah baris dan bersihkan karakter 'sampah' (termasuk penyebab tahun ganjil hilang)
+            // Membersihkan karakter aneh dan spasi yang merusak kolom ganjil
             const rows = csvText.split('\n')
                                 .map(row => row.replace(/[\r\n\t]/g, '').trim())
                                 .filter(row => row !== "");
             
-            // 2. Deteksi pemisah (koma atau titik koma)
-            const headerRow = rows.find(r => r.includes('2011'));
-            const separator = headerRow && headerRow.includes(';') ? ';' : ',';
+            // Deteksi pemisah otomatis
+            const headerRow = rows.find(r => r.includes('2011')) || rows[0];
+            const separator = headerRow.includes(';') ? ';' : ',';
             
-            // 3. Konversi menjadi Matrix dan bersihkan tiap sel
             const dataMatrix = rows.map(row => row.split(separator).map(cell => cell.trim()));
             
             let tahunIndexes = {}; 
@@ -102,21 +101,25 @@
             dataMatrix.forEach((cols) => {
                 const cellA = cols[0] ? cols[0].toUpperCase() : "";
 
-                // MENCARI POSISI KOLOM TAHUN SECARA DINAMIS
-                if (cols.some(c => c === "2011")) {
+                // MENCARI TAHUN DI SEMUA KOLOM (Kunci untuk memunculkan tahun ganjil)
+                if (cols.some(c => c.includes("2011"))) {
                     cols.forEach((cell, idx) => {
+                        // Cari angka 4 digit yang dimulai dengan 20 (2011, 2012, dst)
                         const yearMatch = cell.match(/20\d{2}/); 
-                        if (yearMatch) tahunIndexes[yearMatch[0]] = idx;
+                        if (yearMatch) {
+                            tahunIndexes[yearMatch[0]] = idx;
+                        }
                     });
                 }
 
                 const cleanNum = (val) => {
                     if (!val || val === "-" || val === "n.a") return 0;
+                    // Hapus titik ribuan dan ganti koma desimal jadi titik
                     let s = val.replace(/\./g, '').replace(',', '.');
                     return parseFloat(s) || 0;
                 };
 
-                // Ambil data hanya jika indeks tahun sudah dipetakan
+                // Jika header tahun sudah ditemukan, baru ambil datanya
                 if (Object.keys(tahunIndexes).length > 0) {
                     if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
                         for (let thn in tahunIndexes) { database.laju[thn] = cleanNum(cols[tahunIndexes[thn]]); }
@@ -135,9 +138,10 @@
             });
 
             document.getElementById('status').innerText = "DATABASE TERHUBUNG (AKTIF)";
-            sesuaikanFilter();
+            sesuaikanFilter(); // Ini akan memicu updateChart()
         } catch (error) {
             document.getElementById('status').innerText = "KONEKSI GAGAL";
+            console.error("Detail Error:", error);
         }
     }
     function sesuaikanFilter() {
