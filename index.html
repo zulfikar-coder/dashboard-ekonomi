@@ -84,52 +84,53 @@
             const response = await fetch(sheetUrl);
             const csvText = await response.text();
             
-            // SOLUSI UTAMA: Menghapus karakter \r dan spasi liar yang merusak kolom ganjil
+            // 1. Pecah baris dan bersihkan karakter 'sampah' (termasuk penyebab tahun ganjil hilang)
             const rows = csvText.split('\n')
-                                .map(row => row.replace(/\r/g, '').trim())
+                                .map(row => row.replace(/[\r\n\t]/g, '').trim())
                                 .filter(row => row !== "");
             
-            // Deteksi pemisah (koma atau titik koma) secara otomatis
-            const headerRow = rows.find(r => r.includes('2011')) || rows[0];
-            const separator = headerRow.includes(';') ? ';' : ',';
-            const dataMatrix = rows.map(row => row.split(separator));
+            // 2. Deteksi pemisah (koma atau titik koma)
+            const headerRow = rows.find(r => r.includes('2011'));
+            const separator = headerRow && headerRow.includes(';') ? ';' : ',';
             
-            let listTahun = [];
+            // 3. Konversi menjadi Matrix dan bersihkan tiap sel
+            const dataMatrix = rows.map(row => row.split(separator).map(cell => cell.trim()));
             
-            // Fungsi pembersih angka untuk format Indonesia (Titik ribuan, Koma desimal)
-            const cleanNum = (val) => {
-                if (!val || ["", "-", "n.a"].includes(val.trim())) return 0;
-                let s = val.trim();
-                // Jika ada titik lebih dari satu, itu pemisah ribuan
-                if ((s.match(/\./g) || []).length > 1) s = s.replace(/\./g, '');
-                // Jika ada titik dan koma sekaligus, titik adalah ribuan
-                else if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '');
-                
-                s = s.replace(',', '.'); // Ubah koma desimal ke titik sistem
-                return parseFloat(s) || 0;
-            };
+            let tahunIndexes = {}; 
+            database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
 
             dataMatrix.forEach((cols) => {
-                const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
-                
-                // Cari baris yang mengandung tahun-tahun data
-                if (cols.some(c => c.trim() === "2011") && listTahun.length === 0) {
-                    listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
+                const cellA = cols[0] ? cols[0].toUpperCase() : "";
+
+                // MENCARI POSISI KOLOM TAHUN SECARA DINAMIS
+                if (cols.some(c => c === "2011")) {
+                    cols.forEach((cell, idx) => {
+                        const yearMatch = cell.match(/20\d{2}/); 
+                        if (yearMatch) tahunIndexes[yearMatch[0]] = idx;
+                    });
                 }
 
-                // Pemetaan data secara spesifik berdasarkan teks di Kolom A
-                if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN EKONOMI")) {
-                    listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("ADHB")) {
-                    listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("ADHK")) {
-                    listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("SUMBER")) {
-                    listTahun.forEach((thn, idx) => { database.sumber[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("DISTRIBUSI")) {
-                    const kategori = cellA.replace("DISTRIBUSI", "").replace("(%)", "").trim();
-                    if (!database.distribusi[kategori]) database.distribusi[kategori] = {};
-                    listTahun.forEach((thn, idx) => { database.distribusi[kategori][thn] = cleanNum(cols[idx + 1]); });
+                const cleanNum = (val) => {
+                    if (!val || val === "-" || val === "n.a") return 0;
+                    let s = val.replace(/\./g, '').replace(',', '.');
+                    return parseFloat(s) || 0;
+                };
+
+                // Ambil data hanya jika indeks tahun sudah dipetakan
+                if (Object.keys(tahunIndexes).length > 0) {
+                    if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
+                        for (let thn in tahunIndexes) { database.laju[thn] = cleanNum(cols[tahunIndexes[thn]]); }
+                    } else if (cellA.includes("ADHB")) {
+                        for (let thn in tahunIndexes) { database.adhb[thn] = cleanNum(cols[tahunIndexes[thn]]); }
+                    } else if (cellA.includes("ADHK")) {
+                        for (let thn in tahunIndexes) { database.adhk[thn] = cleanNum(cols[tahunIndexes[thn]]); }
+                    } else if (cellA.includes("SUMBER")) {
+                        for (let thn in tahunIndexes) { database.sumber[thn] = cleanNum(cols[tahunIndexes[thn]]); }
+                    } else if (cellA.includes("DISTRIBUSI")) {
+                        const kategori = cellA.replace("DISTRIBUSI", "").replace("(%)", "").trim();
+                        if (!database.distribusi[kategori]) database.distribusi[kategori] = {};
+                        for (let thn in tahunIndexes) { database.distribusi[kategori][thn] = cleanNum(cols[tahunIndexes[thn]]); }
+                    }
                 }
             });
 
@@ -139,7 +140,6 @@
             document.getElementById('status').innerText = "KONEKSI GAGAL";
         }
     }
-
     function sesuaikanFilter() {
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
