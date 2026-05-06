@@ -105,54 +105,69 @@
 </div>
 
 <script>
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    let currentChart;
-    let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
-    
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
-
-    async function fetchData() {
+   async function fetchData() {
         try {
             const response = await fetch(sheetUrl);
             const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => row.replace('\r', '').trim());
+            // Membersihkan karakter aneh dan membagi baris
+            const rows = csvText.split('\n').map(row => row.trim());
             
             const headerRow = rows.find(r => r.includes('2011'));
             const separator = headerRow && headerRow.includes(';') ? ';' : ',';
             const dataMatrix = rows.map(row => row.split(separator));
             
             let listTahun = [];
+
+            // FUNGSI PEMBERSIH ANGKA YANG LEBIH AKURAT
             const cleanNum = (val) => {
-                if (!val || ["", "-", "n.a"].includes(val.trim())) return 0;
-                let s = val.trim().replace(/\./g, '').replace(',', '.');
+                if (!val) return 0;
+                let s = val.trim();
+                if (s === "" || s === "-" || s === "n.a") return 0;
+                
+                // Jika format Indonesia (10.500,50), ubah ke format standar (10500.50)
+                // Hapus titik sebagai ribuan, lalu ganti koma menjadi titik desimal
+                if (s.includes(',') && s.includes('.')) {
+                    s = s.replace(/\./g, '').replace(',', '.');
+                } 
+                // Jika hanya ada koma (misal: 5,4), anggap itu desimal
+                else if (s.includes(',')) {
+                    s = s.replace(',', '.');
+                }
+                
                 return parseFloat(s) || 0;
             };
 
             dataMatrix.forEach((cols) => {
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
-                if (cols.some(c => c.trim() === "2011") && listTahun.length === 0) {
+                
+                // Deteksi Tahun (Header)
+                if (cols.some(c => c.trim().startsWith("2011")) && listTahun.length === 0) {
+                    // Ambil kolom tahun dari indeks 1 sampai 16 (2011-2026)
                     listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
                 }
 
                 if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
-                    listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
+                    listTahun.forEach((thn, idx) => { 
+                        if(thn) database.laju[thn] = cleanNum(cols[idx + 1]); 
+                    });
                 } else if (cellA.includes("ADHB")) {
-                    listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
+                    listTahun.forEach((thn, idx) => { 
+                        if(thn) database.adhb[thn] = cleanNum(cols[idx + 1]); 
+                    });
                 } else if (cellA.includes("ADHK")) {
-                    listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
+                    listTahun.forEach((thn, idx) => { 
+                        if(thn) database.adhk[thn] = cleanNum(cols[idx + 1]); 
+                    });
                 }
             });
-
-            // Data distribusi (Contoh dummy jika tidak ada di sheet utama)
-            database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
 
             document.getElementById('status').innerText = "DATABASE TERHUBUNG (AKTIF)";
             sesuaikanFilter();
         } catch (error) {
+            console.error(error);
             document.getElementById('status').innerText = "KONEKSI GAGAL";
         }
     }
-
     function sesuaikanFilter() {
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
