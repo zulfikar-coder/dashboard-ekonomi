@@ -135,31 +135,38 @@
                 return parseFloat(s) || 0;
             };
 
-            dataMatrix.forEach((cols) => {
-                const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
-                
-                // Ambil daftar tahun dari header
-               // Ambil header tahun (lebih fleksibel)
-if (cols.some(c => c.toString().match(/20\d{2}/)) && listTahun.length === 0) {
-    listTahun = cols
-        .map(c => {
-            const match = c.toString().match(/20\d{2}/);
-            return match ? match[0] : null;
-        })
-        .filter(t => t !== null);
-}
-                }
+         dataMatrix.forEach((cols) => {
+    const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
 
-                // Ambil data berdasarkan indikator di Kolom A
-                if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
-                    listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("ADHB")) {
-                    listTahun.forEach((thn, idx) => { database.adhb[thn] = cleanNum(cols[idx + 1]); });
-                } else if (cellA.includes("ADHK")) {
-                    listTahun.forEach((thn, idx) => { database.adhk[thn] = cleanNum(cols[idx + 1]); });
-                }
-            });
+    // Ambil header tahun (sekali saja)
+    if (cols.some(c => c.toString().match(/20\d{2}/)) && listTahun.length === 0) {
+        listTahun = cols
+            .map(c => {
+                const match = c.toString().match(/20\d{2}/);
+                return match ? match[0] : null;
+            })
+            .filter(t => t !== null);
 
+        console.log("TAHUN TERDETEKSI:", listTahun);
+    }
+
+    // Ambil data
+    if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
+        listTahun.forEach((thn, idx) => {
+            database.laju[thn] = cleanNum(cols[idx + 1]);
+        });
+    } 
+    else if (cellA.includes("ADHB") && !cellA.includes("DISTRIBUSI")) {
+        listTahun.forEach((thn, idx) => {
+            database.adhb[thn] = cleanNum(cols[idx + 1]);
+        });
+    } 
+    else if (cellA.includes("ADHK")) {
+        listTahun.forEach((thn, idx) => {
+            database.adhk[thn] = cleanNum(cols[idx + 1]);
+        });
+    }
+});
             // Data Distribusi (Bisa disesuaikan manual)
             database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
 
