@@ -139,8 +139,15 @@
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
                 
                 // Ambil daftar tahun dari header
-                if (cols.some(c => c.trim() === "2011") && listTahun.length === 0) {
-                    listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
+               // Ambil header tahun (lebih fleksibel)
+if (cols.some(c => c.toString().match(/20\d{2}/)) && listTahun.length === 0) {
+    listTahun = cols
+        .map(c => {
+            const match = c.toString().match(/20\d{2}/);
+            return match ? match[0] : null;
+        })
+        .filter(t => t !== null);
+}
                 }
 
                 // Ambil data berdasarkan indikator di Kolom A
