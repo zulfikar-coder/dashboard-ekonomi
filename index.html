@@ -87,7 +87,7 @@
                                 .map(row => row.replace(/[\r\t]/g, '').trim())
                                 .filter(row => row !== "");
             
-            const headerRow = rows.find(r => r.includes('2011')) || rows[0];
+            const headerRow = rows.find(r => r.match(/20\d{2}/)) || rows[0];
             const separator = headerRow.includes(';') ? ';' : ',';
             const dataMatrix = rows.map(row => row.split(separator).map(cell => cell.trim()));
             
@@ -97,9 +97,9 @@
                 const cellA = cols[0] ? cols[0].toUpperCase() : "";
 
                 // MENCARI TAHUN DI HEADER (Solusi Tahun Ganjil)
-                if (cols.some(c => c === "2011")) {
+             if (cols.some(c => c.toString().match(/20\d{2}/))) {
                     cols.forEach((cell, idx) => {
-                        const yearMatch = cell.match(/20\d{2}/); 
+                        const yearMatch = cell.toString().match(/20\d{2}/);
                         if (yearMatch) {
                             tahunIndexes[yearMatch[0]] = idx;
                         }
