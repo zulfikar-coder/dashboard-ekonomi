@@ -258,4 +258,10 @@
     }
 
     fetchData();
+    function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    
+    // Update chart biar ikut berubah warna
+    updateChart();
+}
 </script>
