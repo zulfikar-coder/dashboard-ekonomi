@@ -7,107 +7,93 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        :root { --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; text-transform: uppercase; }
+        :root { 
+            --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; 
+            --text: #333; --card-bg: #ffffff; --border: #eee;
+        }
         
+        /* DARK MODE */
+        .dark { 
+            --bg: #121212; --text: #eee; --card-bg: #1e1e1e; --border: #333;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); 
+            color: var(--text); margin: 0; padding: 20px; text-transform: uppercase; 
+            transition: all 0.3s ease;
+        }
+
         .header { 
-            background: var(--orange); 
-            color: white; 
-            padding: 15px 30px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: flex-start; 
-            align-items: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            margin-bottom: 20px; 
-            gap: 20px; 
+            background: var(--orange); color: white; padding: 15px 30px; 
+            border-radius: 12px; display: flex; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 20px; 
         }
 
-        .header-text { text-align: left; }
-        .header h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; }
-        .header h2 { font-size: 1.1rem; margin: 5px 0 0 0; font-weight: normal; }
-
-        .logo-container {
-            background: white;
-            padding: 8px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .logo-img { 
-            height: 75px; 
-            width: auto; 
-        }
+        .logo-container { background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; }
+        .logo-img { height: 65px; }
 
         .controls { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            display: flex; 
-            gap: 20px; 
-            flex-wrap: wrap; 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;
         }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 0.8rem; color: var(--orange); }
+
+        select { 
+            padding: 10px; border-radius: 6px; border: 1px solid var(--orange); 
+            font-weight: bold; background: var(--card-bg); color: var(--text); cursor: pointer;
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-left: auto; }
+        button { 
+            padding: 10px 15px; border-radius: 6px; border: none; 
+            font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-download { background: var(--green); color: white; }
+        .btn-dark { background: #333; color: white; }
 
         .card { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-            border-top: 4px solid var(--orange);
-            max-width: 900px; 
-            margin: 0 auto; 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange);
+            max-width: 900px; margin: 0 auto; 
         }
 
-        .chart-container {
-            position: relative;
-            margin: auto;
-            height: 400px;
-            width: 100%;
-        }
-
-        h3 { color: #333; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align: center; }
-        select { padding: 10px; border-radius: 6px; border: 1px solid var(--orange); font-weight: bold; min-width: 200px; text-transform: uppercase; cursor: pointer; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--orange); }
-
-        #status { font-size: 0.7rem; color: #fff; opacity: 0.8; }
+        .chart-container { position: relative; height: 400px; width: 100%; }
+        h3 { color: var(--text); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center; }
 
         @media (max-width: 768px) {
-            .header h1 { font-size: 1rem; }
-            .logo-img { height: 50px; }
-            .header-text { text-align: center; }
+            .btn-group { margin-left: 0; width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo-container">
-        <img src="logo-bps.png" alt="LOGO BPS" class="logo-img">
-    </div>
-
+    <div class="logo-container"><img src="logo-bps.png" alt="BPS" class="logo-img"></div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h2>PERIODE (2011 - 2026)</h2>
-        <div id="status">Memuat data...</div>
+        <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
     </div>
 </div>
 
 <div class="controls">
-    <div>
-        <label>PILIH JENIS GRAFIK:</label>
+    <div class="control-group">
+        <label>JENIS GRAFIK</label>
         <select id="menuGrafik" onchange="sesuaikanFilter()">
             <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
             <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
             <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
         </select>
     </div>
-    <div>
-        <label id="labelFilter">PILIH PERIODE:</label>
+    <div class="control-group">
+        <label>PILIH PERIODE</label>
         <select id="filterTahun" onchange="updateChart()"></select>
+    </div>
+    <div class="btn-group">
+        <button class="btn-download" onclick="downloadChart()">UNDUH GRAFIK</button>
+        <button class="btn-dark" onclick="toggleDarkMode()">MODE GELAP</button>
     </div>
 </div>
 
@@ -123,24 +109,19 @@
     let currentChart;
     let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
     
-    // Link Google Sheets CSV Anda
     const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
-    // Fungsi mengambil data dari Google Sheets
     async function fetchData() {
         try {
             const response = await fetch(sheetUrl);
             const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => row.trim());
+            const rows = csvText.split('\n').map(row => row.replace('\r', '').trim());
             
-            // Mencari baris yang mengandung tahun 2011
             const headerRow = rows.find(r => r.includes('2011'));
-            const separator = headerRow.includes(';') ? ';' : ',';
+            const separator = headerRow && headerRow.includes(';') ? ';' : ',';
             const dataMatrix = rows.map(row => row.split(separator));
             
             let listTahun = [];
-
-            // Fungsi membersihkan angka (mengubah format Indonesia ke standar komputer)
             const cleanNum = (val) => {
                 if (!val || ["", "-", "n.a"].includes(val.trim())) return 0;
                 let s = val.trim().replace(/\./g, '').replace(',', '.');
@@ -149,13 +130,10 @@
 
             dataMatrix.forEach((cols) => {
                 const cellA = cols[0] ? cols[0].trim().toUpperCase() : "";
-                
-                // Mendapatkan header tahun
-                if (cols.some(c => c.trim().startsWith("2011")) && listTahun.length === 0) {
+                if (cols.some(c => c.trim() === "2011") && listTahun.length === 0) {
                     listTahun = cols.slice(1, 17).map(t => t.trim().replace(/\*/g, ''));
                 }
 
-                // Map data berdasarkan indikator di Kolom A
                 if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
                     listTahun.forEach((thn, idx) => { database.laju[thn] = cleanNum(cols[idx + 1]); });
                 } else if (cellA.includes("ADHB")) {
@@ -165,14 +143,13 @@
                 }
             });
 
-            // Data Distribusi (Contoh Statis jika tidak ada di Sheet, bisa disesuaikan)
-            database.distribusi = { "PERTANIAN": 12.5, "INDUSTRI": 15.2, "JASA": 45.3, "KONSTRUKSI": 10.0, "LAINNYA": 17.0 };
+            // Data distribusi (Contoh dummy jika tidak ada di sheet utama)
+            database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
 
-            document.getElementById('status').innerText = "Data Terhubung";
+            document.getElementById('status').innerText = "DATABASE TERHUBUNG (AKTIF)";
             sesuaikanFilter();
         } catch (error) {
-            document.getElementById('status').innerText = "Gagal memuat data";
-            console.error(error);
+            document.getElementById('status').innerText = "KONEKSI GAGAL";
         }
     }
 
@@ -180,24 +157,15 @@
         const menu = document.getElementById('menuGrafik').value;
         const filter = document.getElementById('filterTahun');
         filter.innerHTML = ""; 
-
-        if (menu === 'laju' || menu === 'nilai') {
-            const opsi = [
-                {text: "2021 - 2026", val: "2021-2026"},
-                {text: "2016 - 2020", val: "2016-2020"},
-                {text: "2011 - 2015", val: "2011-2015"}
-            ];
-            opsi.forEach(o => {
-                let el = document.createElement("option");
-                el.text = o.text; el.value = o.val; filter.add(el);
+        
+        if (menu === 'distribusi') {
+            Object.keys(database.adhb).reverse().forEach(t => {
+                if(t) { let el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); }
             });
         } else {
-            // Untuk Pie Chart ambil tahun tunggal
-            Object.keys(database.adhb).reverse().forEach(t => {
-                if(t) {
-                    let el = document.createElement("option");
-                    el.text = t; el.value = t; filter.add(el);
-                }
+            const opsi = [{text: "2021 - 2026", val: "2021-2026"}, {text: "2016 - 2020", val: "2016-2020"}, {text: "2011 - 2015", val: "2011-2015"}];
+            opsi.forEach(o => {
+                let el = document.createElement("option"); el.text = o.text; el.value = o.val; filter.add(el);
             });
         }
         updateChart();
@@ -206,46 +174,31 @@
     function updateChart() {
         const menu = document.getElementById('menuGrafik').value;
         const periode = document.getElementById('filterTahun').value;
-        
         if (currentChart) currentChart.destroy();
-
+        
         let labels = [];
         if (periode.includes("-")) {
             const [start, end] = periode.split("-").map(Number);
             for(let i=start; i<=end; i++) labels.push(i.toString());
-        } else {
-            labels = [periode];
-        }
+        } else { labels = [periode]; }
 
         let config = {
             plugins: [ChartDataLabels],
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
                     datalabels: {
                         anchor: 'end', align: 'top',
-                        formatter: (val) => val.toLocaleString('id-ID') + (menu === 'laju' || menu === 'distribusi' ? '%' : ''),
-                        font: { weight: 'bold', size: 10 }
+                        formatter: (val) => val.toLocaleString('id-ID') + (menu === 'laju' ? '%' : ''),
+                        font: { weight: 'bold', size: 10 },
+                        color: () => document.body.classList.contains('dark') ? '#eee' : '#333'
                     },
-                    legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                    legend: { labels: { color: () => document.body.classList.contains('dark') ? '#eee' : '#333' } }
                 }
             }
         };
 
-        if (menu === 'laju') {
-            config.type = 'line';
-            config.data = {
-                labels: labels,
-                datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)',
-                    data: labels.map(t => database.laju[t] || 0),
-                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                    fill: true, tension: 0.3, pointRadius: 5
-                }]
-            };
-        } 
-        else if (menu === 'nilai') {
+        if (menu === 'nilai') {
             config.type = 'bar';
             config.data = {
                 labels: labels,
@@ -254,15 +207,17 @@
                     { label: 'ADHK', data: labels.map(t => database.adhk[t] || 0), backgroundColor: '#27ae60' }
                 ]
             };
-        }
-        else if (menu === 'distribusi') {
+        } else if (menu === 'laju') {
+            config.type = 'line';
+            config.data = {
+                labels: labels,
+                datasets: [{ label: 'LAJU PERTUMBUHAN (%)', data: labels.map(t => database.laju[t] || 0), borderColor: '#27ae60', fill: true, tension: 0.3 }]
+            };
+        } else {
             config.type = 'pie';
             config.data = {
                 labels: Object.keys(database.distribusi),
-                datasets: [{ 
-                    data: Object.values(database.distribusi), 
-                    backgroundColor: ['#FF8C00', '#27ae60', '#F39C12', '#2ECC71', '#3498DB'] 
-                }]
+                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00', '#27ae60', '#2980b9', '#f1c40f', '#8e44ad'] }]
             };
             config.options.plugins.datalabels.anchor = 'center';
             config.options.plugins.datalabels.align = 'center';
@@ -270,12 +225,22 @@
         }
 
         currentChart = new Chart(ctx, config);
-        document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
+        document.getElementById('judulGrafik').innerText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
     }
 
-    // Jalankan fetch data saat halaman dibuka
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark');
+        updateChart();
+    }
+
+    function downloadChart() {
+        const link = document.createElement('a');
+        link.download = 'Dashboard-Ekonomi-Palu.png';
+        link.href = document.getElementById('mainChart').toDataURL('image/png');
+        link.click();
+    }
+
     fetchData();
 </script>
-
 </body>
 </html>
