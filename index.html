@@ -6,262 +6,202 @@
     <title>DASHBOARD EKONOMI KOTA PALU</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
     <style>
         :root { 
-            --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; 
-            --text: #333; --card-bg: #ffffff; --border: #eee;
+            --orange: #FF8C00; --green: #27ae60; --bg: #f8f9fa; 
+            --text: #333; --card-bg: #ffffff;
         }
-        .dark { 
-            --bg: #121212; --text: #eee; --card-bg: #1e1e1e; --border: #333;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background: var(--bg); color: var(--text); 
-            margin: 0; padding: 20px; text-transform: uppercase; 
-            transition: all 0.3s ease;
-        }
-
-        .header { 
-            background: var(--orange); color: white; padding: 15px 30px; 
-            border-radius: 12px; display: flex; align-items: center; 
-            margin-bottom: 20px; gap: 20px; 
-        }
-
-        .logo-img { height: 65px; }
-
-        .controls { 
-            background: var(--card-bg); padding: 20px; border-radius: 12px; 
-            margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; 
-            align-items: flex-end;
-        }
-
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-weight: bold; font-size: 0.8rem; color: var(--orange); }
-
-        select { 
-            padding: 10px; border-radius: 6px; border: 1px solid var(--orange); 
-            font-weight: bold; background: var(--card-bg); color: var(--text);
-        }
-
-        .btn-group { display: flex; gap: 10px; margin-left: auto; }
-        button { padding: 10px 15px; border-radius: 6px; border: none; cursor: pointer; }
-        .btn-dark { background: #333; color: white; }
-
-        .card { 
-            background: var(--card-bg); padding: 20px; border-radius: 12px; 
-            border-top: 4px solid var(--orange);
-            max-width: 900px; margin: 0 auto; 
-        }
-
-        .chart-container { height: 400px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .header { background: var(--orange); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .controls { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; cursor: pointer; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .chart-container { position: relative; height: 450px; width: 100%; }
+        #status { font-weight: bold; color: var(--green); }
     </style>
 </head>
-
 <body>
 
 <div class="header">
-    <img src="logo-bps.png" class="logo-img">
-    <div>
-        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <small id="status">MENGHUBUNGKAN...</small>
-    </div>
+    <h1 style="margin:0;">Dashboard Statistik Ekonomi Kota Palu</h1>
+    <p style="margin:5px 0 0 0;">Visualisasi Data Berdasarkan File: Dashboard_Ekonomi_Palu_2011_2026.xlsx</p>
 </div>
 
 <div class="controls">
-    <div class="control-group">
-        <label>JENIS GRAFIK</label>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+        <label style="font-size:12px; color:var(--orange); font-weight:bold;">PILIH INDIKATOR</label>
         <select id="menuGrafik" onchange="sesuaikanFilter()">
-            <option value="laju">LAJU</option>
-            <option value="nilai">ADHB & ADHK</option>
-            <option value="distribusi">DISTRIBUSI</option>
+            <option value="laju">LAJU PERTUMBUHAN (%)</option>
+            <option value="nilai">PDRB ADHB & ADHK (Miliar Rp)</option>
+            <option value="distribusi">DISTRIBUSI PDRB (%)</option>
+            <option value="sumber">SUMBER PERTUMBUHAN (Poin)</option>
         </select>
     </div>
-
-    <div class="control-group">
-        <label>PERIODE</label>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+        <label style="font-size:12px; color:var(--orange); font-weight:bold;">PERIODE/TAHUN</label>
         <select id="filterTahun" onchange="updateChart()"></select>
     </div>
-
-    <div class="btn-group">
-        <button class="btn-dark" onclick="toggleDarkMode()">MODE GELAP</button>
+    <div style="margin-left:auto; align-self:center;">
+        <span id="status">MEMUAT DATA...</span>
     </div>
 </div>
 
 <div class="card">
-    <canvas id="mainChart"></canvas>
+    <h3 id="judulGrafik" style="text-align:center; color:var(--orange); text-transform:uppercase; margin-top:0;">Grafik Ekonomi</h3>
+    <div class="chart-container">
+        <canvas id="mainChart"></canvas>
+    </div>
 </div>
 
 <script>
-const ctx = document.getElementById('mainChart').getContext('2d');
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    let currentChart;
+    let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
+    let listTahun = [];
 
-let currentChart;
-let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+    // URL CSV yang dipublikasikan dari Google Sheets (Export dari file Dashboard_Ekonomi_Palu_2011_2026.xlsx)
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
-const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
+    async function fetchData() {
+        try {
+            const response = await fetch(sheetUrl);
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(r => r.split(',').map(c => c.trim()));
 
-async function fetchData() {
-    try {
-        const res = await fetch(sheetUrl);
-        const text = await res.text();
+            // Mencari baris Header (Tahun) - Berdasarkan file, ada di baris dengan kata "Indikator"
+            const headerRow = rows.find(r => r.some(cell => cell.includes("Indikator")));
+            if (!headerRow) throw new Error("Format file tidak sesuai");
 
-        const rows = text.split('\n').map(r => r.replace('\r','').trim());
-        const header = rows.find(r => r.match(/20\d{2}/));
-        const sep = header.includes(';') ? ';' : ',';
+            // Ambil semua tahun dari header
+            listTahun = headerRow.filter(cell => cell.match(/\d{4}/)).map(t => t.replace(/[*]/g, ''));
+            const startCol = headerRow.findIndex(cell => cell.match(/\d{4}/));
 
-        const data = rows.map(r => r.split(sep));
+            const cleanNum = (val) => {
+                if (!val || val === "-" || val === "") return 0;
+                return parseFloat(val.replace(/[^\d.-]/g, '')) || 0;
+            };
 
-        let tahunIndexes = {};
-
-        const cleanNum = v => {
-            if (!v || v === "-" || v === "n.a") return 0;
-            return parseFloat(v.replace(/\./g,'').replace(',','.')) || 0;
-        };
-
-        data.forEach(cols => {
-            const cellA = cols[0] ? cols[0].toUpperCase() : "";
-
-            // 🔥 ambil semua tahun
-            if (Object.keys(tahunIndexes).length === 0) {
-                cols.forEach((c,i)=>{
-                    const m = c.match(/20\d{2}/);
-                    if(m) tahunIndexes[m[0]] = i;
+            rows.forEach(cols => {
+                const label = cols[0] ? cols[0].toUpperCase() : "";
+                
+                listTahun.forEach((thn, i) => {
+                    const value = cleanNum(cols[startCol + i]);
+                    
+                    if (label.includes("LAJU PERTUMBUHAN")) {
+                        database.laju[thn] = value;
+                    } else if (label.includes("ADHB")) {
+                        database.adhb[thn] = value;
+                    } else if (label.includes("ADHK")) {
+                        database.adhk[thn] = value;
+                    } else if (label.includes("SUMBER PERTUMBUHAN")) {
+                        database.sumber[thn] = value;
+                    } else if (label.includes("DISTRIBUSI")) {
+                        const kat = label.replace("DISTRIBUSI", "").replace("(%)", "").trim();
+                        if (!database.distribusi[kat]) database.distribusi[kat] = {};
+                        database.distribusi[kat][thn] = value;
+                    }
                 });
-            }
+            });
 
-            if (cellA.includes("LAJU")) {
-                for(let t in tahunIndexes){
-                    database.laju[t] = cleanNum(cols[tahunIndexes[t]]);
-                }
-            }
-
-            else if (cellA.includes("ADHB") && !cellA.includes("DISTRIBUSI")) {
-                for(let t in tahunIndexes){
-                    database.adhb[t] = cleanNum(cols[tahunIndexes[t]]);
-                }
-            }
-
-            else if (cellA.includes("ADHK")) {
-                for(let t in tahunIndexes){
-                    database.adhk[t] = cleanNum(cols[tahunIndexes[t]]);
-                }
-            }
-
-            // 🔥 FIX DISTRIBUSI
-            else if (cellA.includes("DISTRIBUSI")) {
-
-                const kategori = cellA
-                    .replace("DISTRIBUSI","")
-                    .replace("(%)","")
-                    .trim();
-
-                if(!database.distribusi[kategori]){
-                    database.distribusi[kategori] = {};
-                }
-
-                for(let t in tahunIndexes){
-                    database.distribusi[kategori][t] = cleanNum(cols[tahunIndexes[t]]);
-                }
-            }
-        });
-
-        console.log("DATA:", database);
-
-        document.getElementById("status").innerText = "TERHUBUNG";
-        sesuaikanFilter();
-
-    } catch(e){
-        document.getElementById("status").innerText = "GAGAL";
-    }
-}
-
-function sesuaikanFilter(){
-    const menu = menuGrafik.value;
-    const f = filterTahun;
-    f.innerHTML = "";
-
-    if(menu === "distribusi"){
-        Object.keys(database.laju).forEach(t=>{
-            let o = new Option(t,t);
-            f.add(o);
-        });
-    } else {
-        ["2011-2015","2016-2020","2021-2026"].forEach(r=>{
-            let o = new Option(r,r);
-            f.add(o);
-        });
+            document.getElementById('status').innerText = "DATABASE AKTIF";
+            sesuaikanFilter();
+        } catch (error) {
+            console.error(error);
+            document.getElementById('status').innerText = "GAGAL MEMUAT DATA";
+            document.getElementById('status').style.color = "red";
+        }
     }
 
-    updateChart();
-}
+    function sesuaikanFilter() {
+        const menu = document.getElementById('menuGrafik').value;
+        const filter = document.getElementById('filterTahun');
+        filter.innerHTML = "";
 
-function updateChart(){
-    if(currentChart) currentChart.destroy();
+        if (menu === 'distribusi') {
+            // Untuk Pie Chart, pilih satu tahun saja
+            [...listTahun].reverse().forEach(t => {
+                filter.add(new Option(t, t));
+            });
+        } else {
+            // Untuk grafik batang/garis, gunakan rentang periode
+            const ranges = ["2011-2015", "2016-2020", "2021-2026"];
+            ranges.forEach(r => filter.add(new Option(r, r)));
+        }
+        updateChart();
+    }
 
-    const menu = menuGrafik.value;
-    const periode = filterTahun.value;
+    function updateChart() {
+        const menu = document.getElementById('menuGrafik').value;
+        const periode = document.getElementById('filterTahun').value;
+        
+        if (currentChart) currentChart.destroy();
 
-    let labels = [];
+        let labels = [];
+        if (periode.includes("-")) {
+            const [start, end] = periode.split("-").map(Number);
+            labels = listTahun.filter(t => parseInt(t) >= start && parseInt(t) <= end);
+        } else {
+            labels = [periode];
+        }
 
-    if(periode.includes("-")){
-        let [a,b] = periode.split("-").map(Number);
-        for(let i=a;i<=b;i++) labels.push(i+"");
-    } else labels=[periode];
-
-    let config = { plugins:[ChartDataLabels] };
-
-    if(menu==="laju"){
-        config.type="line";
-        config.data={
-            labels,
-            datasets:[{
-                label:"LAJU",
-                data: labels.map(t=>database.laju[t]||0),
-                borderColor:"#27ae60",
-                fill:true
-            }]
+        let config = {
+            plugins: [ChartDataLabels],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end', align: 'top', font: { weight: 'bold' },
+                        formatter: (v) => v ? v.toLocaleString('id-ID') : ''
+                    }
+                }
+            }
         };
+
+        if (menu === 'laju') {
+            config.type = 'line';
+            config.data = {
+                labels,
+                datasets: [{
+                    label: 'LAJU PERTUMBUHAN (%)',
+                    data: labels.map(t => database.laju[t]),
+                    borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)', fill: true, tension: 0.3
+                }]
+            };
+        } else if (menu === 'nilai') {
+            config.type = 'bar';
+            config.data = {
+                labels,
+                datasets: [
+                    { label: 'ADHB (Miliar Rp)', data: labels.map(t => database.adhb[t]), backgroundColor: '#FF8C00' },
+                    { label: 'ADHK (Miliar Rp)', data: labels.map(t => database.adhk[t]), backgroundColor: '#27ae60' }
+                ]
+            };
+        } else if (menu === 'sumber') {
+            config.type = 'bar';
+            config.data = {
+                labels,
+                datasets: [{ label: 'SUMBER PERTUMBUHAN (Poin)', data: labels.map(t => database.sumber[t]), backgroundColor: '#3498db' }]
+            };
+        } else if (menu === 'distribusi') {
+            config.type = 'pie';
+            const kategori = Object.keys(database.distribusi);
+            config.data = {
+                labels: kategori,
+                datasets: [{
+                    data: kategori.map(k => database.distribusi[k][periode]),
+                    backgroundColor: ['#FF8C00', '#27ae60', '#3498db', '#f1c40f', '#e74c3c']
+                }]
+            };
+            config.options.plugins.datalabels.formatter = (v) => v ? v + '%' : '';
+        }
+
+        currentChart = new Chart(ctx, config);
+        document.getElementById('judulGrafik').innerText = 
+            document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text + " (" + periode + ")";
     }
 
-    else if(menu==="nilai"){
-        config.type="bar";
-        config.data={
-            labels,
-            datasets:[
-                {label:"ADHB", data:labels.map(t=>database.adhb[t]||0), backgroundColor:"#FF8C00"},
-                {label:"ADHK", data:labels.map(t=>database.adhk[t]||0), backgroundColor:"#27ae60"}
-            ]
-        };
-    }
-
-    else if(menu==="distribusi"){
-        const thn = periode;
-        const kategori = Object.keys(database.distribusi);
-
-        const dataPie = kategori.map(k=>{
-            return database.distribusi[k]?.[thn] || 0;
-        });
-
-        config.type="pie";
-        config.data={
-            labels:kategori,
-            datasets:[{
-                data:dataPie,
-                backgroundColor:['#FF8C00','#27ae60','#3498db','#f1c40f','#9b59b6']
-            }]
-        };
-    }
-
-    currentChart = new Chart(ctx, config);
-}
-
-function toggleDarkMode(){
-    document.body.classList.toggle("dark");
-}
-
-fetchData();
+    fetchData();
 </script>
-
 </body>
 </html>
