@@ -1,170 +1,228 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DASHBOARD EKONOMI KOTA PALU</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASHBOARD EKONOMI KOTA PALU</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        :root { 
+            --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; 
+            --text: #333; --card-bg: #ffffff; --border: #eee;
+        }
+        .dark { 
+            --bg: #121212; --text: #eee; --card-bg: #1e1e1e; --border: #333;
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); 
+            color: var(--text); margin: 0; padding: 20px; text-transform: uppercase; 
+            transition: all 0.3s ease;
+        }
 
-<style>
-:root { 
-    --orange:#FF8C00; --green:#27ae60; --bg:#fffcf5; 
-    --text:#333; --card:#fff;
-}
-.dark { --bg:#121212; --text:#eee; --card:#1e1e1e; }
+        .header { 
+            background: var(--orange); color: white; padding: 15px 30px; 
+            border-radius: 12px; display: flex; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 20px; 
+        }
+        .logo-container { background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; }
+        .logo-img { height: 65px; }
 
-body{
-    font-family:Segoe UI; background:var(--bg);
-    color:var(--text); padding:20px; text-transform:uppercase;
-}
+        .controls { 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;
+        }
 
-.header{
-    background:var(--orange); color:#fff;
-    padding:15px; border-radius:10px;
-    display:flex; gap:15px; align-items:center;
-}
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 0.8rem; color: var(--orange); }
 
-.controls{
-    background:var(--card); padding:15px;
-    border-radius:10px; margin-top:15px;
-    display:flex; gap:10px; flex-wrap:wrap;
-}
+        select { 
+            padding: 10px; border-radius: 6px; border: 1px solid var(--orange); 
+            font-weight: bold; background: var(--card-bg); color: var(--text); cursor: pointer;
+        }
 
-button, select{
-    padding:8px; border-radius:6px;
-    font-weight:bold;
-}
+        .btn-group { display: flex; gap: 10px; margin-left: auto; }
+        button { 
+            padding: 10px 15px; border-radius: 6px; border: none; 
+            font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+        }
+        .btn-download { background: var(--green); color: white; }
+        .btn-dark { background: #333; color: white; }
 
-.card{
-    background:var(--card); padding:20px;
-    border-radius:10px; margin-top:15px;
-}
+        .card { 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange);
+            max-width: 900px; margin: 0 auto; 
+        }
 
-.chart-container{ height:400px; }
-</style>
+        .chart-container { position: relative; height: 400px; width: 100%; }
+        h3 { color: var(--text); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center; }
+
+        @media (max-width: 768px) {
+            .btn-group { margin-left: 0; width: 100%; justify-content: center; }
+        }
+    </style>
 </head>
-
 <body>
 
 <div class="header">
-    <h2>DASHBOARD EKONOMI KOTA PALU</h2>
-    <small id="status">LOADING...</small>
+    <div class="logo-container"><img src="logo-bps.png" alt="BPS" class="logo-img"></div>
+    <div class="header-text">
+        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
+    </div>
 </div>
 
 <div class="controls">
-    <select id="menuGrafik" onchange="updateChart()">
-        <option value="nilai">ADHB & ADHK</option>
-        <option value="laju">LAJU</option>
-    </select>
-
-    <select id="filterTahun" onchange="updateChart()"></select>
-
-    <button onclick="toggleDarkMode()">MODE</button>
+    <div class="control-group">
+        <label>JENIS GRAFIK</label>
+        <select id="menuGrafik" onchange="sesuaikanFilter()">
+            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
+            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
+            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+            <option value="sumber">SUMBER PERTUMBUHAN (BATANG)</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>PILIH PERIODE</label>
+        <select id="filterTahun" onchange="updateChart()"></select>
+    </div>
+    <div class="btn-group">
+        <button class="btn-download" onclick="downloadChart()">UNDUH GRAFIK</button>
+        <button class="btn-dark" onclick="toggleDarkMode()">MODE GELAP</button>
+    </div>
 </div>
 
 <div class="card">
-    <canvas id="mainChart"></canvas>
+    <h3 id="judulGrafik">VISUALISASI DATA</h3>
+    <div class="chart-container">
+        <canvas id="mainChart"></canvas>
+    </div>
 </div>
 
 <script>
 const ctx = document.getElementById('mainChart').getContext('2d');
 let currentChart;
-
-let database = { laju:{}, adhb:{}, adhk:{} };
-let tahunIndexes = {};
+let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {}, sumber: {} };
 
 const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
-async function fetchData(){
-    const res = await fetch(sheetUrl);
-    const text = await res.text();
+async function fetchData() {
+    try {
+        const response = await fetch(sheetUrl);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').map(r => r.replace('\r','').trim());
 
-    const rows = text.split("\n").map(r=>r.trim());
-    const separator = rows[0].includes(";") ? ";" : ",";
+        const headerRow = rows.find(r => r.match(/20\d{2}/));
+        const separator = headerRow && headerRow.includes(';') ? ';' : ',';
+        const dataMatrix = rows.map(r => r.split(separator));
 
-    const data = rows.map(r=>r.split(separator));
+        // 🔥 ambil index tahun
+        let tahunIndexes = {};
+        dataMatrix.forEach(cols => {
+            cols.forEach((c,i) => {
+                const match = c.toString().match(/20\d{2}/);
+                if(match){
+                    tahunIndexes[match[0]] = i;
+                }
+            });
+        });
 
-    // 🔥 Ambil posisi kolom tahun
-    data.forEach(cols=>{
-        cols.forEach((c,i)=>{
-            const m = c.match(/20\d{2}/);
-            if(m){
-                tahunIndexes[m[0]] = i;
+        console.log("INDEX TAHUN:", tahunIndexes);
+
+        const cleanNum = (val) => {
+            if (!val || ["", "-", "n.a"].includes(val.trim())) return 0;
+            let s = val.trim().replace(/\./g,'').replace(',','.');
+            return parseFloat(s) || 0;
+        };
+
+        dataMatrix.forEach(cols => {
+            const cellA = cols[0] ? cols[0].toUpperCase() : "";
+
+            if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
+                for(let t in tahunIndexes){
+                    database.laju[t] = cleanNum(cols[tahunIndexes[t]]);
+                }
+            }
+            else if (cellA.includes("ADHB") && !cellA.includes("DISTRIBUSI")) {
+                for(let t in tahunIndexes){
+                    database.adhb[t] = cleanNum(cols[tahunIndexes[t]]);
+                }
+            }
+            else if (cellA.includes("ADHK")) {
+                for(let t in tahunIndexes){
+                    database.adhk[t] = cleanNum(cols[tahunIndexes[t]]);
+                }
             }
         });
-    });
 
-    console.log("TAHUN:", tahunIndexes);
+        // distribusi dummy (tidak diubah)
+        database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
 
-    const clean = v=>{
-        if(!v) return 0;
-        let s = v.replace(/\./g,'').replace(',', '.');
-        return parseFloat(s)||0;
-    };
+        document.getElementById('status').innerText = "DATABASE TERHUBUNG (AKTIF)";
+        sesuaikanFilter();
 
-    // 🔥 Ambil data
-    data.forEach(cols=>{
-        const a = cols[0]?.toUpperCase()||"";
+    } catch (e) {
+        document.getElementById('status').innerText = "KONEKSI GAGAL";
+    }
+}
 
-        if(a.includes("LAJU")){
-            for(let t in tahunIndexes){
-                database.laju[t] = clean(cols[tahunIndexes[t]]);
-            }
-        }
+function sesuaikanFilter() {
+    const menu = document.getElementById('menuGrafik').value;
+    const filter = document.getElementById('filterTahun');
+    filter.innerHTML = "";
 
-        else if(a.includes("ADHB") && !a.includes("DISTRIBUSI")){
-            for(let t in tahunIndexes){
-                database.adhb[t] = clean(cols[tahunIndexes[t]]);
-            }
-        }
+    const opsi = [
+        {text:"2021 - 2026", val:"2021-2026"},
+        {text:"2016 - 2020", val:"2016-2020"},
+        {text:"2011 - 2015", val:"2011-2015"}
+    ];
 
-        else if(a.includes("ADHK")){
-            for(let t in tahunIndexes){
-                database.adhk[t] = clean(cols[tahunIndexes[t]]);
-            }
-        }
-    });
+    if(menu === 'nilai' || menu === 'laju'){
+        opsi.forEach(o=>{
+            let el=document.createElement("option");
+            el.text=o.text; el.value=o.val;
+            filter.add(el);
+        });
+    } else {
+        Object.keys(database.adhb).reverse().forEach(t=>{
+            let el=document.createElement("option");
+            el.text=t; el.value=t;
+            filter.add(el);
+        });
+    }
 
-    // isi dropdown
-    const filter = document.getElementById("filterTahun");
-    Object.keys(tahunIndexes).sort().forEach(t=>{
-        let o=document.createElement("option");
-        o.value=t; o.text=t;
-        filter.add(o);
-    });
-
-    document.getElementById("status").innerText="AKTIF";
     updateChart();
 }
 
-function updateChart(){
-    const menu = document.getElementById("menuGrafik").value;
-    const thn = document.getElementById("filterTahun").value;
+function updateChart() {
+    const menu = document.getElementById('menuGrafik').value;
+    const periode = document.getElementById('filterTahun').value;
 
-    if(currentChart) currentChart.destroy();
+    if (currentChart) currentChart.destroy();
 
-    let config={
+    let labels=[];
+    if(periode.includes("-")){
+        const [s,e]=periode.split("-").map(Number);
+        for(let i=s;i<=e;i++) labels.push(i.toString());
+    } else {
+        labels=[periode];
+    }
+
+    let config = {
         plugins:[ChartDataLabels],
-        options:{
-            responsive:true,
-            plugins:{
-                datalabels:{
-                    anchor:'end',
-                    formatter:v=>v
-                }
-            }
-        }
+        options:{ responsive:true, maintainAspectRatio:false }
     };
 
     if(menu==="nilai"){
         config.type="bar";
         config.data={
-            labels:[thn],
+            labels:labels,
             datasets:[
-                {label:"ADHB", data:[database.adhb[thn]||0], backgroundColor:"#FF8C00"},
-                {label:"ADHK", data:[database.adhk[thn]||0], backgroundColor:"#27ae60"}
+                {label:"ADHB", data:labels.map(t=>database.adhb[t]||0), backgroundColor:"#FF8C00"},
+                {label:"ADHK", data:labels.map(t=>database.adhk[t]||0), backgroundColor:"#27ae60"}
             ]
         };
     }
@@ -172,11 +230,12 @@ function updateChart(){
     if(menu==="laju"){
         config.type="line";
         config.data={
-            labels:Object.keys(database.laju),
+            labels:labels,
             datasets:[{
                 label:"LAJU",
-                data:Object.values(database.laju),
-                borderColor:"#27ae60"
+                data:labels.map(t=>database.laju[t]||0),
+                borderColor:"#27ae60",
+                fill:true
             }]
         };
     }
@@ -191,6 +250,5 @@ function toggleDarkMode(){
 
 fetchData();
 </script>
-
 </body>
 </html>
