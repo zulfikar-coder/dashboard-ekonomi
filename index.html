@@ -159,7 +159,13 @@ async function fetchData() {
         });
 
         // distribusi dummy (tidak diubah)
-        database.distribusi = { "PERTANIAN": 11.9, "INDUSTRI": 11.3, "KONSTRUKSI": 18.8, "PERDAGANGAN": 25.5, "JASA": 32.5 };
+        database.distribusi = {
+    "PERTANIAN": { "2021": 11.9, "2022": 11.9, "2023": 11.9 },
+    "INDUSTRI": { "2021": 11.3, "2022": 11.3, "2023": 11.3 },
+    "KONSTRUKSI": { "2021": 18.8, "2022": 18.8, "2023": 18.8 },
+    "PERDAGANGAN": { "2021": 25.5, "2022": 25.5, "2023": 25.5 },
+    "JASA": { "2021": 32.5, "2022": 32.5, "2023": 32.5 }
+};
 
         document.getElementById('status').innerText = "DATABASE TERHUBUNG (AKTIF)";
         sesuaikanFilter();
