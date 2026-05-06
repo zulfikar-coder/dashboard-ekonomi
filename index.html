@@ -6,21 +6,92 @@
     <title>DASHBOARD EKONOMI KOTA PALU</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <style>
+        :root { 
+            --orange: #FF8C00; --green: #27ae60; --bg: #fffcf5; 
+            --text: #333; --card-bg: #ffffff; --border: #eee;
+        }
+        .dark { 
+            --bg: #121212; --text: #eee; --card-bg: #1e1e1e; --border: #333;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            margin: 0; padding: 20px; text-transform: uppercase; 
+            transition: all 0.3s ease;
+        }
+
+        .header { 
+            background: var(--orange); color: white; padding: 15px 30px; 
+            border-radius: 12px; display: flex; align-items: center; 
+            margin-bottom: 20px; gap: 20px; 
+        }
+
+        .logo-img { height: 65px; }
+
+        .controls { 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; 
+            align-items: flex-end;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-weight: bold; font-size: 0.8rem; color: var(--orange); }
+
+        select { 
+            padding: 10px; border-radius: 6px; border: 1px solid var(--orange); 
+            font-weight: bold; background: var(--card-bg); color: var(--text);
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-left: auto; }
+        button { padding: 10px 15px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-dark { background: #333; color: white; }
+
+        .card { 
+            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            border-top: 4px solid var(--orange);
+            max-width: 900px; margin: 0 auto; 
+        }
+
+        .chart-container { height: 400px; }
+    </style>
 </head>
 
 <body>
 
-<div class="controls">
-    <select id="menuGrafik" onchange="sesuaikanFilter()">
-        <option value="laju">LAJU</option>
-        <option value="nilai">ADHB & ADHK</option>
-        <option value="distribusi">DISTRIBUSI</option>
-    </select>
-
-    <select id="filterTahun" onchange="updateChart()"></select>
+<div class="header">
+    <img src="logo-bps.png" class="logo-img">
+    <div>
+        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <small id="status">MENGHUBUNGKAN...</small>
+    </div>
 </div>
 
-<canvas id="mainChart"></canvas>
+<div class="controls">
+    <div class="control-group">
+        <label>JENIS GRAFIK</label>
+        <select id="menuGrafik" onchange="sesuaikanFilter()">
+            <option value="laju">LAJU</option>
+            <option value="nilai">ADHB & ADHK</option>
+            <option value="distribusi">DISTRIBUSI</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>PERIODE</label>
+        <select id="filterTahun" onchange="updateChart()"></select>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-dark" onclick="toggleDarkMode()">MODE GELAP</button>
+    </div>
+</div>
+
+<div class="card">
+    <canvas id="mainChart"></canvas>
+</div>
 
 <script>
 const ctx = document.getElementById('mainChart').getContext('2d');
@@ -31,101 +102,94 @@ let database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
 const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv";
 
 async function fetchData() {
-    const res = await fetch(sheetUrl);
-    const text = await res.text();
+    try {
+        const res = await fetch(sheetUrl);
+        const text = await res.text();
 
-    const rows = text.split('\n').map(r => r.replace('\r','').trim());
-    const headerRow = rows.find(r => r.includes('2011'));
-    const sep = headerRow.includes(';') ? ';' : ',';
+        const rows = text.split('\n').map(r => r.replace('\r','').trim());
+        const header = rows.find(r => r.match(/20\d{2}/));
+        const sep = header.includes(';') ? ';' : ',';
 
-    const data = rows.map(r => r.split(sep));
+        const data = rows.map(r => r.split(sep));
 
-    let listTahun = [];
+        let tahunIndexes = {};
 
-    const cleanNum = (v) => {
-        if (!v || v === "-" || v === "n.a") return 0;
-        let s = v.replace(/\./g,'').replace(',','.');
-        return parseFloat(s) || 0;
-    };
+        const cleanNum = v => {
+            if (!v || v === "-" || v === "n.a") return 0;
+            return parseFloat(v.replace(/\./g,'').replace(',','.')) || 0;
+        };
 
-    data.forEach(cols => {
-        const cellA = cols[0] ? cols[0].toUpperCase() : "";
+        data.forEach(cols => {
+            const cellA = cols[0] ? cols[0].toUpperCase() : "";
 
-        // ✅ DETEKSI SEMUA TAHUN (GANJIL GENAP)
-        if (cols.some(c => c.match(/20\d{2}/)) && listTahun.length === 0) {
-            listTahun = cols
-                .map(c => {
+            // 🔥 ambil semua tahun
+            if (Object.keys(tahunIndexes).length === 0) {
+                cols.forEach((c,i)=>{
                     const m = c.match(/20\d{2}/);
-                    return m ? m[0] : null;
-                })
-                .filter(t => t !== null);
-
-            console.log("TAHUN:", listTahun);
-        }
-
-        // ✅ LAJU
-        if (cellA.includes("LAJU")) {
-            listTahun.forEach((t,i)=>{
-                database.laju[t] = cleanNum(cols[i+1]);
-            });
-        }
-
-        // ✅ ADHB
-        else if (cellA.includes("ADHB") && !cellA.includes("DISTRIBUSI")) {
-            listTahun.forEach((t,i)=>{
-                database.adhb[t] = cleanNum(cols[i+1]);
-            });
-        }
-
-        // ✅ ADHK
-        else if (cellA.includes("ADHK")) {
-            listTahun.forEach((t,i)=>{
-                database.adhk[t] = cleanNum(cols[i+1]);
-            });
-        }
-
-        // ✅ 🔥 DISTRIBUSI (FIX UTAMA)
-        else if (cellA.includes("DISTRIBUSI")) {
-
-            const kategori = cellA
-                .replace("DISTRIBUSI","")
-                .replace("(%)","")
-                .trim();
-
-            if (!database.distribusi[kategori]) {
-                database.distribusi[kategori] = {};
+                    if(m) tahunIndexes[m[0]] = i;
+                });
             }
 
-            listTahun.forEach((t,i)=>{
-                database.distribusi[kategori][t] = cleanNum(cols[i+1]);
-            });
-        }
-    });
+            if (cellA.includes("LAJU")) {
+                for(let t in tahunIndexes){
+                    database.laju[t] = cleanNum(cols[tahunIndexes[t]]);
+                }
+            }
 
-    console.log("DISTRIBUSI:", database.distribusi);
+            else if (cellA.includes("ADHB") && !cellA.includes("DISTRIBUSI")) {
+                for(let t in tahunIndexes){
+                    database.adhb[t] = cleanNum(cols[tahunIndexes[t]]);
+                }
+            }
 
-    sesuaikanFilter();
+            else if (cellA.includes("ADHK")) {
+                for(let t in tahunIndexes){
+                    database.adhk[t] = cleanNum(cols[tahunIndexes[t]]);
+                }
+            }
+
+            // 🔥 FIX DISTRIBUSI
+            else if (cellA.includes("DISTRIBUSI")) {
+
+                const kategori = cellA
+                    .replace("DISTRIBUSI","")
+                    .replace("(%)","")
+                    .trim();
+
+                if(!database.distribusi[kategori]){
+                    database.distribusi[kategori] = {};
+                }
+
+                for(let t in tahunIndexes){
+                    database.distribusi[kategori][t] = cleanNum(cols[tahunIndexes[t]]);
+                }
+            }
+        });
+
+        console.log("DATA:", database);
+
+        document.getElementById("status").innerText = "TERHUBUNG";
+        sesuaikanFilter();
+
+    } catch(e){
+        document.getElementById("status").innerText = "GAGAL";
+    }
 }
 
 function sesuaikanFilter(){
-    const menu = document.getElementById('menuGrafik').value;
-    const filter = document.getElementById('filterTahun');
+    const menu = menuGrafik.value;
+    const f = filterTahun;
+    f.innerHTML = "";
 
-    filter.innerHTML = "";
-
-    if(menu === 'distribusi'){
+    if(menu === "distribusi"){
         Object.keys(database.laju).forEach(t=>{
-            let o = document.createElement('option');
-            o.value = t;
-            o.text = t;
-            filter.add(o);
+            let o = new Option(t,t);
+            f.add(o);
         });
     } else {
         ["2011-2015","2016-2020","2021-2026"].forEach(r=>{
-            let o = document.createElement('option');
-            o.value = r;
-            o.text = r;
-            filter.add(o);
+            let o = new Option(r,r);
+            f.add(o);
         });
     }
 
@@ -133,69 +197,67 @@ function sesuaikanFilter(){
 }
 
 function updateChart(){
-    const menu = document.getElementById('menuGrafik').value;
-    const periode = document.getElementById('filterTahun').value;
-
     if(currentChart) currentChart.destroy();
+
+    const menu = menuGrafik.value;
+    const periode = filterTahun.value;
 
     let labels = [];
 
     if(periode.includes("-")){
-        const [a,b] = periode.split("-").map(Number);
-        for(let i=a;i<=b;i++) labels.push(i.toString());
-    } else {
-        labels=[periode];
-    }
+        let [a,b] = periode.split("-").map(Number);
+        for(let i=a;i<=b;i++) labels.push(i+"");
+    } else labels=[periode];
 
     let config = { plugins:[ChartDataLabels] };
 
-    if(menu === 'laju'){
-        config.type = 'line';
-        config.data = {
+    if(menu==="laju"){
+        config.type="line";
+        config.data={
             labels,
             datasets:[{
-                label:'LAJU',
+                label:"LAJU",
                 data: labels.map(t=>database.laju[t]||0),
-                borderColor:'#27ae60'
+                borderColor:"#27ae60",
+                fill:true
             }]
         };
     }
 
-    else if(menu === 'nilai'){
-        config.type = 'bar';
-        config.data = {
+    else if(menu==="nilai"){
+        config.type="bar";
+        config.data={
             labels,
             datasets:[
-                {label:'ADHB', data: labels.map(t=>database.adhb[t]||0)},
-                {label:'ADHK', data: labels.map(t=>database.adhk[t]||0)}
+                {label:"ADHB", data:labels.map(t=>database.adhb[t]||0), backgroundColor:"#FF8C00"},
+                {label:"ADHK", data:labels.map(t=>database.adhk[t]||0), backgroundColor:"#27ae60"}
             ]
         };
     }
 
-    else if(menu === 'distribusi'){
+    else if(menu==="distribusi"){
         const thn = periode;
-
         const kategori = Object.keys(database.distribusi);
 
         const dataPie = kategori.map(k=>{
-            return database.distribusi[k] && database.distribusi[k][thn]
-                ? database.distribusi[k][thn]
-                : 0;
+            return database.distribusi[k]?.[thn] || 0;
         });
 
-        config.type = 'pie';
-        config.data = {
-            labels: kategori,
+        config.type="pie";
+        config.data={
+            labels:kategori,
             datasets:[{
-                data: dataPie,
-                backgroundColor:[
-                    '#FF8C00','#27ae60','#3498db','#f1c40f','#9b59b6'
-                ]
+                data:dataPie,
+                backgroundColor:['#FF8C00','#27ae60','#3498db','#f1c40f','#9b59b6']
             }]
         };
     }
 
     currentChart = new Chart(ctx, config);
+}
+
+function toggleDarkMode(){
+    document.body.classList.toggle("dark");
 }
 
 fetchData();
