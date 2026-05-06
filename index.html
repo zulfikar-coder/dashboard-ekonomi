@@ -93,17 +93,41 @@
             
             let tahunIndexes = {}; 
 
-            dataMatrix.forEach((cols) => {
-                const cellA = cols[0] ? cols[0].toUpperCase() : "";
+           dataMatrix.forEach((cols) => {
+    const cellA = cols[0] ? cols[0].toUpperCase() : "";
 
-                // MENCARI TAHUN DI HEADER (Solusi Tahun Ganjil)
-             if (cols.some(c => c.toString().match(/20\d{2}/))) {
-                    cols.forEach((cell, idx) => {
-                        const yearMatch = cell.toString().match(/20\d{2}/);
-                        if (yearMatch) {
-                            tahunIndexes[yearMatch[0]] = idx;
-                        }
-                    });
+    const cleanNum = (val) => {
+        if (!val || ["", "-", "n.a"].includes(val)) return 0;
+        let s = val.replace(/\./g, '').replace(',', '.');
+        return parseFloat(s) || 0;
+    };
+
+    if (Object.keys(tahunIndexes).length > 0) {
+        if (cellA.includes("LAJU") || cellA.includes("PERTUMBUHAN")) {
+            for (let thn in tahunIndexes) {
+                database.laju[thn] = cleanNum(cols[tahunIndexes[thn]]);
+            }
+        } else if (cellA.includes("ADHB") && !cellA.includes("DISTRIBUSI")) {
+            for (let thn in tahunIndexes) {
+                database.adhb[thn] = cleanNum(cols[tahunIndexes[thn]]);
+            }
+        } else if (cellA.includes("ADHK")) {
+            for (let thn in tahunIndexes) {
+                database.adhk[thn] = cleanNum(cols[tahunIndexes[thn]]);
+            }
+        } else if (cellA.includes("SUMBER")) {
+            for (let thn in tahunIndexes) {
+                database.sumber[thn] = cleanNum(cols[tahunIndexes[thn]]);
+            }
+        } else if (cellA.includes("DISTRIBUSI")) {
+            const kategori = cellA.replace("DISTRIBUSI", "").replace("(%)", "").trim();
+            if (!database.distribusi[kategori]) database.distribusi[kategori] = {};
+            for (let thn in tahunIndexes) {
+                database.distribusi[kategori][thn] = cleanNum(cols[tahunIndexes[thn]]);
+            }
+        }
+    }
+});
                 }
 
                 const cleanNum = (val) => {
@@ -195,7 +219,7 @@
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)',
-                    data: labels.map(t => database.laju[t] || 0),
+                    data: labels.map(t => database.adhb[t] ?? null),
                     borderColor: '#27ae60', backgroundColor: 'rgba(39, 174, 96, 0.1)',
                     fill: true, tension: 0.3, pointRadius: 5
                 }]
