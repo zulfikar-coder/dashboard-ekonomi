@@ -29,12 +29,12 @@
         }
 
         .logo-container { 
-            background: white; padding: 10px; border-radius: 10px; 
+            background: white; padding: 8px; border-radius: 10px; 
             display: flex; align-items: center; justify-content: center;
-            width: 80px; height: 80px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            width: 85px; height: 85px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .logo-img { 
-            width: 60px; height: 60px; object-fit: contain; display: block; 
+            width: 70px; height: 70px; object-fit: contain; display: block; 
         }
         .logo-fallback {
             display: none; width: 100%; height: 100%;
@@ -80,38 +80,38 @@
 
 <div class="header">
     <div class="logo-container">
-        <!-- Logo BPS dengan SVG Fallback -->
+        <!-- Logo BPS dengan SVG Fallback yang AKURAT -->
         <img id="bpsLogo" 
              src="https://palukota.bps.go.id/backend/images/logo-bps.png" 
              alt="BPS" 
              class="logo-img"
              onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
         
-        <!-- Fallback SVG Logo BPS -->
+        <!-- Fallback SVG Logo BPS - DESAIN AKURAT -->
         <div id="logoFallback" class="logo-fallback">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                 <!-- Background putih -->
-                <rect width="100" height="100" fill="white" rx="8"/>
+                <rect width="200" height="200" fill="white"/>
                 
-                <!-- Huruf B (Biru) -->
-                <path d="M 15 15 L 35 15 L 35 25 L 25 25 L 25 30 L 35 30 L 35 40 L 25 40 L 25 50 L 35 50 L 35 60 L 15 60 Z" 
+                <!-- Huruf B (Biru #0080D7) -->
+                <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" 
                       fill="#0080D7"/>
                 
-                <!-- Huruf P (Hijau) -->
-                <path d="M 40 60 L 40 40 L 50 40 C 58 40 62 36 62 30 C 62 24 58 20 50 20 L 40 20 L 40 15 L 50 15 C 63 15 72 22 72 30 C 72 38 63 45 50 45 L 45 45 L 45 60 Z" 
+                <!-- Huruf P (Hijau #009543) -->
+                <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" 
                       fill="#009543"/>
                 
-                <!-- Huruf S (Oranye) -->
-                <path d="M 75 15 L 85 15 L 85 25 C 85 33 78 40 70 40 L 65 40 L 65 35 L 70 35 C 73 35 75 33 75 30 L 75 25 L 65 25 L 65 15 L 75 15 Z M 75 45 L 75 50 C 75 53 73 55 70 55 L 65 55 L 65 60 L 70 60 C 78 60 85 53 85 45 L 85 40 L 75 40 L 75 45 Z" 
+                <!-- Huruf S (Oranye #F48024) -->
+                <path d="M 130 10 L 155 10 L 155 25 C 155 38 145 48 132 48 L 125 48 L 125 40 L 132 40 C 138 40 142 36 142 30 L 142 23 L 125 23 L 125 10 Z M 130 55 L 130 63 C 130 68 134 72 140 72 L 148 72 L 148 80 L 140 80 C 130 80 122 72 122 62 L 122 55 Z M 142 80 L 142 88 C 142 94 138 98 132 98 L 125 98 L 125 106 L 132 106 C 145 106 155 96 155 83 L 155 80 Z" 
                       fill="#F48024"/>
                 
-                <!-- Kurva dinamis biru -->
-                <path d="M 10 70 Q 20 85, 35 80 Q 50 75, 65 80 Q 80 85, 90 75" 
-                      stroke="#0080D7" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <!-- Kurva/elips biru (bawah kiri ke kanan) -->
+                <path d="M 20 120 Q 40 140, 70 135 Q 100 130, 130 135 Q 160 140, 180 125" 
+                      stroke="#0080D7" stroke-width="8" fill="none" stroke-linecap="round"/>
                 
-                <!-- Kurva dinamis oranye -->
-                <path d="M 10 20 Q 25 10, 40 15 Q 55 20, 70 15 Q 85 10, 90 25" 
-                      stroke="#F48024" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
+                <!-- Kurva/elips oranye (atas kiri ke kanan) -->
+                <path d="M 25 80 Q 45 60, 75 65 Q 105 70, 135 60 Q 165 50, 175 70" 
+                      stroke="#F48024" stroke-width="6" fill="none" stroke-linecap="round"/>
             </svg>
         </div>
     </div>
@@ -411,7 +411,8 @@ function updateChart() {
              {
                 labels: labels,
                 datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)',  labels.map(t => database.laju[t] || 0),
+                    label: 'LAJU PERTUMBUHAN (%)', 
+                    data: labels.map(t => database.laju[t] || 0),
                     borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)', borderWidth: 3, fill: true, tension: 0.4,
                     pointRadius: 6, pointBackgroundColor: '#27ae60', pointBorderColor: isDark ? '#fff' : '#27ae60', pointBorderWidth: 2, pointHoverRadius: 8
                 }]
@@ -461,7 +462,7 @@ function downloadChart() {
 
 // ===== INIT =====
 function init() {
-    console.log(' Dashboard initializing...');
+    console.log('🚀 Dashboard initializing...');
     if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
     
     // Logo error handler
