@@ -106,12 +106,13 @@
 
 <script>
 /**
- * 🎯 DASHBOARD EKONOMI PALU - IMPROVED VERSION
- * ✅ UI 100% SAMA dengan original
- * ✅ Logic JavaScript diperbaiki untuk Google Sheets
- * ✅ Parsing angka format Indonesia (10.452,12 → 10452.12)
+ * 🎯 DASHBOARD EKONOMI PALU - FINAL FIXED VERSION
+ * ✅ UI 100% sama dengan original
+ * ✅ Google Sheets CSV parsing robust
+ * ✅ Format angka Indonesia: 10.452,12 → 10452.12
+ * ✅ 🌙 DARK MODE FIX: Angka grafik garis/batang = HITAM agar kontras
  * ✅ Error handling + fallback mock data
- * ✅ Chart.js plugin registration yang benar
+ * ✅ Chart.js v4.x compatible
  */
 
 // ===== GLOBAL VARIABLES =====
@@ -125,257 +126,164 @@ let isDataLoaded = false;
 const CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
     timeout: 15000,
-    useMockData: true // Fallback ke data simulasi jika fetch gagal
+    useMockData: true
 };
 
-// ===== UTILITY FUNCTIONS =====
-
-// Bersihkan angka format Indonesia: "10.452,12" → 10452.12
+// ===== UTILITY: Clean Indonesian Number Format =====
 function cleanIndonesianNumber(val) {
     if (!val || val === '' || val === '-' || val === 'n.a' || val === 'N/A') return 0;
-    
-    let s = String(val).trim();
-    // Hapus tanda kutip jika ada
-    s = s.replace(/^"|"$/g, '');
+    let s = String(val).trim().replace(/^"|"$/g, '');
     
     if (s.includes(',') && s.includes('.')) {
-        // Format Indonesia lengkap: 10.452,12 → 10452.12
         s = s.replace(/\./g, '').replace(',', '.');
     } else if (s.includes(',') && !s.includes('.')) {
-        // Hanya desimal koma: 8,52 → 8.52
         s = s.replace(',', '.');
     } else if (s.includes('.')) {
-        // Cek apakah titik sebagai ribuan (misal: 1.234)
         const parts = s.split('.');
         if (parts.length > 1 && parts[parts.length - 1].length === 3) {
             s = s.replace(/\./g, '');
         }
     }
-    
     const num = parseFloat(s);
     return isNaN(num) ? 0 : num;
 }
 
-// Parse CSV dengan handling quoted values
+// ===== UTILITY: Parse CSV =====
 function parseCSV(csvText) {
-    const rows = csvText.split('\n')
-        .map(row => row.replace('\r', '').trim())
-        .filter(row => row.length > 0);
-    
+    const rows = csvText.split('\n').map(r => r.replace('\r', '').trim()).filter(r => r.length > 0);
     if (rows.length === 0) throw new Error('CSV kosong');
     
-    // Deteksi separator
     const separator = rows[0].includes(';') ? ';' : ',';
     
-    // Parse ke matrix dengan handling quoted values
     const matrix = rows.map(row => {
         const result = [];
-        let current = '';
-        let inQuotes = false;
-        
+        let current = '', inQuotes = false;
         for (let char of row) {
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === separator && !inQuotes) {
-                result.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === separator && !inQuotes) { result.push(current.trim()); current = ''; }
+            else current += char;
         }
         result.push(current.trim());
         return result;
     });
     
-    // Cari header yang mengandung tahun (2011, 2012, dll)
     let headerIndex = -1;
     for (let i = 0; i < Math.min(10, matrix.length); i++) {
-        if (matrix[i].some(cell => /^\d{4}$/.test(cell.trim()))) {
-            headerIndex = i;
-            break;
-        }
+        if (matrix[i].some(cell => /^\d{4}$/.test(cell.trim()))) { headerIndex = i; break; }
     }
-    
-    if (headerIndex === -1) {
-        throw new Error('Header dengan tahun tidak ditemukan dalam CSV');
-    }
+    if (headerIndex === -1) throw new Error('Header tahun tidak ditemukan');
     
     const headers = matrix[headerIndex].map(h => h.trim().replace(/\*/g, ''));
     const years = headers.slice(1).filter(h => /^\d{4}$/.test(h));
-    
-    if (years.length === 0) {
-        throw new Error('Tidak ada kolom tahun valid ditemukan');
-    }
+    if (years.length === 0) throw new Error('Tidak ada kolom tahun valid');
     
     console.log('✅ Tahun ditemukan:', years);
     return { matrix, headers, years };
 }
 
-// Extract data dari CSV matrix
+// ===== UTILITY: Extract Data =====
 function extractData(matrix, headers, years) {
     const data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
     
-    matrix.forEach((cols, rowIndex) => {
-        // Skip header rows
+    matrix.forEach((cols) => {
         if (headers.some(h => cols[0] && cols[0].trim() === h)) return;
-        
         const label = (cols[0] || '').trim().toUpperCase();
         if (!label) return;
         
-        years.forEach((year, yearIndex) => {
-            const value = cleanIndonesianNumber(cols[yearIndex + 1]);
-            
-            // Mapping berdasarkan label
-            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) {
-                data.laju[year] = value;
-            } else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) {
-                data.adhb[year] = value;
-            } else if (label.includes('ADHK')) {
-                data.adhk[year] = value;
-            } else if (label.includes('DISTRIBUSI')) {
-                // Extract nama sektor untuk pie chart
-                const sectorMatch = label.match(/DISTRIBUSI\s+([^\(]+)/i);
-                if (sectorMatch) {
-                    const sector = sectorMatch[1].trim().toUpperCase();
-                    if (sector && !data.distribusi[sector]) {
-                        data.distribusi[sector] = value;
-                    }
+        years.forEach((year, idx) => {
+            const value = cleanIndonesianNumber(cols[idx + 1]);
+            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) data.laju[year] = value;
+            else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) data.adhb[year] = value;
+            else if (label.includes('ADHK')) data.adhk[year] = value;
+            else if (label.includes('DISTRIBUSI')) {
+                const match = label.match(/DISTRIBUSI\s+([^\(]+)/i);
+                if (match) {
+                    const sector = match[1].trim().toUpperCase();
+                    if (sector && !data.distribusi[sector]) data.distribusi[sector] = value;
                 }
             }
         });
     });
     
-    // Fallback distribusi jika kosong
     if (Object.keys(data.distribusi).length === 0) {
-        data.distribusi = {
-            'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
-            'PERDAGANGAN': 25.5, 'JASA': 32.5
-        };
+        data.distribusi = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
     }
-    
     return data;
 }
 
-// Generate mock data untuk fallback
+// ===== MOCK DATA FALLBACK =====
 function generateMockData() {
     const years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
     const data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
-    
-    years.forEach((year, i) => {
-        data.laju[year] = Math.max(-2, Math.min(10, 5 + Math.sin(i/2)*2.5 + (Math.random()-0.5)*1.5));
-        data.adhb[year] = 10000 + i * 1200 + Math.random() * 1500;
-        data.adhk[year] = 7500 + i * 900 + Math.random() * 1000;
+    years.forEach((y, i) => {
+        data.laju[y] = Math.max(-2, Math.min(10, 5 + Math.sin(i/2)*2.5 + (Math.random()-0.5)*1.5));
+        data.adhb[y] = 10000 + i * 1200 + Math.random() * 1500;
+        data.adhk[y] = 7500 + i * 900 + Math.random() * 1000;
     });
-    
-    data.distribusi = {
-        'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
-        'PERDAGANGAN': 25.5, 'JASA': 32.5
-    };
-    
+    data.distribusi = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
     return { data, years };
 }
 
-// ===== DATA FETCHING =====
+// ===== FETCH DATA =====
 async function fetchData() {
     const statusEl = document.getElementById('status');
-    
     try {
         statusEl.innerText = "MENGUNDUH DATA DARI GOOGLE SHEETS...";
-        console.log('📡 Fetching:', CONFIG.sheetUrl);
-        
-        // Fetch dengan timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), CONFIG.timeout);
-        
-        const response = await fetch(CONFIG.sheetUrl, {
-            signal: controller.signal,
-            headers: { 'Cache-Control': 'no-cache' }
-        });
+        const response = await fetch(CONFIG.sheetUrl, { signal: controller.signal, headers: { 'Cache-Control': 'no-cache' } });
         clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const csvText = await response.text();
-        console.log('📄 CSV received, length:', csvText.length);
+        if (!csvText || csvText.length < 100) throw new Error('Data CSV tidak valid');
         
-        if (!csvText || csvText.length < 100) {
-            throw new Error('Data CSV tidak valid (terlalu pendek)');
-        }
-        
-        // Parse CSV
         const { matrix, headers, years } = parseCSV(csvText);
-        
-        // Extract data
         database = extractData(matrix, headers, years);
         availableYears = years;
         
-        if (availableYears.length === 0) {
-            throw new Error('Tidak ada data tahun yang berhasil diekstrak');
-        }
+        if (availableYears.length === 0) throw new Error('Tidak ada data tahun');
         
-        // Success
-        console.log('✅ Data loaded successfully:', availableYears);
+        console.log('✅ Data loaded:', availableYears);
         statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) • " + availableYears.length + " TAHUN";
         isDataLoaded = true;
-        
         sesuaikanFilter();
         
     } catch (error) {
         console.error('❌ Fetch error:', error.message);
-        
         if (CONFIG.useMockData) {
-            console.log('🔄 Using mock data as fallback...');
+            console.log('🔄 Using mock data fallback...');
             statusEl.innerText = "MODE SIMULASI • DATA CONTOH";
-            
             const mock = generateMockData();
             database = mock.data;
             availableYears = mock.years;
             isDataLoaded = true;
-            
             sesuaikanFilter();
         } else {
             statusEl.innerText = "KONEKSI GAGAL: " + error.message;
-            console.error('Full error:', error);
         }
     }
 }
 
-// ===== FILTER & CHART FUNCTIONS =====
+// ===== FILTER FUNCTIONS =====
 function sesuaikanFilter() {
     const menu = document.getElementById('menuGrafik').value;
     const filter = document.getElementById('filterTahun');
     filter.innerHTML = ""; 
     
     if (menu === 'distribusi') {
-        // Untuk Pie Chart, pilih tahun tunggal
         const years = availableYears.filter(t => t && t.length === 4).reverse();
-        years.forEach(t => {
-            let el = document.createElement("option"); 
-            el.text = t; el.value = t; 
-            filter.add(el); 
-        });
-        if (filter.options.length === 0) {
-            let el = document.createElement("option");
-            el.text = "2024"; el.value = "2024";
-            filter.add(el);
-        }
+        years.forEach(t => { let el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); });
+        if (filter.options.length === 0) { let el = document.createElement("option"); el.text = "2024"; el.value = "2024"; filter.add(el); }
     } else {
-        // Untuk Bar/Line Chart, pilih rentang periode
         const lastYear = availableYears[availableYears.length - 1] || '2026';
         const firstYear = availableYears[0] || '2011';
-        
         const opsi = [
             {text: "2021 - " + lastYear, val: "2021-" + lastYear}, 
             {text: "2016 - 2020", val: "2016-2020"}, 
             {text: firstYear + " - 2015", val: firstYear + "-2015"}
         ];
-        opsi.forEach(o => {
-            let el = document.createElement("option"); 
-            el.text = o.text; el.value = o.val; 
-            filter.add(el);
-        });
+        opsi.forEach(o => { let el = document.createElement("option"); el.text = o.text; el.value = o.val; filter.add(el); });
     }
     updateChart();
 }
@@ -384,66 +292,50 @@ function getYearsInRange(range) {
     if (range.includes("-")) {
         const [start, end] = range.split("-").map(Number);
         const labels = [];
-        for(let i = start; i <= end; i++) {
-            labels.push(i.toString());
-        }
+        for(let i = start; i <= end; i++) labels.push(i.toString());
         return labels;
     }
     return [range];
 }
 
+// ===== CHART RENDER (DARK MODE FIX HERE!) =====
 function updateChart() {
     if (!isDataLoaded) return;
     
     const menu = document.getElementById('menuGrafik').value;
     const periode = document.getElementById('filterTahun').value;
     
-    if (currentChart) {
-        currentChart.destroy();
-        currentChart = null;
-    }
+    if (currentChart) { currentChart.destroy(); currentChart = null; }
     
     const labels = getYearsInRange(periode);
     const isDark = document.body.classList.contains('dark');
     const textColor = isDark ? '#eee' : '#333';
     const gridColor = isDark ? '#444' : '#ddd';
+    
+    // 🌙 DARK MODE FIX: Data labels warna HITAM di mode gelap untuk kontras maksimal
+    const dataLabelColor = isDark ? '#000000' : '#333333';
+    const dataLabelBg = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)';
 
-    // Base config
     const baseConfig = {
-        responsive: true, 
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
-            legend: { 
-                labels: { 
-                    color: textColor,
-                    font: { weight: 'bold', size: 10 }
-                } 
-            },
+            legend: { labels: { color: textColor, font: { weight: 'bold', size: 10 } } },
             tooltip: {
-                backgroundColor: 'rgba(30, 30, 40, 0.95)',
-                titleColor: '#fff',
-                bodyColor: '#eee',
-                borderColor: isDark ? '#555' : '#ddd',
-                borderWidth: 1,
-                padding: 10,
+                backgroundColor: 'rgba(30,30,40,0.95)', titleColor: '#fff', bodyColor: '#eee',
+                borderColor: isDark ? '#555' : '#ddd', borderWidth: 1, padding: 10,
                 callbacks: {
-                    label: function(context) {
-                        let value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
-                        if (menu === 'laju') {
-                            return ' ' + value.toFixed(2) + '%';
-                        } else if (menu === 'nilai') {
-                            return ' Rp ' + (value >= 1000 ? (value/1000).toFixed(1) + ' T' : value.toFixed(0) + ' M');
-                        } else if (menu === 'distribusi') {
-                            return ' ' + value.toFixed(1) + '%';
-                        }
-                        return ' ' + value.toLocaleString('id-ID');
+                    label: function(ctx) {
+                        let v = ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed;
+                        if (menu === 'laju') return ' ' + v.toFixed(2) + '%';
+                        if (menu === 'nilai') return ' Rp ' + (v >= 1000 ? (v/1000).toFixed(1)+' T' : v.toFixed(0)+' M');
+                        if (menu === 'distribusi') return ' ' + v.toFixed(1) + '%';
+                        return ' ' + v.toLocaleString('id-ID');
                     }
                 }
             },
             datalabels: {
-                anchor: 'end', 
-                align: 'top',
+                anchor: 'end', align: 'top',
                 formatter: function(val) {
                     if (!val && val !== 0) return '';
                     if (menu === 'laju') return val.toFixed(1) + '%';
@@ -452,205 +344,101 @@ function updateChart() {
                     return val.toLocaleString('id-ID');
                 },
                 font: { weight: 'bold', size: 9 },
-                color: textColor,
-                backgroundColor: 'rgba(255,255,255,0.85)',
-                borderRadius: 3,
-                padding: 3
+                // 🎨 FIX UTAMA: Warna angka hitam di mode gelap
+                color: dataLabelColor,
+                backgroundColor: dataLabelBg,
+                borderRadius: 3, padding: 3
             }
         },
         scales: menu !== 'distribusi' ? {
-            y: { 
-                beginAtZero: true,
-                ticks: { color: textColor, font: { size: 9 } }, 
-                grid: { color: gridColor } 
-            },
-            x: { 
-                ticks: { color: textColor, font: { size: 9 } }, 
-                grid: { display: false } 
-            }
+            y: { beginAtZero: true, ticks: { color: textColor, font: { size: 9 } }, grid: { color: gridColor } },
+            x: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } }
         } : {}
     };
 
     let config;
-
     if (menu === 'nilai') {
         config = {
             type: 'bar',
-            data: {
+             {
                 labels: labels,
                 datasets: [
-                    { 
-                        label: 'ADHB', 
-                        data: labels.map(t => database.adhb[t] || 0), 
-                        backgroundColor: 'rgba(255, 140, 0, 0.85)',
-                        borderColor: '#FF8C00',
-                        borderWidth: 2,
-                        borderRadius: 4,
-                        borderSkipped: false
-                    },
-                    { 
-                        label: 'ADHK', 
-                        data: labels.map(t => database.adhk[t] || 0), 
-                        backgroundColor: 'rgba(39, 174, 96, 0.85)',
-                        borderColor: '#27ae60',
-                        borderWidth: 2,
-                        borderRadius: 4,
-                        borderSkipped: false
-                    }
+                    { label: 'ADHB', data: labels.map(t => database.adhb[t] || 0), backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 4, borderSkipped: false },
+                    { label: 'ADHK', data: labels.map(t => database.adhk[t] || 0), backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 4, borderSkipped: false }
                 ]
             },
             options: {
                 ...baseConfig,
-                scales: {
-                    ...baseConfig.scales,
-                    y: {
-                        ...baseConfig.scales.y,
-                        ticks: {
-                            ...baseConfig.scales.y.ticks,
-                            callback: function(value) {
-                                return (value/1000).toFixed(0) + 'T';
-                            }
-                        }
-                    }
-                }
+                scales: { ...baseConfig.scales, y: { ...baseConfig.scales.y, ticks: { ...baseConfig.scales.y.ticks, callback: v => (v/1000).toFixed(0)+'T' } } }
             }
         };
     } else if (menu === 'laju') {
         config = {
             type: 'line',
-            data: {
+             {
                 labels: labels,
-                datasets: [{ 
-                    label: 'LAJU PERTUMBUHAN (%)', 
-                    data: labels.map(t => database.laju[t] || 0), 
-                    borderColor: '#27ae60', 
-                    backgroundColor: 'rgba(39, 174, 96, 0.15)',
-                    borderWidth: 3,
-                    fill: true, 
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: '#27ae60',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 7
+                datasets: [{
+                    label: 'LAJU PERTUMBUHAN (%)', data: labels.map(t => database.laju[t] || 0),
+                    borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)', borderWidth: 3, fill: true, tension: 0.4,
+                    pointRadius: 5, pointBackgroundColor: '#27ae60', pointBorderColor: '#fff', pointBorderWidth: 2, pointHoverRadius: 7
                 }]
             },
             options: {
                 ...baseConfig,
-                scales: {
-                    ...baseConfig.scales,
-                    y: {
-                        ...baseConfig.scales.y,
-                        ticks: {
-                            ...baseConfig.scales.y.ticks,
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        }
-                    }
-                }
+                scales: { ...baseConfig.scales, y: { ...baseConfig.scales.y, ticks: { ...baseConfig.scales.y.ticks, callback: v => v+'%' } } }
             }
         };
     } else {
-        // Pie/Doughnut chart
         config = {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(database.distribusi),
-                datasets: [{ 
-                    data: Object.values(database.distribusi), 
-                    backgroundColor: ['#FF8C00', '#27ae60', '#2980b9', '#f1c40f', '#8e44ad'],
-                    borderColor: isDark ? '#1e1e1e' : '#fff',
-                    borderWidth: 3,
-                    hoverOffset: 10
-                }]
+                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 1000 },
+                responsive: true, maintainAspectRatio: false, animation: { duration: 1000 },
                 plugins: {
-                    legend: { 
-                        position: 'bottom',
-                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(30, 30, 40, 0.95)',
-                        callbacks: {
-                            label: function(context) {
-                                return ' ' + context.parsed.toFixed(1) + '%';
-                            }
-                        }
-                    },
-                    datalabels: {
-                        anchor: 'center',
-                        align: 'center',
-                        formatter: function(val) {
-                            return val >= 5 ? val.toFixed(1) + '%' : '';
-                        },
-                        font: { weight: 'bold', size: 10 },
-                        color: '#fff'
-                    }
+                    legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } },
+                    tooltip: { backgroundColor: 'rgba(30,30,40,0.95)', callbacks: { label: ctx => ' ' + ctx.parsed.toFixed(1) + '%' } },
+                    datalabels: { anchor: 'center', align: 'center', formatter: v => v >= 5 ? v.toFixed(1)+'%' : '', font: { weight: 'bold', size: 10 }, color: '#fff' }
                 },
                 cutout: '55%'
             }
         };
     }
 
-    // Register plugin dan buat chart
     Chart.register(ChartDataLabels);
     currentChart = new Chart(ctx, config);
     
-    // Update judul
-    const activeMenuText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
-    document.getElementById('judulGrafik').innerText = activeMenuText + " (" + periode + ")";
+    const menuText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
+    document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
 }
 
+// ===== UI FUNCTIONS =====
 function toggleDarkMode() {
     document.body.classList.toggle('dark');
-    if (currentChart) {
-        updateChart();
-    }
+    if (currentChart) updateChart();
 }
 
 function downloadChart() {
     const canvas = document.getElementById('mainChart');
     if (!canvas) return;
-    
     const link = document.createElement('a');
     link.download = 'Dashboard-Ekonomi-Palu-' + new Date().toISOString().slice(0,10) + '.png';
     link.href = canvas.toDataURL('image/png', 1.0);
     link.click();
 }
 
-// ===== INITIALIZATION =====
+// ===== INIT =====
 function init() {
     console.log('🚀 Dashboard initializing...');
-    
-    // Register plugin first
-    if (typeof ChartDataLabels !== 'undefined') {
-        Chart.register(ChartDataLabels);
-        console.log('✅ ChartDataLabels plugin registered');
-    }
-    
-    // Fetch data
+    if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
     fetchData();
-    
-    // Add keyboard shortcut for download
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            downloadChart();
-        }
-    });
+    document.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } });
 }
 
-// Start when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>
