@@ -12,7 +12,6 @@
             --text: #333; --card-bg: #ffffff; --border: #eee;
         }
         
-        /* DARK MODE */
         .dark { 
             --bg: #121212; --text: #eee; --card-bg: #1e1e1e; --border: #333;
         }
@@ -30,16 +29,15 @@
         }
 
         .logo-container { 
-            background: white; padding: 8px; border-radius: 10px; 
+            background: white; padding: 10px; border-radius: 10px; 
             display: flex; align-items: center; justify-content: center;
-            width: 75px; height: 75px;
+            width: 80px; height: 80px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .logo-img { 
-            height: 65px; width: auto; display: block; 
+            width: 60px; height: 60px; object-fit: contain; display: block; 
         }
         .logo-fallback {
-            font-size: 24px; font-weight: bold; color: var(--orange);
-            display: none;
+            display: none; width: 100%; height: 100%;
         }
 
         .controls { 
@@ -82,18 +80,38 @@
 
 <div class="header">
     <div class="logo-container">
-        <!-- Logo BPS dengan fallback SVG -->
+        <!-- Logo BPS dengan SVG Fallback -->
         <img id="bpsLogo" 
              src="https://palukota.bps.go.id/backend/images/logo-bps.png" 
              alt="BPS" 
              class="logo-img"
              onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
+        
+        <!-- Fallback SVG Logo BPS -->
         <div id="logoFallback" class="logo-fallback">
-            <svg width="55" height="55" viewBox="0 0 100 100">
-                <rect width="100" height="100" rx="15" fill="#FF8C00"/>
-                <text x="50" y="38" text-anchor="middle" fill="white" font-size="28" font-weight="bold" font-family="Arial">BPS</text>
-                <text x="50" y="62" text-anchor="middle" fill="white" font-size="12" font-family="Arial">STATISTIK</text>
-                <text x="50" y="78" text-anchor="middle" fill="white" font-size="10" font-family="Arial">PALU</text>
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background putih -->
+                <rect width="100" height="100" fill="white" rx="8"/>
+                
+                <!-- Huruf B (Biru) -->
+                <path d="M 15 15 L 35 15 L 35 25 L 25 25 L 25 30 L 35 30 L 35 40 L 25 40 L 25 50 L 35 50 L 35 60 L 15 60 Z" 
+                      fill="#0080D7"/>
+                
+                <!-- Huruf P (Hijau) -->
+                <path d="M 40 60 L 40 40 L 50 40 C 58 40 62 36 62 30 C 62 24 58 20 50 20 L 40 20 L 40 15 L 50 15 C 63 15 72 22 72 30 C 72 38 63 45 50 45 L 45 45 L 45 60 Z" 
+                      fill="#009543"/>
+                
+                <!-- Huruf S (Oranye) -->
+                <path d="M 75 15 L 85 15 L 85 25 C 85 33 78 40 70 40 L 65 40 L 65 35 L 70 35 C 73 35 75 33 75 30 L 75 25 L 65 25 L 65 15 L 75 15 Z M 75 45 L 75 50 C 75 53 73 55 70 55 L 65 55 L 65 60 L 70 60 C 78 60 85 53 85 45 L 85 40 L 75 40 L 75 45 Z" 
+                      fill="#F48024"/>
+                
+                <!-- Kurva dinamis biru -->
+                <path d="M 10 70 Q 20 85, 35 80 Q 50 75, 65 80 Q 80 85, 90 75" 
+                      stroke="#0080D7" stroke-width="3" fill="none" stroke-linecap="round"/>
+                
+                <!-- Kurva dinamis oranye -->
+                <path d="M 10 20 Q 25 10, 40 15 Q 55 20, 70 15 Q 85 10, 90 25" 
+                      stroke="#F48024" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
             </svg>
         </div>
     </div>
@@ -130,15 +148,6 @@
 </div>
 
 <script>
-/**
- * 🎯 DASHBOARD EKONOMI PALU - FINAL VERSION
- * ✅ Angka grafik TERLIHAT JELAS di mode gelap (hitam + bg putih)
- * ✅ Logo BPS muncul (dengan SVG fallback jika gambar gagal load)
- * ✅ Google Sheets CSV parsing robust
- * ✅ Format angka Indonesia: 10.452,12 → 10452.12
- * ✅ Error handling + fallback mock data
- */
-
 // ===== GLOBAL VARIABLES =====
 const ctx = document.getElementById('mainChart').getContext('2d');
 let currentChart = null;
@@ -322,7 +331,7 @@ function getYearsInRange(range) {
     return [range];
 }
 
-// ===== CHART RENDER - FIX ANGKA TERLIHAT DI MODE GELAP =====
+// ===== CHART RENDER =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -336,8 +345,7 @@ function updateChart() {
     const textColor = isDark ? '#eee' : '#333';
     const gridColor = isDark ? '#444' : '#ddd';
     
-    // 🌙 FIX UTAMA: Angka data labels HITAM + background PUTIH di mode gelap
-    // Agar kontras maksimal dengan background gelap
+    // 🌙 FIX: Angka HITAM + background PUTIH di mode gelap
     const dataLabelColor = isDark ? '#000000' : '#333333';
     const dataLabelBg = isDark ? '#FFFFFF' : 'rgba(255,255,255,0.85)';
     const dataLabelBorder = isDark ? '#FFFFFF' : 'rgba(200,200,200,0.5)';
@@ -370,25 +378,17 @@ function updateChart() {
                     return val.toLocaleString('id-ID');
                 },
                 font: { weight: 'bold', size: 10 },
-                // 🎨 KONFIGURASI WARANG DATA LABELS
-                color: dataLabelColor,              // Teks HITAM di mode gelap
-                backgroundColor: dataLabelBg,       // Background PUTIH di mode gelap
-                borderColor: dataLabelBorder,       // Border putih tipis
+                color: dataLabelColor,
+                backgroundColor: dataLabelBg,
+                borderColor: dataLabelBorder,
                 borderWidth: 1,
                 borderRadius: 6,
                 padding: 5
             }
         },
         scales: menu !== 'distribusi' ? {
-            y: { 
-                beginAtZero: true, 
-                ticks: { color: textColor, font: { size: 10 } }, 
-                grid: { color: gridColor } 
-            },
-            x: { 
-                ticks: { color: textColor, font: { size: 10 } }, 
-                grid: { display: false } 
-            }
+            y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }
         } : {}
     };
 
@@ -396,110 +396,41 @@ function updateChart() {
     if (menu === 'nilai') {
         config = {
             type: 'bar',
-            data: {
+             {
                 labels: labels,
                 datasets: [
-                    { 
-                        label: 'ADHB',  
-                        data: labels.map(t => database.adhb[t] || 0), 
-                        backgroundColor: 'rgba(255,140,0,0.85)', 
-                        borderColor: '#FF8C00', 
-                        borderWidth: 2, 
-                        borderRadius: 6, 
-                        borderSkipped: false 
-                    },
-                    { 
-                        label: 'ADHK', 
-                        data: labels.map(t => database.adhk[t] || 0), 
-                        backgroundColor: 'rgba(39,174,96,0.85)', 
-                        borderColor: '#27ae60', 
-                        borderWidth: 2, 
-                        borderRadius: 6, 
-                        borderSkipped: false 
-                    }
+                    { label: 'ADHB',  labels.map(t => database.adhb[t] || 0), backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHK', data: labels.map(t => database.adhk[t] || 0), backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
-            options: {
-                ...baseConfig,
-                scales: { 
-                    ...baseConfig.scales, 
-                    y: { 
-                        ...baseConfig.scales.y, 
-                        ticks: { 
-                            ...baseConfig.scales.y.ticks, 
-                            callback: v => (v/1000).toFixed(0)+'T' 
-                        } 
-                    } 
-                }
-            }
+            options: { ...baseConfig, scales: { ...baseConfig.scales, y: { ...baseConfig.scales.y, ticks: { ...baseConfig.scales.y.ticks, callback: v => (v/1000).toFixed(0)+'T' } } } }
         };
     } else if (menu === 'laju') {
         config = {
             type: 'line',
-            data: {
+             {
                 labels: labels,
                 datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)', 
-                    data: labels.map(t => database.laju[t] || 0),
-                    borderColor: '#27ae60', 
-                    backgroundColor: 'rgba(39,174,96,0.15)', 
-                    borderWidth: 3, 
-                    fill: true, 
-                    tension: 0.4,
-                    pointRadius: 6, 
-                    pointBackgroundColor: '#27ae60', 
-                    pointBorderColor: isDark ? '#fff' : '#27ae60', 
-                    pointBorderWidth: 2, 
-                    pointHoverRadius: 8
+                    label: 'LAJU PERTUMBUHAN (%)',  labels.map(t => database.laju[t] || 0),
+                    borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)', borderWidth: 3, fill: true, tension: 0.4,
+                    pointRadius: 6, pointBackgroundColor: '#27ae60', pointBorderColor: isDark ? '#fff' : '#27ae60', pointBorderWidth: 2, pointHoverRadius: 8
                 }]
             },
-            options: {
-                ...baseConfig,
-                scales: { 
-                    ...baseConfig.scales, 
-                    y: { 
-                        ...baseConfig.scales.y, 
-                        ticks: { 
-                            ...baseConfig.scales.y.ticks, 
-                            callback: v => v+'%' 
-                        } 
-                    } 
-                }
-            }
+            options: { ...baseConfig, scales: { ...baseConfig.scales, y: { ...baseConfig.scales.y, ticks: { ...baseConfig.scales.y.ticks, callback: v => v+'%' } } } }
         };
     } else {
         config = {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(database.distribusi),
-                datasets: [{  
-                    data: Object.values(database.distribusi), 
-                    backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], 
-                    borderColor: isDark ? '#1e1e1e' : '#fff', 
-                    borderWidth: 3, 
-                    hoverOffset: 10 
-                }]
+                datasets: [{  Object.values(database.distribusi), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
             },
             options: {
-                responsive: true, 
-                maintainAspectRatio: false, 
-                animation: { duration: 1000 },
+                responsive: true, maintainAspectRatio: false, animation: { duration: 1000 },
                 plugins: {
-                    legend: { 
-                        position: 'bottom', 
-                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } 
-                    },
-                    tooltip: { 
-                        backgroundColor: 'rgba(30,30,40,0.95)', 
-                        callbacks: { label: ctx => ' ' + ctx.parsed.toFixed(1) + '%' } 
-                    },
-                    datalabels: { 
-                        anchor: 'center', 
-                        align: 'center', 
-                        formatter: v => v >= 5 ? v.toFixed(1)+'%' : '', 
-                        font: { weight: 'bold', size: 11 }, 
-                        color: '#fff' 
-                    }
+                    legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } },
+                    tooltip: { backgroundColor: 'rgba(30,30,40,0.95)', callbacks: { label: ctx => ' ' + ctx.parsed.toFixed(1) + '%' } },
+                    datalabels: { anchor: 'center', align: 'center', formatter: v => v >= 5 ? v.toFixed(1)+'%' : '', font: { weight: 'bold', size: 11 }, color: '#fff' }
                 },
                 cutout: '55%'
             }
@@ -533,11 +464,12 @@ function init() {
     console.log(' Dashboard initializing...');
     if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
     
-    // Coba load logo BPS
+    // Logo error handler
     const logoImg = document.getElementById('bpsLogo');
     logoImg.onerror = function() {
+        console.log('Logo BPS gagal load, menggunakan SVG fallback');
         this.style.display = 'none';
-        document.getElementById('logoFallback').style.display = 'flex';
+        document.getElementById('logoFallback').style.display = 'block';
     };
     
     fetchData();
