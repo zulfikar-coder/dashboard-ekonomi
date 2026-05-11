@@ -54,7 +54,6 @@
             background: linear-gradient(135deg, var(--bg) 0%, #1a1f2e 100%);
         }
 
-        /* HEADER - Enhanced */
         .header { 
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white; 
@@ -131,7 +130,6 @@
             font-weight: 500;
         }
 
-        /* CONTROLS - Enhanced */
         .controls { 
             background: var(--card-bg); 
             padding: 25px 30px; 
@@ -243,7 +241,6 @@
             color: white;
         }
 
-        /* CARD - Enhanced */
         .card { 
             background: var(--card-bg); 
             padding: 30px; 
@@ -285,7 +282,6 @@
             padding: 20px;
         }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -339,7 +335,6 @@
             }
         }
 
-        /* Animations */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -409,10 +404,17 @@
 </div>
 
 <script>
-// ===== GLOBAL VARIABLES =====
+// ===== GLOBAL VARIABLES - PERBAIKI STRUKTUR DATA =====
 var ctx = document.getElementById('mainChart').getContext('2d');
 var currentChart = null;
-var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+
+// STRUKTUR DATA YANG DIPERBAIKI: distribusi sekarang per tahun
+var database = { 
+    laju: {}, 
+    adhb: {}, 
+    adhk: {}, 
+    distribusi: {}  // Format: { '2021': {'PERTANIAN': 11.9, ...}, '2022': {...} }
+};
 var availableYears = [];
 var isDataLoaded = false;
 
@@ -479,9 +481,14 @@ function parseCSV(csvText) {
     return { matrix: matrix, headers: headers, years: years };
 }
 
-// ===== UTILITY: Extract Data =====
+// ===== UTILITY: Extract Data - DIPERBAIKI UNTUK DISTRIBUSI PER TAHUN =====
 function extractData(matrix, headers, years) {
     var data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+    
+    // Inisialisasi distribusi per tahun
+    years.forEach(function(year) {
+        data.distribusi[year] = {};
+    });
     
     matrix.forEach(function(cols) {
         if (headers.some(function(h) { return cols[0] && cols[0].trim() === h; })) return;
@@ -490,22 +497,40 @@ function extractData(matrix, headers, years) {
         
         years.forEach(function(year, idx) {
             var value = cleanIndonesianNumber(cols[idx + 1]);
-            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) data.laju[year] = value;
-            else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) data.adhb[year] = value;
-            else if (label.includes('ADHK')) data.adhk[year] = value;
-            else if (label.includes('DISTRIBUSI')) {
+            
+            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) {
+                data.laju[year] = value;
+            } else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) {
+                data.adhb[year] = value;
+            } else if (label.includes('ADHK')) {
+                data.adhk[year] = value;
+            } else if (label.includes('DISTRIBUSI')) {
+                // Extract nama sektor dari label
                 var match = label.match(/DISTRIBUSI\s+([^\(]+)/i);
                 if (match) {
                     var sector = match[1].trim().toUpperCase();
-                    if (sector && !data.distribusi[sector]) data.distribusi[sector] = value;
+                    if (sector && value !== 0) {
+                        // SIMPAN DISTRIBUSI PER TAHUN - INI YANG DIPERBAIKI!
+                        if (!data.distribusi[year]) {
+                            data.distribusi[year] = {};
+                        }
+                        data.distribusi[year][sector] = value;
+                    }
                 }
             }
         });
     });
     
-    if (Object.keys(data.distribusi).length === 0) {
-        data.distribusi = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
-    }
+    // Fallback distribusi jika kosong untuk setiap tahun
+    years.forEach(function(year) {
+        if (Object.keys(data.distribusi[year]).length === 0) {
+            data.distribusi[year] = {
+                'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
+                'PERDAGANGAN': 25.5, 'JASA': 32.5
+            };
+        }
+    });
+    
     return data;
 }
 
@@ -513,12 +538,22 @@ function extractData(matrix, headers, years) {
 function generateMockData() {
     var years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
     var data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+    
     years.forEach(function(y, i) {
         data.laju[y] = Math.max(-2, Math.min(10, 5 + Math.sin(i/2)*2.5 + (Math.random()-0.5)*1.5));
         data.adhb[y] = 10000 + i * 1200 + Math.random() * 1500;
         data.adhk[y] = 7500 + i * 900 + Math.random() * 1000;
+        
+        // Distribusi berbeda per tahun
+        data.distribusi[y] = {
+            'PERTANIAN': 10 + Math.random() * 3,
+            'INDUSTRI': 10 + Math.random() * 3,
+            'KONSTRUKSI': 17 + Math.random() * 3,
+            'PERDAGANGAN': 23 + Math.random() * 4,
+            'JASA': 30 + Math.random() * 5
+        };
     });
-    data.distribusi = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
+    
     return { data: data, years: years };
 }
 
@@ -543,6 +578,7 @@ async function fetchData() {
         if (availableYears.length === 0) throw new Error('Tidak ada data tahun');
         
         console.log('Data loaded:', availableYears);
+        console.log('Distribusi per tahun:', database.distribusi);
         statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - " + availableYears.length + " TAHUN";
         isDataLoaded = true;
         sesuaikanFilter();
@@ -570,6 +606,7 @@ function sesuaikanFilter() {
     filter.innerHTML = ""; 
     
     if (menu === 'distribusi') {
+        // Untuk Pie Chart, pilih tahun tunggal
         var years = availableYears.filter(function(t) { return t && t.length === 4; }).reverse();
         years.forEach(function(t) { 
             var el = document.createElement("option"); 
@@ -582,6 +619,7 @@ function sesuaikanFilter() {
             filter.add(el); 
         }
     } else {
+        // Untuk Bar/Line Chart, pilih rentang periode
         var lastYear = availableYears[availableYears.length - 1] || '2026';
         var firstYear = availableYears[0] || '2011';
         var opsi = [
@@ -610,7 +648,7 @@ function getYearsInRange(range) {
     return [range];
 }
 
-// ===== CHART RENDER =====
+// ===== CHART RENDER - DIPERBAIKI UNTUK PIE CHART =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -703,19 +741,57 @@ function updateChart() {
             options: JSON.parse(JSON.stringify(baseConfig))
         };
         config.options.scales.y.ticks.callback = function(v) { return v+'%'; };
-    } else {
+    } else if (menu === 'distribusi') {
+        // PIE CHART - AMBIL DATA DISTRIBUSI SESUAI TAHUN YANG DIPILIH
+        var selectedYear = periode;
+        var distribusiData = database.distribusi[selectedYear] || {};
+        
+        // Jika data kosong, gunakan fallback
+        if (Object.keys(distribusiData).length === 0) {
+            distribusiData = {
+                'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
+                'PERDAGANGAN': 25.5, 'JASA': 32.5
+            };
+        }
+        
         config = {
             type: 'doughnut',
             data: {
-                labels: Object.keys(database.distribusi),
-                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
+                labels: Object.keys(distribusiData),
+                datasets: [{
+                    data: Object.values(distribusiData),
+                    backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
+                    borderColor: isDark ? '#1e1e1e' : '#fff',
+                    borderWidth: 3,
+                    hoverOffset: 10
+                }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, animation: { duration: 1000 },
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1000 },
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } },
-                    tooltip: { backgroundColor: 'rgba(30,30,40,0.95)', callbacks: { label: function(ctx) { return ' ' + ctx.parsed.toFixed(1) + '%'; } } },
-                    datalabels: { anchor: 'center', align: 'center', formatter: function(v) { return v >= 5 ? v.toFixed(1)+'%' : ''; }, font: { weight: 'bold', size: 11 }, color: '#fff' }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } 
+                    },
+                    tooltip: { 
+                        backgroundColor: 'rgba(30,30,40,0.95)', 
+                        callbacks: { 
+                            label: function(ctx) { 
+                                return ' ' + ctx.parsed.toFixed(1) + '%'; 
+                            } 
+                        } 
+                    },
+                    datalabels: { 
+                        anchor: 'center', 
+                        align: 'center', 
+                        formatter: function(v) { 
+                            return v >= 5 ? v.toFixed(1)+'%' : ''; 
+                        }, 
+                        font: { weight: 'bold', size: 11 }, 
+                        color: '#fff' 
+                    }
                 },
                 cutout: '55%'
             }
