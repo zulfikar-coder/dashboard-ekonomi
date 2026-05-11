@@ -715,11 +715,11 @@ function updateChart() {
         
         config = {
             type: 'bar',
-             {
+            data: {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
-                    { label: 'ADHK',  adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
+                    { label: 'ADHB', data: adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHK', data: adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
             options: JSON.parse(JSON.stringify(baseConfig))
@@ -730,7 +730,7 @@ function updateChart() {
         
         config = {
             type: 'line',
-             {
+            data: {
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
@@ -756,10 +756,10 @@ function updateChart() {
         
         config = {
             type: 'doughnut',
-             {
+            data: {
                 labels: Object.keys(distribusiData),
                 datasets: [{
-                     Object.values(distribusiData),
+                    data: Object.values(distribusiData),
                     backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
                     borderColor: isDark ? '#1e1e1e' : '#fff',
                     borderWidth: 3,
