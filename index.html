@@ -29,8 +29,18 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 20px; 
         }
 
-        .logo-container { background: white; padding: 8px; border-radius: 10px; display: flex; align-items: center; }
-        .logo-img { height: 65px; }
+        .logo-container { 
+            background: white; padding: 8px; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center;
+            width: 75px; height: 75px;
+        }
+        .logo-img { 
+            height: 65px; width: auto; display: block; 
+        }
+        .logo-fallback {
+            font-size: 24px; font-weight: bold; color: var(--orange);
+            display: none;
+        }
 
         .controls { 
             background: var(--card-bg); padding: 20px; border-radius: 12px; 
@@ -71,7 +81,22 @@
 <body>
 
 <div class="header">
-    <div class="logo-container"><img src="https://palukota.bps.go.id/backend/images/logo-bps.png" alt="BPS" class="logo-img"></div>
+    <div class="logo-container">
+        <!-- Logo BPS dengan fallback SVG -->
+        <img id="bpsLogo" 
+             src="https://palukota.bps.go.id/backend/images/logo-bps.png" 
+             alt="BPS" 
+             class="logo-img"
+             onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
+        <div id="logoFallback" class="logo-fallback">
+            <svg width="55" height="55" viewBox="0 0 100 100">
+                <rect width="100" height="100" rx="15" fill="#FF8C00"/>
+                <text x="50" y="38" text-anchor="middle" fill="white" font-size="28" font-weight="bold" font-family="Arial">BPS</text>
+                <text x="50" y="62" text-anchor="middle" fill="white" font-size="12" font-family="Arial">STATISTIK</text>
+                <text x="50" y="78" text-anchor="middle" fill="white" font-size="10" font-family="Arial">PALU</text>
+            </svg>
+        </div>
+    </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
         <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
@@ -106,13 +131,12 @@
 
 <script>
 /**
- * 🎯 DASHBOARD EKONOMI PALU - FINAL FIXED VERSION
- * ✅ UI 100% sama dengan original
+ * 🎯 DASHBOARD EKONOMI PALU - FINAL VERSION
+ * ✅ Angka grafik TERLIHAT JELAS di mode gelap (hitam + bg putih)
+ * ✅ Logo BPS muncul (dengan SVG fallback jika gambar gagal load)
  * ✅ Google Sheets CSV parsing robust
  * ✅ Format angka Indonesia: 10.452,12 → 10452.12
- * ✅ 🌙 DARK MODE FIX: Angka grafik garis/batang = HITAM agar kontras
  * ✅ Error handling + fallback mock data
- * ✅ Chart.js v4.x compatible
  */
 
 // ===== GLOBAL VARIABLES =====
@@ -298,7 +322,7 @@ function getYearsInRange(range) {
     return [range];
 }
 
-// ===== CHART RENDER (DARK MODE FIX HERE!) =====
+// ===== CHART RENDER - FIX ANGKA TERLIHAT DI MODE GELAP =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -312,9 +336,11 @@ function updateChart() {
     const textColor = isDark ? '#eee' : '#333';
     const gridColor = isDark ? '#444' : '#ddd';
     
-    // 🌙 DARK MODE FIX: Data labels warna HITAM di mode gelap untuk kontras maksimal
+    // 🌙 FIX UTAMA: Angka data labels HITAM + background PUTIH di mode gelap
+    // Agar kontras maksimal dengan background gelap
     const dataLabelColor = isDark ? '#000000' : '#333333';
-    const dataLabelBg = isDark ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)';
+    const dataLabelBg = isDark ? '#FFFFFF' : 'rgba(255,255,255,0.85)';
+    const dataLabelBorder = isDark ? '#FFFFFF' : 'rgba(200,200,200,0.5)';
 
     const baseConfig = {
         responsive: true, maintainAspectRatio: false,
@@ -343,16 +369,26 @@ function updateChart() {
                     if (menu === 'distribusi') return val.toFixed(1) + '%';
                     return val.toLocaleString('id-ID');
                 },
-                font: { weight: 'bold', size: 9 },
-                // 🎨 FIX UTAMA: Warna angka hitam di mode gelap
-                color: dataLabelColor,
-                backgroundColor: dataLabelBg,
-                borderRadius: 3, padding: 3
+                font: { weight: 'bold', size: 10 },
+                // 🎨 KONFIGURASI WARANG DATA LABELS
+                color: dataLabelColor,              // Teks HITAM di mode gelap
+                backgroundColor: dataLabelBg,       // Background PUTIH di mode gelap
+                borderColor: dataLabelBorder,       // Border putih tipis
+                borderWidth: 1,
+                borderRadius: 6,
+                padding: 5
             }
         },
         scales: menu !== 'distribusi' ? {
-            y: { beginAtZero: true, ticks: { color: textColor, font: { size: 9 } }, grid: { color: gridColor } },
-            x: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } }
+            y: { 
+                beginAtZero: true, 
+                ticks: { color: textColor, font: { size: 10 } }, 
+                grid: { color: gridColor } 
+            },
+            x: { 
+                ticks: { color: textColor, font: { size: 10 } }, 
+                grid: { display: false } 
+            }
         } : {}
     };
 
@@ -360,47 +396,110 @@ function updateChart() {
     if (menu === 'nilai') {
         config = {
             type: 'bar',
-             {
+            data: {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB', data: labels.map(t => database.adhb[t] || 0), backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 4, borderSkipped: false },
-                    { label: 'ADHK', data: labels.map(t => database.adhk[t] || 0), backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 4, borderSkipped: false }
+                    { 
+                        label: 'ADHB',  
+                        data: labels.map(t => database.adhb[t] || 0), 
+                        backgroundColor: 'rgba(255,140,0,0.85)', 
+                        borderColor: '#FF8C00', 
+                        borderWidth: 2, 
+                        borderRadius: 6, 
+                        borderSkipped: false 
+                    },
+                    { 
+                        label: 'ADHK', 
+                        data: labels.map(t => database.adhk[t] || 0), 
+                        backgroundColor: 'rgba(39,174,96,0.85)', 
+                        borderColor: '#27ae60', 
+                        borderWidth: 2, 
+                        borderRadius: 6, 
+                        borderSkipped: false 
+                    }
                 ]
             },
             options: {
                 ...baseConfig,
-                scales: { ...baseConfig.scales, y: { ...baseConfig.scales.y, ticks: { ...baseConfig.scales.y.ticks, callback: v => (v/1000).toFixed(0)+'T' } } }
+                scales: { 
+                    ...baseConfig.scales, 
+                    y: { 
+                        ...baseConfig.scales.y, 
+                        ticks: { 
+                            ...baseConfig.scales.y.ticks, 
+                            callback: v => (v/1000).toFixed(0)+'T' 
+                        } 
+                    } 
+                }
             }
         };
     } else if (menu === 'laju') {
         config = {
             type: 'line',
-             {
+            data: {
                 labels: labels,
                 datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)', data: labels.map(t => database.laju[t] || 0),
-                    borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)', borderWidth: 3, fill: true, tension: 0.4,
-                    pointRadius: 5, pointBackgroundColor: '#27ae60', pointBorderColor: '#fff', pointBorderWidth: 2, pointHoverRadius: 7
+                    label: 'LAJU PERTUMBUHAN (%)', 
+                    data: labels.map(t => database.laju[t] || 0),
+                    borderColor: '#27ae60', 
+                    backgroundColor: 'rgba(39,174,96,0.15)', 
+                    borderWidth: 3, 
+                    fill: true, 
+                    tension: 0.4,
+                    pointRadius: 6, 
+                    pointBackgroundColor: '#27ae60', 
+                    pointBorderColor: isDark ? '#fff' : '#27ae60', 
+                    pointBorderWidth: 2, 
+                    pointHoverRadius: 8
                 }]
             },
             options: {
                 ...baseConfig,
-                scales: { ...baseConfig.scales, y: { ...baseConfig.scales.y, ticks: { ...baseConfig.scales.y.ticks, callback: v => v+'%' } } }
+                scales: { 
+                    ...baseConfig.scales, 
+                    y: { 
+                        ...baseConfig.scales.y, 
+                        ticks: { 
+                            ...baseConfig.scales.y.ticks, 
+                            callback: v => v+'%' 
+                        } 
+                    } 
+                }
             }
         };
     } else {
         config = {
             type: 'doughnut',
-             {
+            data: {
                 labels: Object.keys(database.distribusi),
-                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
+                datasets: [{  
+                    data: Object.values(database.distribusi), 
+                    backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], 
+                    borderColor: isDark ? '#1e1e1e' : '#fff', 
+                    borderWidth: 3, 
+                    hoverOffset: 10 
+                }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, animation: { duration: 1000 },
+                responsive: true, 
+                maintainAspectRatio: false, 
+                animation: { duration: 1000 },
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } },
-                    tooltip: { backgroundColor: 'rgba(30,30,40,0.95)', callbacks: { label: ctx => ' ' + ctx.parsed.toFixed(1) + '%' } },
-                    datalabels: { anchor: 'center', align: 'center', formatter: v => v >= 5 ? v.toFixed(1)+'%' : '', font: { weight: 'bold', size: 10 }, color: '#fff' }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } 
+                    },
+                    tooltip: { 
+                        backgroundColor: 'rgba(30,30,40,0.95)', 
+                        callbacks: { label: ctx => ' ' + ctx.parsed.toFixed(1) + '%' } 
+                    },
+                    datalabels: { 
+                        anchor: 'center', 
+                        align: 'center', 
+                        formatter: v => v >= 5 ? v.toFixed(1)+'%' : '', 
+                        font: { weight: 'bold', size: 11 }, 
+                        color: '#fff' 
+                    }
                 },
                 cutout: '55%'
             }
@@ -431,10 +530,20 @@ function downloadChart() {
 
 // ===== INIT =====
 function init() {
-    console.log('🚀 Dashboard initializing...');
+    console.log(' Dashboard initializing...');
     if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+    
+    // Coba load logo BPS
+    const logoImg = document.getElementById('bpsLogo');
+    logoImg.onerror = function() {
+        this.style.display = 'none';
+        document.getElementById('logoFallback').style.display = 'flex';
+    };
+    
     fetchData();
-    document.addEventListener('keydown', function(e) { if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } });
+    document.addEventListener('keydown', function(e) { 
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } 
+    });
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
