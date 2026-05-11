@@ -8,7 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
         :root {
-            --orange: #FF8C00; --green: #27ae60; --blue: #3498db;
+            --orange: #FF8C00; --orange-dark: #cc7000;
+            --green: #27ae60; --blue: #3498db; --red: #e74c3c;
             --bg: #fffcf5; --text: #2c3e50; --card-bg: #ffffff;
             --border: #e0e0e0; --shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
@@ -21,9 +22,10 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg); color: var(--text);
             padding: 16px; transition: all 0.3s ease;
+            min-height: 100vh;
         }
         .header {
-            background: linear-gradient(135deg, var(--orange), #cc7000);
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
             color: white; padding: 24px; border-radius: 16px;
             margin-bottom: 20px; box-shadow: var(--shadow);
         }
@@ -38,7 +40,7 @@
             background: #ffd700; animation: pulse 1.5s infinite;
         }
         .status-dot.success { background: #2ecc71; animation: none; }
-        .status-dot.error { background: #e74c3c; animation: none; }
+        .status-dot.error { background: var(--red); animation: none; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
         
         .controls {
@@ -56,7 +58,7 @@
             border: 2px solid var(--border); background: var(--bg);
             color: var(--text); font-size: 0.95rem; cursor: pointer;
         }
-        select:disabled { opacity: 0.5; cursor: not-allowed; }
+        select:disabled { opacity: 0.6; cursor: not-allowed; background: #f5f5f5; }
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
         button {
             padding: 12px 20px; border-radius: 10px; border: none;
@@ -68,6 +70,23 @@
         .btn-png { background: var(--green); }
         .btn-pdf { background: var(--blue); }
         .btn-dark { background: #555; }
+        .btn-retry { background: var(--orange); }
+        
+        .alert {
+            padding: 16px 20px; border-radius: 12px; margin-bottom: 20px;
+            border-left: 4px solid; display: none; animation: slideIn 0.3s;
+        }
+        .alert.show { display: block; }
+        .alert-error { 
+            background: #fee; border-color: var(--red); color: #c0392b; 
+        }
+        .alert-warning { 
+            background: #fff3cd; border-color: #ffc107; color: #856404; 
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         
         .card {
             background: var(--card-bg); padding: 24px; border-radius: 16px;
@@ -78,20 +97,39 @@
         .chart-container { 
             position: relative; height: clamp(350px, 50vh, 500px); 
             background: var(--bg); border-radius: 12px; padding: 16px;
+            display: flex; align-items: center; justify-content: center;
         }
-        .error-message {
-            background: #fee; border-left: 4px solid #e74c3c;
-            padding: 16px; border-radius: 8px; margin: 20px 0;
-            color: #c0392b; display: none;
-        }
-        .error-message.show { display: block; }
         .loading {
-            text-align: center; padding: 60px 20px; color: var(--orange);
-            font-size: 1.1rem;
+            text-align: center; padding: 60px 20px;
         }
+        .loading-spinner {
+            width: 50px; height: 50px; border: 4px solid var(--border);
+            border-top-color: var(--orange); border-radius: 50%;
+            margin: 0 auto 16px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--orange); font-size: 1.1rem; font-weight: 500; }
+        .loading-sub { color: var(--text); opacity: 0.7; margin-top: 8px; font-size: 0.9rem; }
+        
+        .debug-info {
+            background: #f8f9fa; border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px; margin-top: 16px;
+            font-family: 'Courier New', monospace; font-size: 0.85rem;
+            display: none;
+        }
+        .debug-info.show { display: block; }
+        .debug-info code { 
+            background: #e9ecef; padding: 2px 6px; border-radius: 4px; 
+        }
+        
         @media (max-width: 768px) {
             .controls { grid-template-columns: 1fr; }
             .btn-group { width: 100%; justify-content: center; }
+        }
+        @media print {
+            .controls, .alert, .btn-group { display: none !important; }
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
         }
     </style>
 </head>
@@ -104,6 +142,8 @@
         <span id="statusText">Memuat data...</span>
     </div>
 </div>
+
+<div id="alertContainer"></div>
 
 <div class="controls">
     <div class="control-group">
@@ -122,145 +162,192 @@
         <button class="btn-png" onclick="downloadChart('png')" id="btnPng" disabled>📥 PNG</button>
         <button class="btn-pdf" onclick="downloadChart('pdf')" id="btnPdf" disabled>📄 PDF</button>
         <button class="btn-dark" onclick="toggleDarkMode()">🌙 Gelap</button>
-        <button onclick="retryFetch()" id="btnRetry" style="background:#e67e22;display:none">🔄 Retry</button>
+        <button class="btn-retry" onclick="retryFetch()" id="btnRetry" style="display:none">🔄 Retry</button>
     </div>
 </div>
 
 <div class="card">
     <h3 id="judulGrafik">Visualisasi Data Ekonomi</h3>
-    <div class="error-message" id="errorMsg"></div>
     <div class="chart-container" id="chartContainer">
-        <div class="loading" id="loadingText">⏳ Menghubungkan ke data BPS...</div>
-        <canvas id="mainChart" style="display:none"></canvas>
+        <div class="loading" id="loadingBox">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">⏳ Menghubungkan ke data BPS...</div>
+            <div class="loading-sub">Mohon tunggu, sedang mengambil data dari Google Sheets</div>
+            <div class="debug-info" id="debugInfo"></div>
+        </div>
+        <canvas id="mainChart" style="display:none; width:100%; height:100%"></canvas>
     </div>
 </div>
 
 <script>
+// ===== KONFIGURASI =====
+const CONFIG = {
+    SHEET_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
+    TIMEOUT: 15000, // 15 detik
+    USE_MOCK_DATA: true // Otomatis pakai mock data jika fetch gagal
+};
+
 // ===== STATE =====
 const state = {
     chart: null,
      { laju: {}, adhb: {}, adhk: {}, distribusi: {} },
     years: [],
     isLoaded: false,
-    config: {
-        url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv"
-    }
+    fetchAttempts: 0
 };
 
 // ===== UTILITIES =====
-const fmt = {
-    id: (n, d=1) => {
-        if(n===null || n===undefined || isNaN(n)) return '-';
-        return new Intl.NumberFormat('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+const Utils = {
+    fmt: {
+        id: (n, d=1) => {
+            if(n===null || n===undefined || isNaN(n)) return '-';
+            return new Intl.NumberFormat('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+        },
+        pct: n => Utils.fmt.id(n,2)+'%',
+        rp: n => {
+            if(n===null || n===undefined) return '-';
+            return n>=1000?`Rp ${Utils.fmt.id(n/1000,1)} T`:`Rp ${Utils.fmt.id(n,1)} M`;
+        }
     },
-    pct: n => fmt.id(n,2)+'%',
-    rp: n => {
-        if(n===null || n===undefined) return '-';
-        return n>=1000?`Rp ${fmt.id(n/1000,1)} T`:`Rp ${fmt.id(n,1)} M`;
+    
+    showAlert: (message, type='error') => {
+        const container = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} show`;
+        alert.innerHTML = `
+            <strong>${type==='error'?'❌ Error':'⚠️ Perhatian'}</strong><br>
+            ${message}
+        `;
+        container.innerHTML = '';
+        container.appendChild(alert);
+        setTimeout(() => alert.remove(), 10000);
     },
-    showError: (msg) => {
-        const el = document.getElementById('errorMsg');
-        el.textContent = '⚠️ ' + msg;
-        el.classList.add('show');
-        setTimeout(()=>el.classList.remove('show'), 8000);
-    },
+    
     updateStatus: (text, type='loading') => {
         const dot = document.getElementById('statusDot');
         const txt = document.getElementById('statusText');
         txt.textContent = text;
         dot.className = 'status-dot ' + (type==='success'?'success':type==='error'?'error':'');
+    },
+    
+    setDebugInfo: (info) => {
+        const el = document.getElementById('debugInfo');
+        el.innerHTML = `<strong>Debug Info:</strong><br><code>${info}</code>`;
+        el.classList.add('show');
+    },
+    
+    cleanNumber: (val) => {
+        if(!val || val==='' || val==='-' || val==='n.a' || val==='N/A') return 0;
+        let s = String(val).replace(/^"|"$/g,'').trim();
+        if(s.includes('.') && s.includes(',')) {
+            s = s.replace(/\./g,'').replace(',','.');
+        } else if(s.includes(',') && !s.includes('.')) {
+            s = s.replace(',','.');
+        } else if(s.includes('.')) {
+            const parts = s.split('.');
+            if(parts.length>1 && parts[parts.length-1].length===3) {
+                s = s.replace(/\./g,'');
+            }
+        }
+        return parseFloat(s) || 0;
     }
 };
 
-// ===== CLEAN NUMBER (FORMAT INDONESIA) =====
-const cleanNumber = (val) => {
-    if(!val || val==='' || val==='-' || val==='n.a' || val==='N/A') return 0;
-    let s = String(val).replace(/^"|"$/g,'').trim();
-    
-    // Handle format Indonesia: "10.452,12" -> 10452.12
-    if(s.includes('.') && s.includes(',')) {
-        s = s.replace(/\./g,'').replace(',','.');
-    } else if(s.includes(',') && !s.includes('.')) {
-        s = s.replace(',','.');
-    } else if(s.includes('.')) {
-        const parts = s.split('.');
-        if(parts.length>1 && parts[parts.length-1].length===3) {
-            s = s.replace(/\./g,'');
-        }
+// ===== MOCK DATA (FALLBACK) =====
+const MockData = {
+    years: ['2019','2020','2021','2022','2023','2024','2025','2026'],
+    generate: () => {
+        const data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+        MockData.years.forEach((y, i) => {
+            data.laju[y] = 4.5 + Math.sin(i)*2 + (Math.random()-0.5)*1.5;
+            data.adhb[y] = 12000 + i*1800 + Math.random()*1000;
+            data.adhk[y] = 9000 + i*1200 + Math.random()*800;
+        });
+        data.distribusi = {
+            'Pertanian': 11.9, 'Industri': 11.3, 'Konstruksi': 18.8,
+            'Perdagangan': 25.5, 'Jasa': 32.5
+        };
+        return data;
     }
-    return parseFloat(s) || 0;
 };
 
 // ===== FETCH DATA =====
 async function fetchData() {
+    state.fetchAttempts++;
+    console.log(`🔄 Fetch attempt #${state.fetchAttempts}`);
+    
     try {
-        fmt.updateStatus('Mengunduh data dari Google Sheets...', 'loading');
-        document.getElementById('loadingText').style.display = 'block';
-        document.getElementById('mainChart').style.display = 'none';
+        Utils.updateStatus('Mengunduh data...', 'loading');
+        Utils.setDebugInfo(`Fetching: ${CONFIG.SHEET_URL}<br>Timeout: ${CONFIG.TIMEOUT}ms`);
         
-        // Fetch dengan timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
         
-        const response = await fetch(state.config.url, {
+        console.log('📡 Sending fetch request...');
+        const response = await fetch(CONFIG.SHEET_URL, {
             signal: controller.signal,
-            headers: { 'Cache-Control': 'no-cache' }
+            headers: { 'Cache-Control': 'no-cache' },
+            mode: 'cors'
         });
         clearTimeout(timeoutId);
+        
+        console.log('📥 Response received:', response.status);
         
         if(!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const csvText = await response.text();
+        console.log('📄 CSV length:', csvText.length);
         
-        if(!csvText || csvText.length < 100) {
-            throw new Error('Data CSV kosong atau tidak valid');
+        if(!csvText || csvText.length < 50) {
+            throw new Error('Data CSV kosong atau tidak valid (terlalu pendek)');
         }
         
         parseCSV(csvText);
         
         if(state.years.length === 0) {
-            throw new Error('Tidak ada data tahun yang ditemukan');
+            throw new Error('Tidak ada tahun yang ditemukan dalam data');
         }
         
-        // Success
-        fmt.updateStatus(`✅ Data aktif • ${state.years.length} tahun tersedia`, 'success');
-        document.getElementById('loadingText').style.display = 'none';
-        document.getElementById('mainChart').style.display = 'block';
+        // SUCCESS
+        console.log('✅ Data loaded successfully:', state.years);
+        Utils.updateStatus(`✅ Data aktif • ${state.years.length} tahun`, 'success');
+        Utils.showAlert('Data berhasil dimuat dari Google Sheets!', 'success');
         
-        // Enable controls
-        document.getElementById('menuGrafik').disabled = false;
-        document.getElementById('filterTahun').disabled = false;
-        document.getElementById('btnPng').disabled = false;
-        document.getElementById('btnPdf').disabled = false;
-        
-        populateFilters();
-        updateChart();
-        state.isLoaded = true;
-        
-        console.log('✅ Data berhasil dimuat:', state.years);
+        finalizeLoad();
         
     } catch(error) {
-        console.error('❌ Fetch error:', error);
-        fmt.updateStatus('⚠️ Gagal memuat data • Menggunakan data contoh', 'error');
-        fmt.showError(`Gagal mengambil data: ${error.message}. Menggunakan data simulasi.`);
+        console.error('❌ Fetch failed:', error);
+        Utils.setDebugInfo(`Error: ${error.message}<br>Attempts: ${state.fetchAttempts}`);
         
-        document.getElementById('loadingText').style.display = 'none';
-        document.getElementById('mainChart').style.display = 'block';
-        document.getElementById('btnRetry').style.display = 'inline-flex';
+        if(CONFIG.USE_MOCK_DATA) {
+            Utils.updateStatus('⚠️ Mode offline • Data contoh', 'error');
+            Utils.showAlert(
+                `Gagal mengambil data: ${error.message}. ` +
+                `Menggunakan data simulasi sebagai fallback. ` +
+                `<button onclick="retryFetch()" style="margin-left:10px;padding:4px 12px;background:var(--orange);border:none;border-radius:4px;color:white;cursor:pointer">🔄 Coba Lagi</button>`,
+                'warning'
+            );
+            loadMockData();
+        } else {
+            Utils.updateStatus('❌ Gagal memuat data', 'error');
+            Utils.showAlert(`Gagal memuat data: ${error.message}. Periksa koneksi internet Anda.`, 'error');
+            document.getElementById('btnRetry').style.display = 'inline-flex';
+        }
         
-        // Fallback ke mock data
-        loadMockData();
+        document.getElementById('loadingBox').style.display = 'none';
     }
 }
 
 // ===== PARSE CSV =====
 function parseCSV(csvText) {
     const rows = csvText.split('\n').map(r=>r.replace('\r','').trim()).filter(r=>r);
-    const sep = rows[0].includes(';') ? ';' : ',';
+    console.log('📊 Total rows:', rows.length);
     
-    // Parse ke matrix
+    const sep = rows[0].includes(';') ? ';' : ',';
+    console.log(' Separator:', sep);
+    
     const matrix = rows.map(row => {
         const result = []; let cur='', inQ=false;
         for(let c of row) {
@@ -272,9 +359,9 @@ function parseCSV(csvText) {
         return result;
     });
     
-    // Cari header dengan tahun
+    // Find header
     let headerIdx = -1;
-    for(let i=0; i<Math.min(10, matrix.length); i++) {
+    for(let i=0; i<Math.min(15, matrix.length); i++) {
         if(matrix[i].some(c=>/^\d{4}$/.test(c.trim()))) {
             headerIdx = i;
             break;
@@ -282,23 +369,24 @@ function parseCSV(csvText) {
     }
     
     if(headerIdx === -1) {
-        console.warn('Header tidak ditemukan, menggunakan baris pertama');
+        console.warn('Header not found, using first row');
         headerIdx = 0;
     }
     
     const headers = matrix[headerIdx].map(h=>h.trim().replace(/\*/g,''));
     state.years = headers.slice(1).filter(h=>/^\d{4}$/.test(h));
     
-    console.log('Tahun ditemukan:', state.years);
+    console.log('📅 Years found:', state.years);
+    Utils.setDebugInfo(`Years: ${state.years.join(', ')}<br>Total rows: ${matrix.length}`);
     
-    // Parse data
+    // Parse data rows
     matrix.forEach((cols, idx) => {
         if(idx <= headerIdx) return;
         const label = (cols[0]||'').trim().toUpperCase();
         if(!label) return;
         
         state.years.forEach((year, yIdx) => {
-            const val = cleanNumber(cols[yIdx+1]);
+            const val = Utils.cleanNumber(cols[yIdx+1]);
             
             if(label.includes('LAJU') && label.includes('PERTUMBUHAN')) {
                 state.data.laju[year] = val;
@@ -321,21 +409,21 @@ function parseCSV(csvText) {
     }
 }
 
-// ===== MOCK DATA =====
+// ===== LOAD MOCK DATA =====
 function loadMockData() {
-    state.years = ['2019','2020','2021','2022','2023','2024','2025','2026'];
+    console.log(' Loading mock data...');
+    state.years = [...MockData.years];
+    state.data = MockData.generate();
     
-    state.years.forEach((y, i) => {
-        state.data.laju[y] = 4.5 + Math.sin(i)*2 + (Math.random()-0.5)*1.5;
-        state.data.adhb[y] = 12000 + i*1800 + Math.random()*1000;
-        state.data.adhk[y] = 9000 + i*1200 + Math.random()*800;
-    });
+    finalizeLoad();
+}
+
+// ===== FINALIZE LOAD =====
+function finalizeLoad() {
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('mainChart').style.display = 'block';
     
-    state.data.distribusi = {
-        'Pertanian': 11.9, 'Industri': 11.3, 'Konstruksi': 18.8,
-        'Perdagangan': 25.5, 'Jasa': 32.5
-    };
-    
+    // Enable controls
     document.getElementById('menuGrafik').disabled = false;
     document.getElementById('filterTahun').disabled = false;
     document.getElementById('btnPng').disabled = false;
@@ -351,14 +439,12 @@ function populateFilters() {
     const menu = document.getElementById('menuGrafik');
     const filter = document.getElementById('filterTahun');
     
-    // Populate menu grafik
     menu.innerHTML = `
         <option value="laju">📈 Laju Pertumbuhan (%)</option>
         <option value="nilai">📊 PDRB ADHB & ADHK</option>
         <option value="distribusi">🥧 Distribusi Sektor</option>
     `;
     
-    // Populate tahun
     filter.innerHTML = '';
     
     if(menu.value === 'distribusi') {
@@ -368,10 +454,12 @@ function populateFilters() {
             filter.add(opt);
         });
     } else {
+        const lastYear = state.years[state.years.length-1] || '2026';
+        const firstYear = state.years[0] || '2019';
         const ranges = [
-            {t:'5 Tahun Terakhir', v:`${Math.max(2021, parseInt(state.years[0])||2021)}-${state.years[state.years.length-1]}`},
+            {t:'5 Tahun Terakhir', v:`${Math.max(2021, parseInt(firstYear))}-${lastYear}`},
             {t:'2016-2020', v:'2016-2020'},
-            {t:'2011-2015', v:'2011-2015'}
+            {t:'Full Period', v:`${firstYear}-${lastYear}`}
         ];
         ranges.forEach(r => {
             const opt = document.createElement('option');
@@ -421,10 +509,10 @@ function updateChart() {
                 callbacks: {
                     label: (ctx) => {
                         const v = ctx.parsed.y ?? ctx.parsed;
-                        if(menu==='laju') return ` ${fmt.pct(v)}`;
-                        if(menu==='nilai') return ` ${fmt.rp(v)}`;
-                        if(menu==='distribusi') return ` ${fmt.pct(v)}`;
-                        return ` ${fmt.id(v)}`;
+                        if(menu==='laju') return ` ${Utils.fmt.pct(v)}`;
+                        if(menu==='nilai') return ` ${Utils.fmt.rp(v)}`;
+                        if(menu==='distribusi') return ` ${Utils.fmt.pct(v)}`;
+                        return ` ${Utils.fmt.id(v)}`;
                     }
                 }
             },
@@ -432,10 +520,10 @@ function updateChart() {
                 anchor: 'end', align: 'top',
                 formatter: (v) => {
                     if(!v && v!==0) return '';
-                    if(menu==='laju') return fmt.pct(v);
+                    if(menu==='laju') return Utils.fmt.pct(v);
                     if(menu==='nilai') return v>=1000?`${(v/1000).toFixed(1)}T`:v.toFixed(0);
                     if(menu==='distribusi') return `${v.toFixed(1)}%`;
-                    return fmt.id(v);
+                    return Utils.fmt.id(v);
                 },
                 font: { weight: 'bold', size: 9 }, color: textColor,
                 backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 4, padding: 4
@@ -451,11 +539,11 @@ function updateChart() {
     if(menu==='nilai') {
         config = {
             type: 'bar',
-            data: {
+             {
                 labels,
                 datasets: [
-                    { label: 'ADHB', data: labels.map(y=>state.data.adhb[y]||0), backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 4 },
-                    { label: 'ADHK', data: labels.map(y=>state.data.adhk[y]||0), backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 4 }
+                    { label: 'ADHB',  labels.map(y=>state.data.adhb[y]||0), backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 4 },
+                    { label: 'ADHK',  labels.map(y=>state.data.adhk[y]||0), backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 4 }
                 ]
             },
             options: commonOpts
@@ -463,11 +551,11 @@ function updateChart() {
     } else if(menu==='laju') {
         config = {
             type: 'line',
-            data: {
+             {
                 labels,
                 datasets: [{
                     label: 'Laju Pertumbuhan (%)',
-                    data: labels.map(y=>state.data.laju[y]||0),
+                     labels.map(y=>state.data.laju[y]||0),
                     borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)',
                     borderWidth: 3, fill: true, tension: 0.4,
                     pointRadius: 5, pointBackgroundColor: '#27ae60'
@@ -481,7 +569,7 @@ function updateChart() {
             data: {
                 labels: Object.keys(state.data.distribusi),
                 datasets: [{
-                    data: Object.values(state.data.distribusi),
+                     Object.values(state.data.distribusi),
                     backgroundColor: ['#FF8C00','#27ae60','#3498db','#f1c40f','#9b59b6'],
                     borderColor: isDark?'#1e1e25':'#fff', borderWidth: 3
                 }]
@@ -518,7 +606,7 @@ function downloadChart(format) {
             window.print();
         }
     } catch(e) {
-        fmt.showError('Gagal export: ' + e.message);
+        Utils.showAlert('Gagal export: ' + e.message, 'error');
     }
 }
 
@@ -529,11 +617,25 @@ function toggleDarkMode() {
 
 function retryFetch() {
     document.getElementById('btnRetry').style.display = 'none';
+    document.getElementById('loadingBox').style.display = 'flex';
+    document.getElementById('mainChart').style.display = 'none';
     fetchData();
 }
 
 // ===== INIT =====
-window.addEventListener('DOMContentLoaded', fetchData);
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Dashboard initialized');
+    console.log('📋 Config:', CONFIG);
+    fetchData();
+});
+
+// Auto-retry after 5 seconds if failed
+setTimeout(() => {
+    if(!state.isLoaded && state.fetchAttempts === 1) {
+        console.log('⏰ Auto-retry after timeout...');
+        retryFetch();
+    }
+}, 5000);
 </script>
 </body>
 </html>
