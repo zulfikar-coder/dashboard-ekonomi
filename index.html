@@ -7,134 +7,103 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
-        /* ===== CSS VARIABLES ===== */
         :root { 
-            --orange: #FF8C00;
+            --orange: #FF8C00; 
             --orange-dark: #e67e00;
-            --orange-light: #ffa033;
-            --green: #27ae60;
-            --green-dark: #219a52;
-            --bg: #f7f8fa;
-            --bg-gradient: linear-gradient(135deg, #f7f8fa 0%, #eef1f5 100%);
-            --text: #2c3e50;
-            --text-muted: #7f8c8d;
-            --card-bg: #ffffff;
-            --border: #e8eaed;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow: 0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
-            --shadow-xl: 0 20px 60px rgba(0,0,0,0.15);
-            --radius: 14px;
-            --radius-sm: 10px;
-            --radius-xs: 6px;
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --orange-light: #ffa533;
+            --green: #27ae60; 
+            --green-dark: #229954;
+            --bg: #f8f9fa; 
+            --text: #2c3e50; 
+            --card-bg: #ffffff; 
+            --border: #e1e8ed;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
         }
         
         .dark { 
-            --bg: #0c1117;
-            --bg-gradient: linear-gradient(135deg, #0c1117 0%, #111827 100%);
-            --text: #e8eaed;
-            --text-muted: #9ca3af;
-            --card-bg: #1a1f2e;
-            --border: #2a3040;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
-            --shadow: 0 4px 16px rgba(0,0,0,0.3);
-            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
-            --shadow-xl: 0 20px 60px rgba(0,0,0,0.5);
+            --bg: #0f1419; 
+            --text: #e8e8e8; 
+            --card-bg: #1a1f2e; 
+            --border: #2d3748;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
         }
 
-        /* ===== RESET & BASE ===== */
-        *, *::before, *::after {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
         body { 
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; 
-            background: var(--bg-gradient);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: linear-gradient(135deg, var(--bg) 0%, #f0f2f5 100%);
             color: var(--text); 
             padding: 0;
             text-transform: uppercase; 
-            transition: var(--transition);
+            transition: all 0.3s ease;
             min-height: 100vh;
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ===== LAYOUT CONTAINER ===== */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px 24px;
+        .dark body {
+            background: linear-gradient(135deg, var(--bg) 0%, #1a1f2e 100%);
         }
 
-        /* ===== HEADER ===== */
         .header { 
-            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 50%, var(--orange) 100%);
-            background-size: 200% 200%;
-            animation: gradientShift 8s ease infinite;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white; 
-            padding: 28px 36px; 
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.1) inset;
-            margin-bottom: 20px;
+            padding: 25px 35px; 
+            border-radius: 0;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 0;
             display: flex; 
             align-items: center; 
-            gap: 24px;
+            gap: 25px;
             position: relative;
             overflow: hidden;
         }
 
-        .header::after {
+        .header::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
             pointer-events: none;
         }
 
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
         .logo-container { 
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+            background: white; 
             padding: 10px; 
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius);
             display: flex; 
             align-items: center; 
             justify-content: center;
-            width: 82px; 
-            height: 82px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.2) inset;
+            width: 90px; 
+            height: 90px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             position: relative;
             z-index: 1;
-            transition: var(--transition);
-            flex-shrink: 0;
+            transition: transform 0.3s ease;
         }
 
         .logo-container:hover {
-            transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.3) inset;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
         }
 
         .logo-img { 
-            width: 64px; 
-            height: 64px; 
+            width: 70px; 
+            height: 70px; 
             object-fit: contain; 
-            display: block;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+            display: block; 
         }
 
         .logo-fallback { display: none; }
@@ -146,103 +115,65 @@
         }
 
         .header-text h1 { 
-            font-size: clamp(1.3rem, 3vw, 1.75rem);
-            font-weight: 800;
-            letter-spacing: 0.8px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             margin: 0;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            line-height: 1.3;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .header-text small {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 8px;
-            opacity: 0.92;
-            font-size: 0.82rem;
-            font-weight: 600;
-            background: rgba(255,255,255,0.15);
-            padding: 4px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
+            display: block;
+            margin-top: 6px;
+            opacity: 0.95;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
-        /* ===== CONTROLS BAR ===== */
         .controls { 
             background: var(--card-bg); 
-            padding: 22px 28px; 
-            border-radius: var(--radius);
-            margin-bottom: 20px;
+            padding: 25px 30px; 
+            border-radius: 0;
+            margin: 0;
             box-shadow: var(--shadow);
             display: flex; 
-            gap: 18px; 
+            gap: 20px; 
             flex-wrap: wrap; 
             align-items: flex-end;
-            border: 1px solid var(--border);
-            position: relative;
-        }
-
-        .controls::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 28px;
-            right: 28px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange), var(--orange-light), var(--orange));
-            border-radius: 0 0 4px 4px;
+            border-bottom: 3px solid var(--orange);
         }
 
         .control-group { 
             display: flex; 
             flex-direction: column; 
-            gap: 6px;
+            gap: 8px;
             flex: 1;
-            min-width: 200px;
+            min-width: 220px;
         }
 
         label { 
             font-weight: 700; 
-            font-size: 0.72rem; 
+            font-size: 0.75rem; 
             color: var(--orange);
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        label::before {
-            content: '';
-            width: 3px;
-            height: 14px;
-            background: var(--orange);
-            border-radius: 2px;
         }
 
         select { 
-            padding: 11px 16px; 
-            border-radius: var(--radius-xs); 
+            padding: 12px 16px; 
+            border-radius: var(--radius-sm); 
             border: 2px solid var(--border); 
             font-weight: 600; 
             background: var(--card-bg); 
             color: var(--text); 
             cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.82rem;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            appearance: none;
-            background-image: url("image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23FF8C00' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 36px;
         }
 
         select:hover {
             border-color: var(--orange-light);
-            box-shadow: 0 0 0 3px rgba(255,140,0,0.08);
         }
 
         select:focus {
@@ -253,35 +184,42 @@
 
         .btn-group { 
             display: flex; 
-            gap: 10px; 
+            gap: 12px; 
             margin-left: auto;
             flex-wrap: wrap;
         }
 
         button { 
-            padding: 11px 22px; 
-            border-radius: var(--radius-xs); 
+            padding: 12px 24px; 
+            border-radius: var(--radius-sm); 
             border: none; 
             font-weight: 700; 
             cursor: pointer; 
             text-transform: uppercase; 
-            transition: var(--transition);
-            font-size: 0.78rem;
-            letter-spacing: 0.8px;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
             box-shadow: var(--shadow-sm);
             position: relative;
             overflow: hidden;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
         }
 
-        button::after {
+        button::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-            pointer-events: none;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         button:hover {
@@ -291,7 +229,6 @@
 
         button:active {
             transform: translateY(0);
-            box-shadow: var(--shadow-sm);
         }
 
         .btn-download { 
@@ -299,74 +236,41 @@
             color: white;
         }
 
-        .btn-download:hover {
-            background: linear-gradient(135deg, var(--green-dark) 0%, #1a7a42 100%);
-        }
-
         .btn-dark { 
-            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
             color: white;
         }
 
-        .btn-dark:hover {
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-        }
-
-        /* ===== MAIN CARD ===== */
         .card { 
             background: var(--card-bg); 
-            padding: 0; 
-            border-radius: var(--radius);
+            padding: 30px; 
+            border-radius: 0;
             box-shadow: var(--shadow-lg); 
-            border: 1px solid var(--border);
+            border-top: 4px solid var(--orange);
             max-width: 100%; 
             margin: 0;
             position: relative;
-            overflow: hidden;
         }
 
-        .card-header {
-            padding: 20px 28px 16px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .card-header::before {
+        .card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--orange) 0%, var(--orange-light) 50%, var(--orange) 100%);
+            background: linear-gradient(90deg, var(--orange) 0%, var(--orange-light) 100%);
         }
 
         h3 { 
             color: var(--text); 
-            margin: 0;
-            font-size: 1.15rem;
-            font-weight: 800;
+            margin: 0 0 20px 0; 
+            padding: 0 0 15px 0; 
+            border-bottom: 2px solid var(--border); 
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        h3::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: linear-gradient(180deg, var(--orange), var(--orange-light));
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-
-        .card-body {
-            padding: 24px 28px 28px;
         }
 
         .chart-container { 
@@ -376,87 +280,33 @@
             background: var(--bg);
             border-radius: var(--radius-sm);
             padding: 20px;
-            border: 1px solid var(--border);
         }
 
-        /* ===== STATUS BADGE ===== */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #ffd700;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .status-dot.success { 
-            background: #2ecc71; 
-            animation: none;
-            box-shadow: 0 0 6px rgba(46,204,113,0.5);
-        }
-
-        .status-dot.error { 
-            background: #e74c3c; 
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.85); }
-        }
-
-        /* ===== ANIMATIONS ===== */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header { animation: fadeInUp 0.5s ease-out; }
-        .controls { animation: fadeInUp 0.5s ease-out 0.1s both; }
-        .card { animation: fadeInUp 0.5s ease-out 0.2s both; }
-
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .container {
-                padding: 12px 16px;
-            }
-
             .header {
                 flex-direction: column;
                 text-align: center;
-                padding: 22px 20px;
-                gap: 16px;
+                padding: 20px;
             }
 
             .header-text h1 {
-                font-size: 1.2rem;
+                font-size: 1.4rem;
             }
 
             .logo-container {
-                width: 68px;
-                height: 68px;
+                width: 75px;
+                height: 75px;
             }
 
             .logo-img {
-                width: 52px;
-                height: 52px;
+                width: 55px;
+                height: 55px;
             }
 
             .controls { 
                 flex-direction: column; 
-                gap: 14px;
-                padding: 18px 20px;
+                gap: 15px;
+                padding: 20px;
             }
 
             .control-group {
@@ -472,111 +322,98 @@
 
             button {
                 flex: 1;
-                min-width: 110px;
-                justify-content: center;
-                padding: 11px 16px;
-            }
-
-            .card-header {
-                padding: 16px 20px 12px;
-            }
-
-            .card-body {
-                padding: 16px 20px 20px;
+                min-width: 120px;
             }
 
             .chart-container {
                 height: 300px;
-                padding: 12px;
+                padding: 10px;
             }
 
             h3 {
-                font-size: 0.95rem;
+                font-size: 1.1rem;
             }
         }
 
-        /* ===== PRINT STYLES ===== */
-        @media print {
-            .controls, .btn-group { display: none !important; }
-            body { background: white; }
-            .card { box-shadow: none; border: 1px solid #ddd; }
-            .chart-container { height: 400px !important; }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header, .controls, .card {
+            animation: fadeIn 0.5s ease-out;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- HEADER -->
-    <div class="header">
-        <div class="logo-container">
-            <img id="bpsLogo" 
-                 src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
-                 alt="BPS" 
-                 class="logo-img"
-                 onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
-            <div id="logoFallback" class="logo-fallback">
-                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:64px;height:64px;">
-                    <rect width="200" height="200" fill="white"/>
-                    <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" fill="#0080D7"/>
-                    <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" fill="#009543"/>
-                    <path d="M 130 10 L 155 10 L 155 25 C 155 38 145 48 132 48 L 125 48 L 125 40 L 132 40 C 138 40 142 36 142 30 L 142 23 L 125 23 L 125 10 Z M 130 55 L 130 63 C 130 68 134 72 140 72 L 148 72 L 148 80 L 140 80 C 130 80 122 72 122 62 L 122 55 Z M 142 80 L 142 88 C 142 94 138 98 132 98 L 125 98 L 125 106 L 132 106 C 145 106 155 96 155 83 L 155 80 Z" fill="#F48024"/>
-                    <path d="M 20 120 Q 40 140, 70 135 Q 100 130, 130 135 Q 160 140, 180 125" stroke="#0080D7" stroke-width="8" fill="none" stroke-linecap="round"/>
-                    <path d="M 25 80 Q 45 60, 75 65 Q 105 70, 135 60 Q 165 50, 175 70" stroke="#F48024" stroke-width="6" fill="none" stroke-linecap="round"/>
-                </svg>
-            </div>
-        </div>
-        <div class="header-text">
-            <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-            <small id="status">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">MENGHUBUNGKAN KE SPREADSHEET...</span>
-            </small>
+<div class="header">
+    <div class="logo-container">
+        <img id="bpsLogo" 
+             src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
+             alt="BPS" 
+             class="logo-img"
+             onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
+        <div id="logoFallback" class="logo-fallback">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:70px;height:70px;">
+                <rect width="200" height="200" fill="white"/>
+                <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" fill="#0080D7"/>
+                <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" fill="#009543"/>
+                <path d="M 130 10 L 155 10 L 155 25 C 155 38 145 48 132 48 L 125 48 L 125 40 L 132 40 C 138 40 142 36 142 30 L 142 23 L 125 23 L 125 10 Z M 130 55 L 130 63 C 130 68 134 72 140 72 L 148 72 L 148 80 L 140 80 C 130 80 122 72 122 62 L 122 55 Z M 142 80 L 142 88 C 142 94 138 98 132 98 L 125 98 L 125 106 L 132 106 C 145 106 155 96 155 83 L 155 80 Z" fill="#F48024"/>
+                <path d="M 20 120 Q 40 140, 70 135 Q 100 130, 130 135 Q 160 140, 180 125" stroke="#0080D7" stroke-width="8" fill="none" stroke-linecap="round"/>
+                <path d="M 25 80 Q 45 60, 75 65 Q 105 70, 135 60 Q 165 50, 175 70" stroke="#F48024" stroke-width="6" fill="none" stroke-linecap="round"/>
+            </svg>
         </div>
     </div>
-
-    <!-- CONTROLS -->
-    <div class="controls">
-        <div class="control-group">
-            <label>JENIS GRAFIK</label>
-            <select id="menuGrafik" onchange="sesuaikanFilter()">
-                <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
-                <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
-                <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label>PILIH PERIODE</label>
-            <select id="filterTahun" onchange="updateChart()"></select>
-        </div>
-        <div class="btn-group">
-            <button class="btn-download" onclick="downloadChart()">📥 UNDUH GRAFIK</button>
-            <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
-        </div>
+    <div class="header-text">
+        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
     </div>
+</div>
 
-    <!-- MAIN CARD -->
-    <div class="card">
-        <div class="card-header">
-            <h3 id="judulGrafik">VISUALISASI DATA</h3>
-        </div>
-        <div class="card-body">
-            <div class="chart-container">
-                <canvas id="mainChart"></canvas>
-            </div>
-        </div>
+<div class="controls">
+    <div class="control-group">
+        <label>JENIS GRAFIK</label>
+        <select id="menuGrafik" onchange="sesuaikanFilter()">
+            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
+            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
+            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>PILIH PERIODE</label>
+        <select id="filterTahun" onchange="updateChart()"></select>
+    </div>
+    <div class="btn-group">
+        <button class="btn-download" onclick="downloadChart()">📥 UNDUH GRAFIK</button>
+        <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
+    </div>
+</div>
+
+<div class="card">
+    <h3 id="judulGrafik">VISUALISASI DATA</h3>
+    <div class="chart-container">
+        <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-// ===== GLOBAL VARIABLES =====
+// ===== GLOBAL VARIABLES - PERBAIKI STRUKTUR DATA =====
 var ctx = document.getElementById('mainChart').getContext('2d');
 var currentChart = null;
+
+// STRUKTUR DATA YANG DIPERBAIKI: distribusi sekarang per tahun
 var database = { 
     laju: {}, 
     adhb: {}, 
     adhk: {}, 
-    distribusi: {}
+    distribusi: {}  // Format: { '2021': {'PERTANIAN': 11.9, ...}, '2022': {...} }
 };
 var availableYears = [];
 var isDataLoaded = false;
@@ -592,6 +429,7 @@ var CONFIG = {
 function cleanIndonesianNumber(val) {
     if (!val || val === '' || val === '-' || val === 'n.a' || val === 'N/A') return 0;
     var s = String(val).trim().replace(/^"|"$/g, '');
+    
     if (s.includes(',') && s.includes('.')) {
         s = s.replace(/\./g, '').replace(',', '.');
     } else if (s.includes(',') && !s.includes('.')) {
@@ -610,7 +448,9 @@ function cleanIndonesianNumber(val) {
 function parseCSV(csvText) {
     var rows = csvText.split('\n').map(function(r) { return r.replace('\r', '').trim(); }).filter(function(r) { return r.length > 0; });
     if (rows.length === 0) throw new Error('CSV kosong');
+    
     var separator = rows[0].includes(';') ? ';' : ',';
+    
     var matrix = rows.map(function(row) {
         var result = [];
         var current = '', inQuotes = false;
@@ -623,61 +463,88 @@ function parseCSV(csvText) {
         result.push(current.trim());
         return result;
     });
+    
     var headerIndex = -1;
     for (var i = 0; i < Math.min(10, matrix.length); i++) {
         if (matrix[i].some(function(cell) { return /^\d{4}$/.test(cell.trim()); })) { 
-            headerIndex = i; break; 
+            headerIndex = i; 
+            break; 
         }
     }
     if (headerIndex === -1) throw new Error('Header tahun tidak ditemukan');
+    
     var headers = matrix[headerIndex].map(function(h) { return h.trim().replace(/\*/g, ''); });
     var years = headers.slice(1).filter(function(h) { return /^\d{4}$/.test(h); });
     if (years.length === 0) throw new Error('Tidak ada kolom tahun valid');
+    
     console.log('Tahun ditemukan:', years);
     return { matrix: matrix, headers: headers, years: years };
 }
 
-// ===== UTILITY: Extract Data =====
+// ===== UTILITY: Extract Data - DIPERBAIKI UNTUK DISTRIBUSI PER TAHUN =====
 function extractData(matrix, headers, years) {
     var data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
-    years.forEach(function(year) { data.distribusi[year] = {}; });
+    
+    // Inisialisasi distribusi per tahun
+    years.forEach(function(year) {
+        data.distribusi[year] = {};
+    });
+    
     matrix.forEach(function(cols) {
         if (headers.some(function(h) { return cols[0] && cols[0].trim() === h; })) return;
         var label = (cols[0] || '').trim().toUpperCase();
         if (!label) return;
+        
         years.forEach(function(year, idx) {
             var value = cleanIndonesianNumber(cols[idx + 1]);
-            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) data.laju[year] = value;
-            else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) data.adhb[year] = value;
-            else if (label.includes('ADHK')) data.adhk[year] = value;
-            else if (label.includes('DISTRIBUSI')) {
+            
+            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) {
+                data.laju[year] = value;
+            } else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) {
+                data.adhb[year] = value;
+            } else if (label.includes('ADHK')) {
+                data.adhk[year] = value;
+            } else if (label.includes('DISTRIBUSI')) {
+                // Extract nama sektor dari label
                 var match = label.match(/DISTRIBUSI\s+([^\(]+)/i);
                 if (match) {
                     var sector = match[1].trim().toUpperCase();
                     if (sector && value !== 0) {
-                        if (!data.distribusi[year]) data.distribusi[year] = {};
+                        // SIMPAN DISTRIBUSI PER TAHUN - INI YANG DIPERBAIKI!
+                        if (!data.distribusi[year]) {
+                            data.distribusi[year] = {};
+                        }
                         data.distribusi[year][sector] = value;
                     }
                 }
             }
         });
     });
+    
+    // Fallback distribusi jika kosong untuk setiap tahun
     years.forEach(function(year) {
         if (Object.keys(data.distribusi[year]).length === 0) {
-            data.distribusi[year] = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
+            data.distribusi[year] = {
+                'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
+                'PERDAGANGAN': 25.5, 'JASA': 32.5
+            };
         }
     });
+    
     return data;
 }
 
-// ===== MOCK DATA =====
+// ===== MOCK DATA FALLBACK =====
 function generateMockData() {
     var years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
     var data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+    
     years.forEach(function(y, i) {
         data.laju[y] = Math.max(-2, Math.min(10, 5 + Math.sin(i/2)*2.5 + (Math.random()-0.5)*1.5));
         data.adhb[y] = 10000 + i * 1200 + Math.random() * 1500;
         data.adhk[y] = 7500 + i * 900 + Math.random() * 1000;
+        
+        // Distribusi berbeda per tahun
         data.distribusi[y] = {
             'PERTANIAN': 10 + Math.random() * 3,
             'INDUSTRI': 10 + Math.random() * 3,
@@ -686,46 +553,48 @@ function generateMockData() {
             'JASA': 30 + Math.random() * 5
         };
     });
-    return {  data, years: years };
+    
+    return { data: data, years: years };
 }
 
 // ===== FETCH DATA =====
 async function fetchData() {
-    var statusText = document.getElementById('statusText');
-    var statusDot = document.getElementById('statusDot');
+    var statusEl = document.getElementById('status');
     try {
-        statusText.textContent = 'MENGUNDUH DATA DARI GOOGLE SHEETS...';
+        statusEl.innerText = "MENGUNDUH DATA DARI GOOGLE SHEETS...";
         var controller = new AbortController();
         var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
         var response = await fetch(CONFIG.sheetUrl, { signal: controller.signal, headers: { 'Cache-Control': 'no-cache' } });
         clearTimeout(timeoutId);
         if (!response.ok) throw new Error('HTTP ' + response.status);
+        
         var csvText = await response.text();
         if (!csvText || csvText.length < 100) throw new Error('Data CSV tidak valid');
+        
         var parsed = parseCSV(csvText);
         database = extractData(parsed.matrix, parsed.headers, parsed.years);
         availableYears = parsed.years;
+        
         if (availableYears.length === 0) throw new Error('Tidak ada data tahun');
+        
         console.log('Data loaded:', availableYears);
         console.log('Distribusi per tahun:', database.distribusi);
-        statusText.textContent = 'DATABASE TERHUBUNG (AKTIF) - ' + availableYears.length + ' TAHUN';
-        statusDot.className = 'status-dot success';
+        statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - " + availableYears.length + " TAHUN";
         isDataLoaded = true;
         sesuaikanFilter();
+        
     } catch (error) {
         console.error('Fetch error:', error.message);
         if (CONFIG.useMockData) {
             console.log('Using mock data fallback...');
-            statusText.textContent = 'MODE SIMULASI - DATA CONTOH';
-            statusDot.className = 'status-dot error';
+            statusEl.innerText = "MODE SIMULASI - DATA CONTOH";
             var mock = generateMockData();
             database = mock.data;
             availableYears = mock.years;
             isDataLoaded = true;
             sesuaikanFilter();
         } else {
-            statusText.textContent = 'KONEKSI GAGAL: ' + error.message;
-            statusDot.className = 'status-dot error';
+            statusEl.innerText = "KONEKSI GAGAL: " + error.message;
         }
     }
 }
@@ -734,16 +603,23 @@ async function fetchData() {
 function sesuaikanFilter() {
     var menu = document.getElementById('menuGrafik').value;
     var filter = document.getElementById('filterTahun');
-    filter.innerHTML = ''; 
+    filter.innerHTML = ""; 
+    
     if (menu === 'distribusi') {
+        // Untuk Pie Chart, pilih tahun tunggal
         var years = availableYears.filter(function(t) { return t && t.length === 4; }).reverse();
         years.forEach(function(t) { 
-            var el = document.createElement("option"); el.text = t; el.value = t; filter.add(el); 
+            var el = document.createElement("option"); 
+            el.text = t; el.value = t; 
+            filter.add(el); 
         });
         if (filter.options.length === 0) { 
-            var el = document.createElement("option"); el.text = "2024"; el.value = "2024"; filter.add(el); 
+            var el = document.createElement("option"); 
+            el.text = "2024"; el.value = "2024"; 
+            filter.add(el); 
         }
     } else {
+        // Untuk Bar/Line Chart, pilih rentang periode
         var lastYear = availableYears[availableYears.length - 1] || '2026';
         var firstYear = availableYears[0] || '2011';
         var opsi = [
@@ -752,7 +628,9 @@ function sesuaikanFilter() {
             {text: firstYear + " - 2015", val: firstYear + "-2015"}
         ];
         opsi.forEach(function(o) { 
-            var el = document.createElement("option"); el.text = o.text; el.value = o.val; filter.add(el); 
+            var el = document.createElement("option"); 
+            el.text = o.text; el.value = o.val; 
+            filter.add(el); 
         });
     }
     updateChart();
@@ -770,18 +648,23 @@ function getYearsInRange(range) {
     return [range];
 }
 
-// ===== CHART RENDER =====
+// ===== CHART RENDER - DIPERBAIKI UNTUK PIE CHART =====
 function updateChart() {
     if (!isDataLoaded) return;
+    
     var menu = document.getElementById('menuGrafik').value;
     var periode = document.getElementById('filterTahun').value;
+    
     if (currentChart) { currentChart.destroy(); currentChart = null; }
+    
     var labels = getYearsInRange(periode);
     var isDark = document.body.classList.contains('dark');
     var textColor = isDark ? '#eee' : '#333';
     var gridColor = isDark ? '#444' : '#ddd';
+    
     var dataLabelColor = isDark ? '#000000' : '#333333';
     var dataLabelBg = isDark ? '#FFFFFF' : 'rgba(255,255,255,0.85)';
+    var dataLabelBorder = isDark ? '#FFFFFF' : 'rgba(200,200,200,0.5)';
 
     var baseConfig = {
         responsive: true, maintainAspectRatio: false,
@@ -813,6 +696,7 @@ function updateChart() {
                 font: { weight: 'bold', size: 10 },
                 color: dataLabelColor,
                 backgroundColor: dataLabelBg,
+                borderColor: dataLabelBorder,
                 borderWidth: 1,
                 borderRadius: 6,
                 padding: 5
@@ -828,6 +712,7 @@ function updateChart() {
     if (menu === 'nilai') {
         var adhbData = labels.map(function(t) { return database.adhb[t] || 0; });
         var adhkData = labels.map(function(t) { return database.adhk[t] || 0; });
+        
         config = {
             type: 'bar',
              {
@@ -842,12 +727,13 @@ function updateChart() {
         config.options.scales.y.ticks.callback = function(v) { return (v/1000).toFixed(0)+'T'; };
     } else if (menu === 'laju') {
         var lajuData = labels.map(function(t) { return database.laju[t] || 0; });
+        
         config = {
             type: 'line',
              {
                 labels: labels,
                 datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)',  lajuData,
+                    label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
                     borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)', borderWidth: 3, fill: true, tension: 0.4,
                     pointRadius: 6, pointBackgroundColor: '#27ae60', pointBorderColor: isDark ? '#fff' : '#27ae60', pointBorderWidth: 2, pointHoverRadius: 8
                 }]
@@ -856,23 +742,56 @@ function updateChart() {
         };
         config.options.scales.y.ticks.callback = function(v) { return v+'%'; };
     } else if (menu === 'distribusi') {
+        // PIE CHART - AMBIL DATA DISTRIBUSI SESUAI TAHUN YANG DIPILIH
         var selectedYear = periode;
         var distribusiData = database.distribusi[selectedYear] || {};
+        
+        // Jika data kosong, gunakan fallback
         if (Object.keys(distribusiData).length === 0) {
-            distribusiData = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
+            distribusiData = {
+                'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
+                'PERDAGANGAN': 25.5, 'JASA': 32.5
+            };
         }
+        
         config = {
             type: 'doughnut',
              {
                 labels: Object.keys(distribusiData),
-                datasets: [{ data: Object.values(distribusiData), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
+                datasets: [{
+                     Object.values(distribusiData),
+                    backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
+                    borderColor: isDark ? '#1e1e1e' : '#fff',
+                    borderWidth: 3,
+                    hoverOffset: 10
+                }]
             },
             options: {
-                responsive: true, maintainAspectRatio: false, animation: { duration: 1000 },
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1000 },
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } },
-                    tooltip: { backgroundColor: 'rgba(30,30,40,0.95)', callbacks: { label: function(ctx) { return ' ' + ctx.parsed.toFixed(1) + '%'; } } },
-                    datalabels: { anchor: 'center', align: 'center', formatter: function(v) { return v >= 5 ? v.toFixed(1)+'%' : ''; }, font: { weight: 'bold', size: 11 }, color: '#fff' }
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } 
+                    },
+                    tooltip: { 
+                        backgroundColor: 'rgba(30,30,40,0.95)', 
+                        callbacks: { 
+                            label: function(ctx) { 
+                                return ' ' + ctx.parsed.toFixed(1) + '%'; 
+                            } 
+                        } 
+                    },
+                    datalabels: { 
+                        anchor: 'center', 
+                        align: 'center', 
+                        formatter: function(v) { 
+                            return v >= 5 ? v.toFixed(1)+'%' : ''; 
+                        }, 
+                        font: { weight: 'bold', size: 11 }, 
+                        color: '#fff' 
+                    }
                 },
                 cutout: '55%'
             }
@@ -881,6 +800,7 @@ function updateChart() {
 
     Chart.register(ChartDataLabels);
     currentChart = new Chart(ctx, config);
+    
     var menuText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
     document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
 }
@@ -904,11 +824,14 @@ function downloadChart() {
 function init() {
     console.log('Dashboard initializing...');
     if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+    
     var logoImg = document.getElementById('bpsLogo');
     logoImg.onerror = function() {
+        console.log('Logo BPS gagal load, menggunakan SVG fallback');
         this.style.display = 'none';
         document.getElementById('logoFallback').style.display = 'block';
     };
+    
     fetchData();
     document.addEventListener('keydown', function(e) { 
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } 
