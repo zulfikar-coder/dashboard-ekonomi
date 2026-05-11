@@ -16,61 +16,107 @@
             --bg: #121212; --text: #eee; --card-bg: #1e1e1e; --border: #333;
         }
 
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
         body { 
             font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); 
-            color: var(--text); margin: 0; padding: 20px; text-transform: uppercase; 
+            color: var(--text); padding: 10px; text-transform: uppercase; 
             transition: all 0.3s ease;
         }
 
         .header { 
-            background: var(--orange); color: white; padding: 15px 30px; 
+            background: var(--orange); color: white; padding: 12px 20px; 
             border-radius: 12px; display: flex; align-items: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 10px; gap: 15px; 
         }
 
         .logo-container { 
-            background: white; padding: 8px; border-radius: 10px; 
+            background: white; padding: 6px; border-radius: 10px; 
             display: flex; align-items: center; justify-content: center;
-            width: 85px; height: 85px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            width: 70px; height: 70px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            flex-shrink: 0;
         }
         .logo-img { 
-            width: 70px; height: 70px; object-fit: contain; display: block; 
+            width: 60px; height: 60px; object-fit: contain; display: block; 
         }
         .logo-fallback { display: none; }
 
-        .controls { 
-            background: var(--card-bg); padding: 20px; border-radius: 12px; 
-            margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;
+        .header-text h1 { 
+            font-size: 1.5rem; 
+            margin: 0;
+            line-height: 1.2;
+        }
+        .header-text small {
+            display: block;
+            margin-top: 4px;
+            opacity: 0.95;
         }
 
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        label { font-weight: bold; font-size: 0.8rem; color: var(--orange); }
+        .controls { 
+            background: var(--card-bg); padding: 12px 15px; border-radius: 12px; 
+            margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+        label { font-weight: bold; font-size: 0.75rem; color: var(--orange); }
 
         select { 
-            padding: 10px; border-radius: 6px; border: 1px solid var(--orange); 
+            padding: 8px 10px; border-radius: 6px; border: 1px solid var(--orange); 
             font-weight: bold; background: var(--card-bg); color: var(--text); cursor: pointer;
+            font-size: 0.85rem;
         }
 
-        .btn-group { display: flex; gap: 10px; margin-left: auto; }
+        .btn-group { display: flex; gap: 8px; margin-left: auto; }
         button { 
-            padding: 10px 15px; border-radius: 6px; border: none; 
+            padding: 8px 12px; border-radius: 6px; border: none; 
             font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s;
+            font-size: 0.8rem;
         }
         .btn-download { background: var(--green); color: white; }
         .btn-dark { background: #333; color: white; }
 
         .card { 
-            background: var(--card-bg); padding: 20px; border-radius: 12px; 
+            background: var(--card-bg); padding: 15px; border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--orange);
-            max-width: 900px; margin: 0 auto; 
+            max-width: 100%; margin: 0 auto; 
         }
 
-        .chart-container { position: relative; height: 400px; width: 100%; }
-        h3 { color: var(--text); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; text-align: center; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        h3 { 
+            color: var(--text); margin: 0 0 12px 0; 
+            padding-bottom: 8px; border-bottom: 1px solid var(--border); 
+            text-align: center; font-size: 1.1rem;
+        }
 
         @media (max-width: 768px) {
-            .btn-group { margin-left: 0; width: 100%; justify-content: center; }
+            .header { 
+                flex-direction: column; 
+                text-align: center;
+                padding: 10px 15px;
+            }
+            .header-text h1 { font-size: 1.2rem; }
+            .logo-container { width: 60px; height: 60px; }
+            .logo-img { width: 50px; height: 50px; }
+            
+            .controls { 
+                flex-direction: column; 
+                gap: 10px;
+                padding: 10px;
+            }
+            .control-group { width: 100%; min-width: unset; }
+            .btn-group { 
+                margin-left: 0; 
+                width: 100%; 
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            button { flex: 1; min-width: 100px; }
+            
+            .chart-container { height: 280px; }
         }
     </style>
 </head>
@@ -84,7 +130,7 @@
              class="logo-img"
              onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
         <div id="logoFallback" class="logo-fallback">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:70px;height:70px;">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:60px;height:60px;">
                 <rect width="200" height="200" fill="white"/>
                 <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" fill="#0080D7"/>
                 <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" fill="#009543"/>
@@ -96,7 +142,6 @@
     </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <h4>PERIODE 2011-2026</h4>
         <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
     </div>
 </div>
@@ -128,7 +173,7 @@
 </div>
 
 <script>
-// ===== GLOBAL VARIABLES - DIPERBAIKI SYNTAX =====
+// ===== GLOBAL VARIABLES =====
 var ctx = document.getElementById('mainChart').getContext('2d');
 var currentChart = null;
 var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
@@ -238,7 +283,7 @@ function generateMockData() {
         data.adhk[y] = 7500 + i * 900 + Math.random() * 1000;
     });
     data.distribusi = { 'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8, 'PERDAGANGAN': 25.5, 'JASA': 32.5 };
-    return { data: data, years: years };
+    return {  data, years: years };
 }
 
 // ===== FETCH DATA =====
@@ -396,10 +441,10 @@ function updateChart() {
         
         config = {
             type: 'bar',
-            data: {
+             {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB', data: adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
                     { label: 'ADHK', data: adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
@@ -411,7 +456,7 @@ function updateChart() {
         
         config = {
             type: 'line',
-            data: {
+             {
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
@@ -425,9 +470,9 @@ function updateChart() {
     } else {
         config = {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(database.distribusi),
-                datasets: [{ data: Object.values(database.distribusi), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
+                datasets: [{  Object.values(database.distribusi), backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'], borderColor: isDark ? '#1e1e1e' : '#fff', borderWidth: 3, hoverOffset: 10 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false, animation: { duration: 1000 },
