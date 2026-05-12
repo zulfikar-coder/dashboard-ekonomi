@@ -667,18 +667,20 @@ async function fetchData() {
         }
         
         // Success
-        console.log('✅ Data loaded:', availableYears);
-        statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - " + availableYears.length + " TAHUN" + (usedProxy ? " (via proxy)" : "");
-        if (statusDot) statusDot.className = 'status-dot success';
-        
-        if (usedProxy) {
-            showAlert('✅ Data berhasil dimuat via CORS proxy. Beberapa fitur mungkin terbatas.', 'success');
-        } else {
-            showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
-        }
-        
-        isDataLoaded = true;
-        sesuaikanFilter();
+console.log('✅ Data loaded:', availableYears);
+var firstYear = availableYears[0];
+var lastYear = availableYears[availableYears.length - 1];
+statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
+if (statusDot) statusDot.className = 'status-dot success';
+
+if (usedProxy) {
+    showAlert('✅ Data berhasil dimuat via CORS proxy. Beberapa fitur mungkin terbatas.', 'success');
+} else {
+    showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
+}
+
+isDataLoaded = true;
+sesuaikanFilter();
         
     } catch (error) {
         console.error('❌ Semua metode fetch gagal:', error.message);
