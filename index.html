@@ -40,8 +40,11 @@
             box-sizing: border-box;
         }
 
+        body, h1, h2, h3, p, span, label, select, option, button, small, canvas, input {
+            font-family: 'Times New Roman', Times, serif !important;
+        }
+
         body { 
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
             background: linear-gradient(135deg, var(--bg) 0%, #f0f2f5 100%);
             color: var(--text); 
             padding: 0;
@@ -54,6 +57,120 @@
             background: linear-gradient(135deg, var(--bg) 0%, #1a1f2e 100%);
         }
 
+        /* ===== LOGIN OVERLAY ===== */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 20, 28, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #loginOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            animation: slideUp 0.4s ease;
+        }
+
+        .dark .login-box {
+            background: #1e293b;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-logo {
+            width: 80px;
+            margin-bottom: 20px;
+        }
+
+        .login-title {
+            margin: 0 0 8px;
+            color: var(--text);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .login-subtitle {
+            margin: 0 0 25px;
+            color: var(--text-muted, #64748b);
+            font-size: 0.9rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .login-input {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text);
+            transition: border-color 0.2s;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--orange);
+        }
+
+        .login-btn {
+            padding: 14px;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 140, 0, 0.3);
+        }
+
+        .login-error {
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .login-error.show {
+            display: block;
+            animation: shake 0.3s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* ===== DASHBOARD STYLES ===== */
         .header { 
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white; 
@@ -172,11 +289,16 @@
             text-transform: uppercase;
         }
 
-        select:hover {
+        select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        select:hover:not(:disabled) {
             border-color: var(--orange-light);
         }
 
-        select:focus {
+        select:focus:not(:disabled) {
             outline: none;
             border-color: var(--orange);
             box-shadow: 0 0 0 3px rgba(255,140,0,0.15);
@@ -204,6 +326,11 @@
             overflow: hidden;
         }
 
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         button::before {
             content: '';
             position: absolute;
@@ -217,17 +344,17 @@
             transition: width 0.6s, height 0.6s;
         }
 
-        button:hover::before {
+        button:hover:not(:disabled)::before {
             width: 300px;
             height: 300px;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: var(--shadow);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
         }
 
@@ -386,6 +513,25 @@
 </head>
 <body>
 
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
+             alt="BPS" class="login-logo">
+        <h2 class="login-title">LOGIN DASHBOARD</h2>
+        <p class="login-subtitle">Masukkan kredensial untuk mengakses dashboard</p>
+        
+        <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
+            <input type="text" id="username" class="login-input" placeholder="Username" required autocomplete="username">
+            <input type="password" id="password" class="login-input" placeholder="Password" required autocomplete="current-password">
+            <button type="submit" class="login-btn">MASUK</button>
+        </form>
+        
+        <p id="loginError" class="login-error">❌ Username atau password salah</p>
+    </div>
+</div>
+
+<!-- ===== DASHBOARD CONTENT ===== -->
 <div class="header">
     <div class="logo-container">
         <img id="bpsLogo" 
@@ -406,7 +552,7 @@
     </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
+        <small id="status">⏳ MEMUAT DATA...</small>
     </div>
 </div>
 
@@ -414,19 +560,20 @@
     <div id="alertContainer"></div>
     <div class="control-group">
         <label>JENIS GRAFIK</label>
-        <select id="menuGrafik" onchange="sesuaikanFilter()">
-            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
-            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
-            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+        <select id="menuGrafik" onchange="sesuaikanFilter()" disabled>
+            <option value="">Memuat...</option>
         </select>
     </div>
     <div class="control-group">
         <label>PILIH PERIODE</label>
-        <select id="filterTahun" onchange="updateChart()"></select>
+        <select id="filterTahun" onchange="updateChart()" disabled>
+            <option value="">Memuat...</option>
+        </select>
     </div>
     <div class="btn-group">
-        <button class="btn-download" onclick="downloadChart()">📥 UNDUH GRAFIK</button>
+        <button class="btn-download" onclick="downloadChart()" id="btnDownload" disabled>📥 UNDUH GRAFIK</button>
         <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
+        <button class="btn-dark" onclick="logout()" id="btnLogout" style="display:none">🚪 KELUAR</button>
     </div>
 </div>
 
@@ -438,32 +585,129 @@
 </div>
 
 <script>
-// ===== GLOBAL VARIABLES =====
-var ctx = document.getElementById('mainChart').getContext('2d');
-var currentChart = null;
-var database = { 
-    laju: {}, 
-    adhb: {}, 
-    adhk: {}, 
-    distribusi: {}
-};
-var availableYears = [];
-var isDataLoaded = false;
+/**
+ * 🔐 DASHBOARD EKONOMI PALU - DENGAN LOGIN
+ * 
+ * Fitur:
+ * - Login overlay dengan session management
+ * - Dashboard dengan semua fungsi original
+ * - Google Sheets + CORS proxy + mock data fallback
+ * - Chart rendering (line/bar/pie)
+ * - Dark mode, download, filter
+ * - Font Times New Roman
+ */
 
-// ===== CONFIG - DENGAN CORS PROXY =====
-var CONFIG = {
+// ===== LOGIN CONFIG =====
+const LOGIN_CONFIG = {
+    credentials: {
+        username: "admin",
+        password: "bps2024"
+    },
+    sessionKey: "dashboard_session",
+    sessionDuration: 24 * 60 * 60 * 1000 // 24 jam
+};
+
+// ===== DASHBOARD CONFIG =====
+const DASHBOARD_CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
-    // CORS Proxies untuk bypass CORS error
     corsProxies: [
         "https://api.allorigins.win/raw?url=",
         "https://corsproxy.io/?",
         "https://api.codetabs.com/v1/proxy?quest="
     ],
-    timeout: 10000,
+    timeout: 8000,
     useMockData: true
 };
 
-// ===== UTILITY FUNCTIONS =====
+// ===== STATE =====
+var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+var availableYears = [];
+var isDataLoaded = false;
+var currentChart = null;
+
+// ===== LOGIN FUNCTIONS =====
+function checkSession() {
+    try {
+        var saved = localStorage.getItem(LOGIN_CONFIG.sessionKey);
+        if (saved) {
+            var session = JSON.parse(saved);
+            if (Date.now() - session.timestamp < LOGIN_CONFIG.sessionDuration) {
+                return true;
+            }
+            localStorage.removeItem(LOGIN_CONFIG.sessionKey);
+        }
+    } catch(e) {
+        console.log('Session check error:', e);
+    }
+    return false;
+}
+
+function saveSession(username) {
+    localStorage.setItem(LOGIN_CONFIG.sessionKey, JSON.stringify({
+        user: username,
+        timestamp: Date.now()
+    }));
+}
+
+function clearSession() {
+    localStorage.removeItem(LOGIN_CONFIG.sessionKey);
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+    
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    var errorEl = document.getElementById('loginError');
+    
+    if (username === LOGIN_CONFIG.credentials.username && 
+        password === LOGIN_CONFIG.credentials.password) {
+        
+        saveSession(username);
+        
+        // Hide login overlay
+        document.getElementById('loginOverlay').classList.add('hidden');
+        errorEl.classList.remove('show');
+        
+        // Show logout button
+        document.getElementById('btnLogout').style.display = 'inline-flex';
+        
+        // Enable dashboard
+        enableDashboard();
+        
+        // Load data
+        fetchData();
+        
+        console.log('✅ Login successful:', username);
+    } else {
+        errorEl.classList.add('show');
+        var form = document.getElementById('loginForm');
+        form.style.animation = 'shake 0.3s';
+        setTimeout(function() { form.style.animation = ''; }, 300);
+        console.log('❌ Login failed');
+    }
+}
+
+function logout() {
+    clearSession();
+    location.reload();
+}
+
+function enableDashboard() {
+    document.getElementById('menuGrafik').disabled = false;
+    document.getElementById('filterTahun').disabled = false;
+    document.getElementById('btnDownload').disabled = false;
+}
+
+function blockDashboard() {
+    document.getElementById('menuGrafik').disabled = true;
+    document.getElementById('filterTahun').disabled = true;
+    document.getElementById('btnDownload').disabled = true;
+    document.querySelector('.controls')?.setAttribute('style', 'pointer-events: none; opacity: 0.5;');
+    document.querySelector('.card')?.setAttribute('style', 'pointer-events: none; opacity: 0.5;');
+}
+
+// ===== DASHBOARD FUNCTIONS =====
 function showAlert(message, type) {
     var container = document.getElementById('alertContainer');
     var alert = document.createElement('div');
@@ -473,7 +717,7 @@ function showAlert(message, type) {
     container.appendChild(alert);
     setTimeout(function() {
         alert.classList.remove('show');
-    }, 8000);
+    }, 10000);
 }
 
 function cleanIndonesianNumber(val) {
@@ -573,7 +817,7 @@ function extractData(matrix, headers, years) {
 }
 
 function generateMockData() {
-    var years = ['2019','2020','2021','2022','2023','2024','2025','2026'];
+    var years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
     var data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
     
     years.forEach(function(y, i) {
@@ -592,48 +836,40 @@ function generateMockData() {
     return { data: data, years: years };
 }
 
-// ===== FETCH DATA DENGAN CORS PROXY =====
 async function fetchData() {
     var statusEl = document.getElementById('status');
-    var statusDot = document.getElementById('statusDot');
     
     try {
-        statusEl.innerText = "MENGUNDUH DATA DARI GOOGLE SHEETS...";
-        if (statusDot) statusDot.className = 'status-dot';
+        console.log('🔄 Fetching data from Google Sheets...');
+        statusEl.innerText = "⏳ MENGUNDUH DATA...";
         
         var csvText = null;
         var usedProxy = false;
-        var errorMessage = '';
         
-        // Coba fetch langsung dulu
+        // Try direct fetch
         try {
-            console.log('Mencoba fetch langsung...');
             var controller = new AbortController();
-            var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
-            var response = await fetch(CONFIG.sheetUrl, { 
+            var timeoutId = setTimeout(function() { controller.abort(); }, DASHBOARD_CONFIG.timeout);
+            var response = await fetch(DASHBOARD_CONFIG.sheetUrl, { 
                 signal: controller.signal, 
                 headers: { 'Cache-Control': 'no-cache' } 
             });
             clearTimeout(timeoutId);
             
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
+            if (!response.ok) throw new Error('HTTP ' + response.status);
             csvText = await response.text();
-            console.log('✅ Fetch langsung berhasil!');
+            console.log('✅ Direct fetch successful');
         } catch (directError) {
-            console.log('❌ Fetch langsung gagal:', directError.message);
-            errorMessage = directError.message;
+            console.log('❌ Direct fetch failed:', directError.message);
             
-            // Coba CORS proxies
-            for (var i = 0; i < CONFIG.corsProxies.length; i++) {
-                var proxy = CONFIG.corsProxies[i];
-                var proxyUrl = proxy + encodeURIComponent(CONFIG.sheetUrl);
+            // Try CORS proxies
+            for (var i = 0; i < DASHBOARD_CONFIG.corsProxies.length; i++) {
+                var proxy = DASHBOARD_CONFIG.corsProxies[i];
+                var proxyUrl = proxy + encodeURIComponent(DASHBOARD_CONFIG.sheetUrl);
                 
                 try {
-                    console.log('Mencoba proxy ' + (i+1) + ':', proxy);
                     var controller2 = new AbortController();
-                    var timeoutId2 = setTimeout(function() { controller2.abort(); }, CONFIG.timeout);
+                    var timeoutId2 = setTimeout(function() { controller2.abort(); }, DASHBOARD_CONFIG.timeout);
                     var response2 = await fetch(proxyUrl, { 
                         signal: controller2.signal,
                         headers: { 'Cache-Control': 'no-cache' }
@@ -644,70 +880,70 @@ async function fetchData() {
                     
                     csvText = await response2.text();
                     usedProxy = true;
-                    console.log('✅ Proxy berhasil:', proxy);
+                    console.log('✅ Proxy successful:', proxy);
                     break;
                 } catch (proxyError) {
-                    console.log('❌ Proxy ' + (i+1) + ' gagal:', proxyError.message);
+                    console.log('❌ Proxy failed:', proxy, proxyError.message);
                     continue;
                 }
             }
         }
         
         if (!csvText || csvText.length < 100) {
-            throw new Error('Data tidak valid atau terlalu pendek');
+            throw new Error('Data tidak valid');
         }
         
-        // Parse dan extract data
+        // Parse and extract
         var parsed = parseCSV(csvText);
         database = extractData(parsed.matrix, parsed.headers, parsed.years);
         availableYears = parsed.years;
         
         if (availableYears.length === 0) {
-            throw new Error('Tidak ada data tahun ditemukan');
+            throw new Error('Tidak ada data tahun');
         }
         
         // Success
-console.log('✅ Data loaded:', availableYears);
-var firstYear = availableYears[0];
-var lastYear = availableYears[availableYears.length - 1];
-statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
-if (statusDot) statusDot.className = 'status-dot success';
-
-if (usedProxy) {
-    showAlert('✅ Data berhasil dimuat via CORS proxy. Beberapa fitur mungkin terbatas.', 'success');
-} else {
-    showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
-}
-
-isDataLoaded = true;
-sesuaikanFilter();
+        console.log('✅ Data loaded:', availableYears);
+        var firstYear = availableYears[0];
+        var lastYear = availableYears[availableYears.length - 1];
+        statusEl.innerText = "✅ DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
+        
+        if (usedProxy) {
+            showAlert('✅ Data berhasil dimuat via CORS proxy.', 'success');
+        } else {
+            showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
+        }
+        
+        isDataLoaded = true;
+        sesuaikanFilter();
         
     } catch (error) {
-        console.error('❌ Semua metode fetch gagal:', error.message);
+        console.error('❌ All fetch methods failed:', error.message);
         
-        // Fallback ke mock data
-        if (CONFIG.useMockData) {
-            statusEl.innerText = "MODE SIMULASI - DATA CONTOH";
-            if (statusDot) statusDot.className = 'status-dot error';
-            
-            showAlert('⚠️ <strong>Google Sheets tidak dapat diakses.</strong><br>' +
-                     'Menggunakan data simulasi. Pastikan spreadsheet sudah di-<strong>Publish to Web</strong>.<br>' +
-                     '<small>Cara: File → Share → Publish to web → Entire Document → CSV</small>', 'warning');
-            
+        // Fallback to mock data
+        if (DASHBOARD_CONFIG.useMockData) {
+            console.log('📊 Using mock data fallback');
             var mock = generateMockData();
             database = mock.data;
             availableYears = mock.years;
             isDataLoaded = true;
+            
+            var firstYear = availableYears[0];
+            var lastYear = availableYears[availableYears.length - 1];
+            statusEl.innerText = "⚠️ MODE SIMULASI - PERIODE " + firstYear + "-" + lastYear;
+            
+            showAlert('⚠️ <strong>Menggunakan data simulasi.</strong><br>' +
+                     'Google Sheets tidak dapat diakses.<br>' +
+                     '<small>Pastikan spreadsheet sudah di-Publish to Web</small>', 'warning');
+            
             sesuaikanFilter();
         } else {
-            statusEl.innerText = "KONEKSI GAGAL: " + error.message;
-            if (statusDot) statusDot.className = 'status-dot error';
+            statusEl.innerText = "❌ KONEKSI GAGAL: " + error.message;
             showAlert('❌ Gagal memuat data: ' + error.message, 'error');
         }
     }
 }
 
-// ===== FILTER FUNCTIONS =====
 function sesuaikanFilter() {
     var menu = document.getElementById('menuGrafik').value;
     var filter = document.getElementById('filterTahun');
@@ -727,7 +963,7 @@ function sesuaikanFilter() {
         }
     } else {
         var lastYear = availableYears[availableYears.length - 1] || '2026';
-        var firstYear = availableYears[0] || '2019';
+        var firstYear = availableYears[0] || '2011';
         var opsi = [
             {text: "2021 - " + lastYear, val: "2021-" + lastYear}, 
             {text: "2016 - 2020", val: "2016-2020"}, 
@@ -754,7 +990,6 @@ function getYearsInRange(range) {
     return [range];
 }
 
-// ===== CHART RENDER =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -775,7 +1010,7 @@ function updateChart() {
         responsive: true, maintainAspectRatio: false,
         animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
-            legend: { labels: { color: textColor, font: { weight: 'bold', size: 10 } } },
+            legend: { labels: { color: textColor, font: { weight: 'bold', size: 10, family: "'Times New Roman', serif" } } },
             tooltip: {
                 backgroundColor: 'rgba(30,30,40,0.95)', titleColor: '#fff', bodyColor: '#eee',
                 borderColor: isDark ? '#555' : '#ddd', borderWidth: 1, padding: 10,
@@ -798,7 +1033,7 @@ function updateChart() {
                     if (menu === 'distribusi') return val.toFixed(1) + '%';
                     return val.toLocaleString('id-ID');
                 },
-                font: { weight: 'bold', size: 10 },
+                font: { weight: 'bold', size: 10, family: "'Times New Roman', serif" },
                 color: dataLabelColor,
                 backgroundColor: dataLabelBg,
                 borderColor: dataLabelBorder,
@@ -808,8 +1043,8 @@ function updateChart() {
             }
         },
         scales: menu !== 'distribusi' ? {
-            y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
-            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }
+            y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10, family: "'Times New Roman', serif" } }, grid: { color: gridColor } },
+            x: { ticks: { color: textColor, font: { size: 10, family: "'Times New Roman', serif" } }, grid: { display: false } }
         } : {}
     };
 
@@ -876,7 +1111,7 @@ function updateChart() {
                 plugins: {
                     legend: { 
                         position: 'bottom', 
-                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } 
+                        labels: { color: textColor, font: { weight: 'bold', size: 9, family: "'Times New Roman', serif" }, padding: 10 } 
                     },
                     tooltip: { 
                         backgroundColor: 'rgba(30,30,40,0.95)', 
@@ -892,7 +1127,7 @@ function updateChart() {
                         formatter: function(v) { 
                             return v >= 5 ? v.toFixed(1)+'%' : ''; 
                         }, 
-                        font: { weight: 'bold', size: 11 }, 
+                        font: { weight: 'bold', size: 11, family: "'Times New Roman', serif" }, 
                         color: '#fff' 
                     }
                 },
@@ -908,7 +1143,6 @@ function updateChart() {
     document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
 }
 
-// ===== UI FUNCTIONS =====
 function toggleDarkMode() {
     document.body.classList.toggle('dark');
     if (currentChart) updateChart();
@@ -925,24 +1159,50 @@ function downloadChart() {
 
 // ===== INIT =====
 function init() {
-    console.log('Dashboard initializing...');
-    if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+    console.log('🚀 Dashboard initializing...');
     
+    // Register Chart.js plugin
+    if (typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+    }
+    
+    // Check session
+    if (checkSession()) {
+        console.log('✅ Session valid, showing dashboard');
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('btnLogout').style.display = 'inline-flex';
+        enableDashboard();
+        fetchData();
+    } else {
+        console.log('⏳ No valid session, showing login');
+        blockDashboard();
+    }
+    
+    // Logo fallback
     var logoImg = document.getElementById('bpsLogo');
     logoImg.onerror = function() {
-        console.log('Logo BPS gagal load, menggunakan SVG fallback');
         this.style.display = 'none';
         document.getElementById('logoFallback').style.display = 'block';
     };
     
-    fetchData();
-    document.addEventListener('keydown', function(e) { 
-        if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } 
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            if (!document.getElementById('loginOverlay').classList.contains('hidden')) return;
+            downloadChart();
+        }
     });
+    
+    console.log('✅ Initialization complete');
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
+// Auto-init
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 </script>
 </body>
 </html>
