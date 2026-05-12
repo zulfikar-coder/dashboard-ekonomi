@@ -40,7 +40,7 @@
             box-sizing: border-box;
         }
 
-        /* ===== TIMES NEW ROMAN FOR ALL TEXT ===== */
+        /* ===== FONT TIMES NEW ROMAN UNTUK SEMUA ELEMEN ===== */
         body, h1, h2, h3, h4, h5, h6, p, span, label, select, option, button, small, canvas, input {
             font-family: 'Times New Roman', Times, serif !important;
         }
@@ -76,19 +76,14 @@
         }
 
         .login-box {
-            background: white;
+            background: var(--card-bg);
             padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xl);
             max-width: 420px;
             width: 100%;
             text-align: center;
-            animation: slideUp 0.4s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            border-top: 4px solid var(--orange);
         }
 
         .login-logo {
@@ -96,12 +91,12 @@
             height: 80px;
             margin: 0 auto 20px;
             background: white;
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             padding: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow);
         }
 
         .login-logo img {
@@ -110,63 +105,66 @@
             object-fit: contain;
         }
 
-        .login-title {
+        .login-box h2 {
             margin: 0 0 8px;
-            color: #2c3e50;
+            color: var(--text);
             font-size: 1.4rem;
             font-weight: 700;
-            text-transform: uppercase;
         }
 
-        .login-subtitle {
+        .login-box p {
             margin: 0 0 25px;
-            color: #64748b;
-            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            opacity: 0.8;
         }
 
         .login-form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
         }
 
-        .login-input {
-            padding: 12px 16px;
-            border: 2px solid #e1e8ed;
-            border-radius: 8px;
+        .login-form input {
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
             font-size: 1rem;
-            text-transform: none;
+            background: var(--card-bg);
+            color: var(--text);
             transition: border-color 0.2s;
         }
 
-        .login-input:focus {
+        .login-form input:focus {
             outline: none;
             border-color: var(--orange);
         }
 
-        .login-btn {
+        .login-form button {
             padding: 14px;
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius-xs);
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
             text-transform: uppercase;
-            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .login-btn:hover {
+        .login-form button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 140, 0, 0.3);
+            box-shadow: var(--shadow);
         }
 
         .login-error {
             color: #dc2626;
             font-size: 0.85rem;
-            margin-top: 10px;
+            margin-top: 12px;
             display: none;
+            font-weight: 500;
         }
 
         .login-error.show {
@@ -180,7 +178,7 @@
             75% { transform: translateX(8px); }
         }
 
-        /* ===== DASHBOARD STYLES ===== */
+        /* ===== DASHBOARD STYLES (Original Design) ===== */
         .header { 
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white; 
@@ -503,10 +501,6 @@
             h3 {
                 font-size: 1.1rem;
             }
-
-            .login-box {
-                padding: 30px 25px;
-            }
         }
 
         @keyframes fadeIn {
@@ -533,108 +527,154 @@
         <div class="login-logo">
             <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" alt="BPS">
         </div>
-        <h2 class="login-title">LOGIN DASHBOARD</h2>
-        <p class="login-subtitle">Masukkan kredensial untuk mengakses dashboard statistik ekonomi Kota Palu</p>
+        <h2>LOGIN DASHBOARD</h2>
+        <p>Masukkan kredensial untuk mengakses dashboard statistik ekonomi Kota Palu</p>
         
         <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
-            <input type="text" id="username" class="login-input" placeholder="Username" required autocomplete="username">
-            <input type="password" id="password" class="login-input" placeholder="Password" required autocomplete="current-password">
-            <button type="submit" class="login-btn">MASUK</button>
+            <input type="text" id="username" placeholder="Username" required autocomplete="username">
+            <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+            <button type="submit">MASUK</button>
         </form>
         
         <p id="loginError" class="login-error">❌ Username atau password salah</p>
     </div>
 </div>
 
-<!-- ===== DASHBOARD CONTENT ===== -->
-<div class="header">
-    <div class="logo-container">
-        <img id="bpsLogo" 
-             src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
-             alt="BPS" 
-             class="logo-img"
-             onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
-        <div id="logoFallback" class="logo-fallback">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:70px;height:70px;">
-                <rect width="200" height="200" fill="white"/>
-                <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" fill="#0080D7"/>
-                <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" fill="#009543"/>
-                <path d="M 130 10 L 155 10 L 155 25 C 155 38 145 48 132 48 L 125 48 L 125 40 L 132 40 C 138 40 142 36 142 30 L 142 23 L 125 23 L 125 10 Z M 130 55 L 130 63 C 130 68 134 72 140 72 L 148 72 L 148 80 L 140 80 C 130 80 122 72 122 62 L 122 55 Z M 142 80 L 142 88 C 142 94 138 98 132 98 L 125 98 L 125 106 L 132 106 C 145 106 155 96 155 83 L 155 80 Z" fill="#F48024"/>
-                <path d="M 20 120 Q 40 140, 70 135 Q 100 130, 130 135 Q 160 140, 180 125" stroke="#0080D7" stroke-width="8" fill="none" stroke-linecap="round"/>
-                <path d="M 25 80 Q 45 60, 75 65 Q 105 70, 135 60 Q 165 50, 175 70" stroke="#F48024" stroke-width="6" fill="none" stroke-linecap="round"/>
-            </svg>
+<!-- ===== DASHBOARD CONTENT (Hidden until login) ===== -->
+<div id="dashboardContent" style="display: none;">
+    <div class="header">
+        <div class="logo-container">
+            <img id="bpsLogo" 
+                 src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
+                 alt="BPS" 
+                 class="logo-img"
+                 onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
+            <div id="logoFallback" class="logo-fallback">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:70px;height:70px;">
+                    <rect width="200" height="200" fill="white"/>
+                    <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" fill="#0080D7"/>
+                    <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" fill="#009543"/>
+                    <path d="M 130 10 L 155 10 L 155 25 C 155 38 145 48 132 48 L 125 48 L 125 40 L 132 40 C 138 40 142 36 142 30 L 142 23 L 125 23 L 125 10 Z M 130 55 L 130 63 C 130 68 134 72 140 72 L 148 72 L 148 80 L 140 80 C 130 80 122 72 122 62 L 122 55 Z M 142 80 L 142 88 C 142 94 138 98 132 98 L 125 98 L 125 106 L 132 106 C 145 106 155 96 155 83 L 155 80 Z" fill="#F48024"/>
+                    <path d="M 20 120 Q 40 140, 70 135 Q 100 130, 130 135 Q 160 140, 180 125" stroke="#0080D7" stroke-width="8" fill="none" stroke-linecap="round"/>
+                    <path d="M 25 80 Q 45 60, 75 65 Q 105 70, 135 60 Q 165 50, 175 70" stroke="#F48024" stroke-width="6" fill="none" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="header-text">
+            <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+            <small id="status">⏳ MEMUAT DATA...</small>
         </div>
     </div>
-    <div class="header-text">
-        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <small id="status">⏳ MEMUAT DATA...</small>
-    </div>
-</div>
 
-<div class="controls">
-    <div id="alertContainer"></div>
-    <div class="control-group">
-        <label>JENIS GRAFIK</label>
-        <select id="menuGrafik" onchange="sesuaikanFilter()" disabled>
-            <option value="">Memuat...</option>
-        </select>
+    <div class="controls">
+        <div id="alertContainer"></div>
+        <div class="control-group">
+            <label>JENIS GRAFIK</label>
+            <select id="menuGrafik" onchange="sesuaikanFilter()">
+                <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
+                <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
+                <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>PILIH PERIODE</label>
+            <select id="filterTahun" onchange="updateChart()"></select>
+        </div>
+        <div class="btn-group">
+            <button class="btn-download" onclick="downloadChart()">📥 UNDUH GRAFIK</button>
+            <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
+            <button class="btn-dark" onclick="logout()" style="margin-left: 8px;">🚪 KELUAR</button>
+        </div>
     </div>
-    <div class="control-group">
-        <label>PILIH PERIODE</label>
-        <select id="filterTahun" onchange="updateChart()" disabled>
-            <option value="">Memuat...</option>
-        </select>
-    </div>
-    <div class="btn-group">
-        <button class="btn-download" onclick="downloadChart()" id="btnDownload" disabled>📥 UNDUH GRAFIK</button>
-        <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
-        <button class="btn-dark" onclick="logout()" id="btnLogout" style="display:none">🚪 KELUAR</button>
-    </div>
-</div>
 
-<div class="card">
-    <h3 id="judulGrafik">VISUALISASI DATA</h3>
-    <div class="chart-container">
-        <canvas id="mainChart"></canvas>
+    <div class="card">
+        <h3 id="judulGrafik">VISUALISASI DATA</h3>
+        <div class="chart-container">
+            <canvas id="mainChart"></canvas>
+        </div>
     </div>
 </div>
 
 <script>
-/**
- * 🔐 DASHBOARD EKONOMI KOTA PALU - DENGAN LOGIN
- * 
- * ⚠️ PERINGATAN KEAMANAN:
- * - Login ini adalah CLIENT-SIDE hanya untuk akses kontrol dasar
- * - Kredensial terlihat di source code (View Source)
- * - Bisa di-bypass dengan JavaScript console
- * - JANGAN gunakan untuk data sensitif!
- * 
- * ✅ Cocok untuk: data publik/internal, pembatasan akses casual user
- * ❌ Tidak cocok untuk: data rahasia, produksi dengan requirement keamanan tinggi
- * 
- * Untuk keamanan sebenarnya, gunakan server-side authentication (PHP/Node.js + database)
- */
-
-// ===== LOGIN CONFIG - GANTI DENGAN KREDENSIAL ANDA =====
-const LOGIN_CREDENTIALS = {
+// ===== LOGIN CONFIG (GANTI DENGAN KREDENSIAL ANDA) =====
+const LOGIN_CONFIG = {
     username: "admin",
-    password: "bps2024"
+    password: "bps2024",
+    sessionKey: "dashboard_palukota_session",
+    sessionDuration: 24 * 60 * 60 * 1000 // 24 jam
 };
 
-// ===== SESSION CONFIG =====
-const SESSION_CONFIG = {
-    key: 'dashboard_palukota_session',
-    expiryHours: 24
-};
+// ===== LOGIN FUNCTIONS =====
+function checkSession() {
+    try {
+        var saved = localStorage.getItem(LOGIN_CONFIG.sessionKey);
+        if (saved) {
+            var session = JSON.parse(saved);
+            if (Date.now() - session.timestamp < LOGIN_CONFIG.sessionDuration) {
+                return true;
+            }
+            localStorage.removeItem(LOGIN_CONFIG.sessionKey);
+        }
+    } catch(e) {
+        console.log('Session check error:', e);
+    }
+    return false;
+}
 
-// ===== DASHBOARD DATA & STATE =====
-var ctx = document.getElementById('mainChart').getContext('2d');
+function handleLogin(event) {
+    event.preventDefault();
+    
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    var errorEl = document.getElementById('loginError');
+    
+    if (username === LOGIN_CONFIG.username && password === LOGIN_CONFIG.password) {
+        // Simpan session
+        localStorage.setItem(LOGIN_CONFIG.sessionKey, JSON.stringify({
+            user: username,
+            timestamp: Date.now()
+        }));
+        
+        // Hide login, show dashboard
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('dashboardContent').style.display = 'block';
+        errorEl.classList.remove('show');
+        
+        // Init dashboard
+        console.log('✅ Login successful, initializing dashboard...');
+        initDashboard();
+    } else {
+        errorEl.classList.add('show');
+        var form = document.getElementById('loginForm');
+        form.style.animation = 'shake 0.3s';
+        setTimeout(function() { form.style.animation = ''; }, 300);
+        console.log('❌ Login failed');
+    }
+}
+
+function logout() {
+    localStorage.removeItem(LOGIN_CONFIG.sessionKey);
+    location.reload();
+}
+
+function initAuth() {
+    if (checkSession()) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('dashboardContent').style.display = 'block';
+        initDashboard();
+    } else {
+        document.getElementById('loginOverlay').classList.remove('hidden');
+        document.getElementById('dashboardContent').style.display = 'none';
+    }
+}
+
+// ===== DASHBOARD VARIABLES & CONFIG =====
+var ctx = document.getElementById('mainChart');
 var currentChart = null;
 var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
 var availableYears = [];
 var isDataLoaded = false;
 
-// ===== CONFIG =====
 var CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
     corsProxies: [
@@ -646,123 +686,7 @@ var CONFIG = {
     useMockData: true
 };
 
-// ===== LOGIN FUNCTIONS =====
-
-/**
- * Check if user has valid session
- * @returns {boolean} True if authenticated
- */
-function checkSession() {
-    try {
-        var saved = localStorage.getItem(SESSION_CONFIG.key);
-        if (!saved) return false;
-        
-        var session = JSON.parse(saved);
-        var now = Date.now();
-        var expiry = session.timestamp + (SESSION_CONFIG.expiryHours * 60 * 60 * 1000);
-        
-        return now < expiry;
-    } catch (e) {
-        console.error('Session check error:', e);
-        return false;
-    }
-}
-
-/**
- * Handle login form submission
- * @param {Event} event - Form submit event
- */
-function handleLogin(event) {
-    event.preventDefault();
-    
-    var username = document.getElementById('username').value.trim();
-    var password = document.getElementById('password').value;
-    var errorEl = document.getElementById('loginError');
-    
-    console.log('🔐 Login attempt:', { username, password: '***' });
-    
-    if (username === LOGIN_CREDENTIALS.username && password === LOGIN_CREDENTIALS.password) {
-        // Save session
-        localStorage.setItem(SESSION_CONFIG.key, JSON.stringify({
-            user: username,
-            timestamp: Date.now()
-        }));
-        
-        console.log('✅ Login successful');
-        
-        // Hide login, show dashboard
-        document.getElementById('loginOverlay').classList.add('hidden');
-        errorEl.classList.remove('show');
-        
-        // Enable dashboard
-        enableDashboard();
-        
-        // Add logout button
-        addLogoutButton();
-        
-        // Initialize dashboard
-        if (typeof initDashboard === 'function') initDashboard();
-        
-    } else {
-        console.log('❌ Login failed');
-        errorEl.classList.add('show');
-        
-        // Shake animation
-        var form = document.getElementById('loginForm');
-        form.style.animation = 'shake 0.3s';
-        setTimeout(function() { form.style.animation = ''; }, 300);
-    }
-}
-
-/**
- * Logout user and clear session
- */
-function logout() {
-    console.log('🚪 Logging out...');
-    localStorage.removeItem(SESSION_CONFIG.key);
-    
-    // Show login, hide dashboard
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('btnLogout').style.display = 'none';
-    
-    // Reset dashboard state
-    isDataLoaded = false;
-    if (currentChart) {
-        currentChart.destroy();
-        currentChart = null;
-    }
-    
-    // Disable controls
-    document.getElementById('menuGrafik').disabled = true;
-    document.getElementById('filterTahun').disabled = true;
-    document.getElementById('btnDownload').disabled = true;
-    
-    // Reset status
-    document.getElementById('status').innerText = '⏳ MEMUAT DATA...';
-    
-    console.log('✅ Logged out');
-}
-
-/**
- * Add logout button to dashboard
- */
-function addLogoutButton() {
-    var btnLogout = document.getElementById('btnLogout');
-    if (btnLogout) {
-        btnLogout.style.display = 'inline-flex';
-    }
-}
-
-/**
- * Enable dashboard after successful login
- */
-function enableDashboard() {
-    console.log('🔓 Enabling dashboard...');
-    // Controls will be enabled after data loads
-}
-
-// ===== DASHBOARD UTILITY FUNCTIONS =====
-
+// ===== UTILITY FUNCTIONS =====
 function showAlert(message, type) {
     var container = document.getElementById('alertContainer');
     var alert = document.createElement('div');
@@ -772,7 +696,7 @@ function showAlert(message, type) {
     container.appendChild(alert);
     setTimeout(function() {
         alert.classList.remove('show');
-    }, 10000);
+    }, 8000);
 }
 
 function cleanIndonesianNumber(val) {
@@ -896,13 +820,12 @@ async function fetchData() {
     var statusEl = document.getElementById('status');
     
     try {
-        console.log('🔄 Fetching data from Google Sheets...');
         statusEl.innerText = "⏳ MENGUNDUH DATA...";
         
         var csvText = null;
         var usedProxy = false;
         
-        // Try direct fetch first
+        // Coba fetch langsung
         try {
             var controller = new AbortController();
             var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
@@ -914,11 +837,11 @@ async function fetchData() {
             
             if (!response.ok) throw new Error('HTTP ' + response.status);
             csvText = await response.text();
-            console.log('✅ Direct fetch successful');
+            console.log('✅ Fetch langsung berhasil');
         } catch (directError) {
-            console.log('❌ Direct fetch failed:', directError.message);
+            console.log('❌ Fetch langsung gagal:', directError.message);
             
-            // Try CORS proxies
+            // Coba CORS proxies
             for (var i = 0; i < CONFIG.corsProxies.length; i++) {
                 var proxy = CONFIG.corsProxies[i];
                 var proxyUrl = proxy + encodeURIComponent(CONFIG.sheetUrl);
@@ -936,26 +859,25 @@ async function fetchData() {
                     
                     csvText = await response2.text();
                     usedProxy = true;
-                    console.log('✅ Proxy successful:', proxy);
+                    console.log('✅ Proxy berhasil:', proxy);
                     break;
                 } catch (proxyError) {
-                    console.log('❌ Proxy failed:', proxy, proxyError.message);
                     continue;
                 }
             }
         }
         
         if (!csvText || csvText.length < 100) {
-            throw new Error('Data tidak valid atau terlalu pendek');
+            throw new Error('Data tidak valid');
         }
         
-        // Parse and extract data
+        // Parse dan extract
         var parsed = parseCSV(csvText);
         database = extractData(parsed.matrix, parsed.headers, parsed.years);
         availableYears = parsed.years;
         
         if (availableYears.length === 0) {
-            throw new Error('Tidak ada data tahun ditemukan');
+            throw new Error('Tidak ada data tahun');
         }
         
         // Success
@@ -964,45 +886,31 @@ async function fetchData() {
         var lastYear = availableYears[availableYears.length - 1];
         statusEl.innerText = "✅ DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
         
-        if (usedProxy) {
-            showAlert('✅ Data berhasil dimuat via CORS proxy.', 'success');
-        } else {
-            showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
-        }
-        
+        showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
         isDataLoaded = true;
-        enableControls();
         sesuaikanFilter();
         
     } catch (error) {
-        console.error('❌ All fetch methods failed:', error.message);
-        console.log('📊 Using mock data fallback...');
+        console.error('❌ Fetch gagal:', error.message);
         
-        // Fallback to mock data
-        var mock = generateMockData();
-        database = mock.data;
-        availableYears = mock.years;
-        isDataLoaded = true;
-        
-        var firstYear = availableYears[0];
-        var lastYear = availableYears[availableYears.length - 1];
-        statusEl.innerText = "⚠️ MODE SIMULASI - PERIODE " + firstYear + "-" + lastYear;
-        
-        showAlert('⚠️ <strong>Menggunakan data simulasi.</strong><br>' +
-                 'Google Sheets tidak dapat diakses.<br>' +
-                 '<small>Pastikan spreadsheet sudah di-Publish to Web:<br>' +
-                 'File → Share → Publish to web → Entire Document → CSV</small>', 'warning');
-        
-        enableControls();
-        sesuaikanFilter();
+        // Fallback ke mock data
+        if (CONFIG.useMockData) {
+            var mock = generateMockData();
+            database = mock.data;
+            availableYears = mock.years;
+            isDataLoaded = true;
+            
+            var firstYear = availableYears[0];
+            var lastYear = availableYears[availableYears.length - 1];
+            statusEl.innerText = "⚠️ MODE SIMULASI - PERIODE " + firstYear + "-" + lastYear;
+            
+            showAlert('⚠️ <strong>Menggunakan data simulasi.</strong><br>Google Sheets tidak dapat diakses.<br><small>Pastikan spreadsheet sudah di-Publish to Web</small>', 'warning');
+            sesuaikanFilter();
+        } else {
+            statusEl.innerText = "❌ KONEKSI GAGAL";
+            showAlert('❌ Gagal memuat data: ' + error.message, 'error');
+        }
     }
-}
-
-function enableControls() {
-    console.log('🔧 Enabling controls...');
-    document.getElementById('menuGrafik').disabled = false;
-    document.getElementById('filterTahun').disabled = false;
-    document.getElementById('btnDownload').disabled = false;
 }
 
 // ===== FILTER FUNCTIONS =====
@@ -1118,10 +1026,10 @@ function updateChart() {
         
         config = {
             type: 'bar',
-             {
+            data: {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHB', data: adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
                     { label: 'ADHK', data: adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
@@ -1133,7 +1041,7 @@ function updateChart() {
         
         config = {
             type: 'line',
-             {
+            data: {
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
@@ -1157,10 +1065,10 @@ function updateChart() {
         
         config = {
             type: 'doughnut',
-             {
+            data: {
                 labels: Object.keys(distribusiData),
                 datasets: [{
-                     Object.values(distribusiData),
+                    data: Object.values(distribusiData),
                     backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
                     borderColor: isDark ? '#1e1e1e' : '#fff',
                     borderWidth: 3,
@@ -1230,11 +1138,10 @@ function initDashboard() {
         Chart.register(ChartDataLabels);
     }
     
-    // Setup logo fallback
+    // Logo fallback
     var logoImg = document.getElementById('bpsLogo');
     if (logoImg) {
         logoImg.onerror = function() {
-            console.log('Logo BPS gagal load, menggunakan SVG fallback');
             this.style.display = 'none';
             document.getElementById('logoFallback').style.display = 'block';
         };
@@ -1243,35 +1150,19 @@ function initDashboard() {
     // Fetch data
     fetchData();
     
-    // Keyboard shortcut for download
+    // Keyboard shortcut
     document.addEventListener('keydown', function(e) { 
-        if (e.ctrlKey && e.key === 's') { 
-            e.preventDefault(); 
-            downloadChart(); 
-        } 
+        if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } 
     });
     
-    console.log('✅ Dashboard initialization complete');
+    console.log('✅ Dashboard initialized');
 }
 
 // ===== MAIN INIT =====
 function init() {
-    console.log('🔐 App initializing...');
-    
-    // Check session first
-    if (checkSession()) {
-        console.log('✅ Valid session found');
-        document.getElementById('loginOverlay').classList.add('hidden');
-        addLogoutButton();
-        initDashboard();
-    } else {
-        console.log('⏳ No valid session - showing login');
-        // Dashboard content is blocked by login overlay
-        // Controls will be enabled after successful login
-    }
+    initAuth();
 }
 
-// Auto-init when DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
