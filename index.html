@@ -40,7 +40,6 @@
             box-sizing: border-box;
         }
 
-        /* ===== FONT TIMES NEW ROMAN UNTUK SEMUA ELEMEN ===== */
         body, h1, h2, h3, h4, h5, h6, p, span, label, select, option, button, small, canvas {
             font-family: 'Times New Roman', Times, serif !important;
         }
@@ -177,11 +176,16 @@
             text-transform: uppercase;
         }
 
-        select:hover {
+        select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        select:hover:not(:disabled) {
             border-color: var(--orange-light);
         }
 
-        select:focus {
+        select:focus:not(:disabled) {
             outline: none;
             border-color: var(--orange);
             box-shadow: 0 0 0 3px rgba(255,140,0,0.15);
@@ -209,6 +213,11 @@
             overflow: hidden;
         }
 
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         button::before {
             content: '';
             position: absolute;
@@ -222,17 +231,17 @@
             transition: width 0.6s, height 0.6s;
         }
 
-        button:hover::before {
+        button:hover:not(:disabled)::before {
             width: 300px;
             height: 300px;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: var(--shadow);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
         }
 
@@ -411,7 +420,7 @@
     </div>
     <div class="header-text">
         <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
+        <small id="status">⏳ MEMUAT DATA...</small>
     </div>
 </div>
 
@@ -419,18 +428,18 @@
     <div id="alertContainer"></div>
     <div class="control-group">
         <label>JENIS GRAFIK</label>
-        <select id="menuGrafik" onchange="sesuaikanFilter()">
-            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
-            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
-            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+        <select id="menuGrafik" onchange="sesuaikanFilter()" disabled>
+            <option value="">Memuat...</option>
         </select>
     </div>
     <div class="control-group">
         <label>PILIH PERIODE</label>
-        <select id="filterTahun" onchange="updateChart()"></select>
+        <select id="filterTahun" onchange="updateChart()" disabled>
+            <option value="">Memuat...</option>
+        </select>
     </div>
     <div class="btn-group">
-        <button class="btn-download" onclick="downloadChart()">📥 UNDUH GRAFIK</button>
+        <button class="btn-download" onclick="downloadChart()" id="btnDownload" disabled>📥 UNDUH GRAFIK</button>
         <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
     </div>
 </div>
@@ -446,24 +455,14 @@
 // ===== GLOBAL VARIABLES =====
 var ctx = document.getElementById('mainChart').getContext('2d');
 var currentChart = null;
-var database = { 
-    laju: {}, 
-    adhb: {}, 
-    adhk: {}, 
-    distribusi: {}
-};
+var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
 var availableYears = [];
 var isDataLoaded = false;
 
-// ===== CONFIG - DENGAN CORS PROXY =====
+// ===== CONFIG =====
 var CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
-    corsProxies: [
-        "https://api.allorigins.win/raw?url=",
-        "https://corsproxy.io/?",
-        "https://api.codetabs.com/v1/proxy?quest="
-    ],
-    timeout: 10000,
+    timeout: 8000,
     useMockData: true
 };
 
@@ -477,7 +476,7 @@ function showAlert(message, type) {
     container.appendChild(alert);
     setTimeout(function() {
         alert.classList.remove('show');
-    }, 8000);
+    }, 10000);
 }
 
 function cleanIndonesianNumber(val) {
@@ -577,7 +576,7 @@ function extractData(matrix, headers, years) {
 }
 
 function generateMockData() {
-    var years = ['2019','2020','2021','2022','2023','2024','2025','2026'];
+    var years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
     var data = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
     
     years.forEach(function(y, i) {
@@ -593,70 +592,34 @@ function generateMockData() {
         };
     });
     
-    return {  data, years: years };
+    return { data: data, years: years };
 }
 
-// ===== FETCH DATA DENGAN CORS PROXY =====
+// ===== FETCH DATA =====
 async function fetchData() {
     var statusEl = document.getElementById('status');
-    var statusDot = document.getElementById('statusDot');
     
     try {
-        statusEl.innerText = "MENGUNDUH DATA DARI GOOGLE SHEETS...";
-        if (statusDot) statusDot.className = 'status-dot';
+        console.log('🔄 Mencoba fetch data dari Google Sheets...');
+        statusEl.innerText = "⏳ MENGUNDUH DATA...";
         
-        var csvText = null;
-        var usedProxy = false;
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
         
-        // Coba fetch langsung dulu
-        try {
-            console.log('Mencoba fetch langsung...');
-            var controller = new AbortController();
-            var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
-            var response = await fetch(CONFIG.sheetUrl, { 
-                signal: controller.signal, 
-                headers: { 'Cache-Control': 'no-cache' } 
-            });
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
-            }
-            csvText = await response.text();
-            console.log('✅ Fetch langsung berhasil!');
-        } catch (directError) {
-            console.log('❌ Fetch langsung gagal:', directError.message);
-            
-            // Coba CORS proxies
-            for (var i = 0; i < CONFIG.corsProxies.length; i++) {
-                var proxy = CONFIG.corsProxies[i];
-                var proxyUrl = proxy + encodeURIComponent(CONFIG.sheetUrl);
-                
-                try {
-                    console.log('Mencoba proxy ' + (i+1) + ':', proxy);
-                    var controller2 = new AbortController();
-                    var timeoutId2 = setTimeout(function() { controller2.abort(); }, CONFIG.timeout);
-                    var response2 = await fetch(proxyUrl, { 
-                        signal: controller2.signal,
-                        headers: { 'Cache-Control': 'no-cache' }
-                    });
-                    clearTimeout(timeoutId2);
-                    
-                    if (!response2.ok) continue;
-                    
-                    csvText = await response2.text();
-                    usedProxy = true;
-                    console.log('✅ Proxy berhasil:', proxy);
-                    break;
-                } catch (proxyError) {
-                    console.log('❌ Proxy ' + (i+1) + ' gagal:', proxyError.message);
-                    continue;
-                }
-            }
+        var response = await fetch(CONFIG.sheetUrl, { 
+            signal: controller.signal, 
+            headers: { 'Cache-Control': 'no-cache' } 
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
         }
         
+        var csvText = await response.text();
+        
         if (!csvText || csvText.length < 100) {
-            throw new Error('Data tidak valid atau terlalu pendek');
+            throw new Error('Data tidak valid');
         }
         
         // Parse dan extract data
@@ -665,46 +628,48 @@ async function fetchData() {
         availableYears = parsed.years;
         
         if (availableYears.length === 0) {
-            throw new Error('Tidak ada data tahun ditemukan');
+            throw new Error('Tidak ada data tahun');
         }
         
-        // Success - TAMPILAN PERIODE 2011-2026
-        console.log('✅ Data loaded:', availableYears);
+        // Success - Tampilkan data
+        console.log('✅ Data berhasil dimuat:', availableYears);
         var firstYear = availableYears[0];
         var lastYear = availableYears[availableYears.length - 1];
-        statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
-        if (statusDot) statusDot.className = 'status-dot success';
+        statusEl.innerText = "✅ DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
         
-        if (usedProxy) {
-            showAlert('✅ Data berhasil dimuat via CORS proxy.', 'success');
-        } else {
-            showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
-        }
+        showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
         
         isDataLoaded = true;
+        enableControls();
         sesuaikanFilter();
         
     } catch (error) {
-        console.error('❌ Semua metode fetch gagal:', error.message);
+        console.error('❌ Fetch gagal:', error.message);
+        console.log('📊 Menggunakan data simulasi...');
         
-        // Fallback ke mock data
-        if (CONFIG.useMockData) {
-            statusEl.innerText = "MODE SIMULASI - DATA CONTOH";
-            if (statusDot) statusDot.className = 'status-dot error';
-            
-            showAlert('⚠️ <strong>Google Sheets tidak dapat diakses.</strong><br>Menggunakan data simulasi.', 'warning');
-            
-            var mock = generateMockData();
-            database = mock.data;
-            availableYears = mock.years;
-            isDataLoaded = true;
-            sesuaikanFilter();
-        } else {
-            statusEl.innerText = "KONEKSI GAGAL: " + error.message;
-            if (statusDot) statusDot.className = 'status-dot error';
-            showAlert('❌ Gagal memuat  ' + error.message, 'error');
-        }
+        // Fallback ke mock data - PASTI JALAN
+        var mock = generateMockData();
+        database = mock.data;
+        availableYears = mock.years;
+        isDataLoaded = true;
+        
+        statusEl.innerText = "⚠️ MODE SIMULASI - DATA CONTOH";
+        
+        showAlert('⚠️ <strong>Google Sheets tidak dapat diakses.</strong><br>' +
+                 error.message + '<br><br>' +
+                 '<strong>Menggunakan data simulasi.</strong><br>' +
+                 '<small>Untuk menggunakan data asli, pastikan spreadsheet sudah di-<strong>Publish to Web</strong>:<br>' +
+                 'File → Share → Publish to web → Entire Document → CSV</small>', 'warning');
+        
+        enableControls();
+        sesuaikanFilter();
     }
+}
+
+function enableControls() {
+    document.getElementById('menuGrafik').disabled = false;
+    document.getElementById('filterTahun').disabled = false;
+    document.getElementById('btnDownload').disabled = false;
 }
 
 // ===== FILTER FUNCTIONS =====
@@ -820,7 +785,7 @@ function updateChart() {
         
         config = {
             type: 'bar',
-            data: {
+             {
                 labels: labels,
                 datasets: [
                     { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
@@ -835,7 +800,7 @@ function updateChart() {
         
         config = {
             type: 'line',
-            data: {
+             {
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
@@ -859,7 +824,7 @@ function updateChart() {
         
         config = {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(distribusiData),
                 datasets: [{
                      Object.values(distribusiData),
@@ -925,7 +890,7 @@ function downloadChart() {
 
 // ===== INIT =====
 function init() {
-    console.log('Dashboard initializing...');
+    console.log('🚀 Dashboard initializing...');
     if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
     
     var logoImg = document.getElementById('bpsLogo');
@@ -935,7 +900,10 @@ function init() {
         document.getElementById('logoFallback').style.display = 'block';
     };
     
+    // Load data
     fetchData();
+    
+    // Keyboard shortcut
     document.addEventListener('keydown', function(e) { 
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } 
     });
