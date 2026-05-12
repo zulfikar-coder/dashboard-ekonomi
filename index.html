@@ -40,7 +40,8 @@
             box-sizing: border-box;
         }
 
-        body, h1, h2, h3, p, span, label, select, option, button, small, canvas, input {
+        /* ===== TIMES NEW ROMAN FOR ALL TEXT ===== */
+        body, h1, h2, h3, h4, h5, h6, p, span, label, select, option, button, small, canvas, input {
             font-family: 'Times New Roman', Times, serif !important;
         }
 
@@ -51,6 +52,7 @@
             text-transform: uppercase; 
             transition: all 0.3s ease;
             min-height: 100vh;
+            line-height: 1.6;
         }
 
         .dark body {
@@ -66,13 +68,11 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 20px;
         }
 
         #loginOverlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+            display: none !important;
         }
 
         .login-box {
@@ -81,13 +81,9 @@
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             max-width: 420px;
-            width: 90%;
+            width: 100%;
             text-align: center;
             animation: slideUp 0.4s ease;
-        }
-
-        .dark .login-box {
-            background: #1e293b;
         }
 
         @keyframes slideUp {
@@ -97,19 +93,34 @@
 
         .login-logo {
             width: 80px;
-            margin-bottom: 20px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .login-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
         }
 
         .login-title {
             margin: 0 0 8px;
-            color: var(--text);
-            font-size: 1.5rem;
+            color: #2c3e50;
+            font-size: 1.4rem;
             font-weight: 700;
+            text-transform: uppercase;
         }
 
         .login-subtitle {
             margin: 0 0 25px;
-            color: var(--text-muted, #64748b);
+            color: #64748b;
             font-size: 0.9rem;
         }
 
@@ -121,11 +132,10 @@
 
         .login-input {
             padding: 12px 16px;
-            border: 2px solid var(--border);
+            border: 2px solid #e1e8ed;
             border-radius: 8px;
             font-size: 1rem;
-            background: var(--card-bg);
-            color: var(--text);
+            text-transform: none;
             transition: border-color 0.2s;
         }
 
@@ -144,7 +154,7 @@
             font-size: 1rem;
             cursor: pointer;
             text-transform: uppercase;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         }
 
         .login-btn:hover {
@@ -155,7 +165,7 @@
         .login-error {
             color: #dc2626;
             font-size: 0.85rem;
-            margin-top: 15px;
+            margin-top: 10px;
             display: none;
         }
 
@@ -493,6 +503,10 @@
             h3 {
                 font-size: 1.1rem;
             }
+
+            .login-box {
+                padding: 30px 25px;
+            }
         }
 
         @keyframes fadeIn {
@@ -516,10 +530,11 @@
 <!-- ===== LOGIN OVERLAY ===== -->
 <div id="loginOverlay">
     <div class="login-box">
-        <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
-             alt="BPS" class="login-logo">
+        <div class="login-logo">
+            <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" alt="BPS">
+        </div>
         <h2 class="login-title">LOGIN DASHBOARD</h2>
-        <p class="login-subtitle">Masukkan kredensial untuk mengakses dashboard</p>
+        <p class="login-subtitle">Masukkan kredensial untuk mengakses dashboard statistik ekonomi Kota Palu</p>
         
         <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
             <input type="text" id="username" class="login-input" placeholder="Username" required autocomplete="username">
@@ -586,73 +601,77 @@
 
 <script>
 /**
- * 🔐 DASHBOARD EKONOMI PALU - DENGAN LOGIN
+ * 🔐 DASHBOARD EKONOMI KOTA PALU - DENGAN LOGIN
  * 
- * Fitur:
- * - Login overlay dengan session management
- * - Dashboard dengan semua fungsi original
- * - Google Sheets + CORS proxy + mock data fallback
- * - Chart rendering (line/bar/pie)
- * - Dark mode, download, filter
- * - Font Times New Roman
+ * ⚠️ PERINGATAN KEAMANAN:
+ * - Login ini adalah CLIENT-SIDE hanya untuk akses kontrol dasar
+ * - Kredensial terlihat di source code (View Source)
+ * - Bisa di-bypass dengan JavaScript console
+ * - JANGAN gunakan untuk data sensitif!
+ * 
+ * ✅ Cocok untuk: data publik/internal, pembatasan akses casual user
+ * ❌ Tidak cocok untuk: data rahasia, produksi dengan requirement keamanan tinggi
+ * 
+ * Untuk keamanan sebenarnya, gunakan server-side authentication (PHP/Node.js + database)
  */
 
-// ===== LOGIN CONFIG =====
-const LOGIN_CONFIG = {
-    credentials: {
-        username: "admin",
-        password: "bps2024"
-    },
-    sessionKey: "dashboard_session",
-    sessionDuration: 24 * 60 * 60 * 1000 // 24 jam
+// ===== LOGIN CONFIG - GANTI DENGAN KREDENSIAL ANDA =====
+const LOGIN_CREDENTIALS = {
+    username: "admin",
+    password: "bps2024"
 };
 
-// ===== DASHBOARD CONFIG =====
-const DASHBOARD_CONFIG = {
+// ===== SESSION CONFIG =====
+const SESSION_CONFIG = {
+    key: 'dashboard_palukota_session',
+    expiryHours: 24
+};
+
+// ===== DASHBOARD DATA & STATE =====
+var ctx = document.getElementById('mainChart').getContext('2d');
+var currentChart = null;
+var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
+var availableYears = [];
+var isDataLoaded = false;
+
+// ===== CONFIG =====
+var CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
     corsProxies: [
         "https://api.allorigins.win/raw?url=",
         "https://corsproxy.io/?",
         "https://api.codetabs.com/v1/proxy?quest="
     ],
-    timeout: 8000,
+    timeout: 10000,
     useMockData: true
 };
 
-// ===== STATE =====
-var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
-var availableYears = [];
-var isDataLoaded = false;
-var currentChart = null;
-
 // ===== LOGIN FUNCTIONS =====
+
+/**
+ * Check if user has valid session
+ * @returns {boolean} True if authenticated
+ */
 function checkSession() {
     try {
-        var saved = localStorage.getItem(LOGIN_CONFIG.sessionKey);
-        if (saved) {
-            var session = JSON.parse(saved);
-            if (Date.now() - session.timestamp < LOGIN_CONFIG.sessionDuration) {
-                return true;
-            }
-            localStorage.removeItem(LOGIN_CONFIG.sessionKey);
-        }
-    } catch(e) {
-        console.log('Session check error:', e);
+        var saved = localStorage.getItem(SESSION_CONFIG.key);
+        if (!saved) return false;
+        
+        var session = JSON.parse(saved);
+        var now = Date.now();
+        var expiry = session.timestamp + (SESSION_CONFIG.expiryHours * 60 * 60 * 1000);
+        
+        return now < expiry;
+    } catch (e) {
+        console.error('Session check error:', e);
+        return false;
     }
-    return false;
 }
 
-function saveSession(username) {
-    localStorage.setItem(LOGIN_CONFIG.sessionKey, JSON.stringify({
-        user: username,
-        timestamp: Date.now()
-    }));
-}
-
-function clearSession() {
-    localStorage.removeItem(LOGIN_CONFIG.sessionKey);
-}
-
+/**
+ * Handle login form submission
+ * @param {Event} event - Form submit event
+ */
 function handleLogin(event) {
     event.preventDefault();
     
@@ -660,54 +679,90 @@ function handleLogin(event) {
     var password = document.getElementById('password').value;
     var errorEl = document.getElementById('loginError');
     
-    if (username === LOGIN_CONFIG.credentials.username && 
-        password === LOGIN_CONFIG.credentials.password) {
+    console.log('🔐 Login attempt:', { username, password: '***' });
+    
+    if (username === LOGIN_CREDENTIALS.username && password === LOGIN_CREDENTIALS.password) {
+        // Save session
+        localStorage.setItem(SESSION_CONFIG.key, JSON.stringify({
+            user: username,
+            timestamp: Date.now()
+        }));
         
-        saveSession(username);
+        console.log('✅ Login successful');
         
-        // Hide login overlay
+        // Hide login, show dashboard
         document.getElementById('loginOverlay').classList.add('hidden');
         errorEl.classList.remove('show');
-        
-        // Show logout button
-        document.getElementById('btnLogout').style.display = 'inline-flex';
         
         // Enable dashboard
         enableDashboard();
         
-        // Load data
-        fetchData();
+        // Add logout button
+        addLogoutButton();
         
-        console.log('✅ Login successful:', username);
+        // Initialize dashboard
+        if (typeof initDashboard === 'function') initDashboard();
+        
     } else {
+        console.log('❌ Login failed');
         errorEl.classList.add('show');
+        
+        // Shake animation
         var form = document.getElementById('loginForm');
         form.style.animation = 'shake 0.3s';
         setTimeout(function() { form.style.animation = ''; }, 300);
-        console.log('❌ Login failed');
     }
 }
 
+/**
+ * Logout user and clear session
+ */
 function logout() {
-    clearSession();
-    location.reload();
-}
-
-function enableDashboard() {
-    document.getElementById('menuGrafik').disabled = false;
-    document.getElementById('filterTahun').disabled = false;
-    document.getElementById('btnDownload').disabled = false;
-}
-
-function blockDashboard() {
+    console.log('🚪 Logging out...');
+    localStorage.removeItem(SESSION_CONFIG.key);
+    
+    // Show login, hide dashboard
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('btnLogout').style.display = 'none';
+    
+    // Reset dashboard state
+    isDataLoaded = false;
+    if (currentChart) {
+        currentChart.destroy();
+        currentChart = null;
+    }
+    
+    // Disable controls
     document.getElementById('menuGrafik').disabled = true;
     document.getElementById('filterTahun').disabled = true;
     document.getElementById('btnDownload').disabled = true;
-    document.querySelector('.controls')?.setAttribute('style', 'pointer-events: none; opacity: 0.5;');
-    document.querySelector('.card')?.setAttribute('style', 'pointer-events: none; opacity: 0.5;');
+    
+    // Reset status
+    document.getElementById('status').innerText = '⏳ MEMUAT DATA...';
+    
+    console.log('✅ Logged out');
 }
 
-// ===== DASHBOARD FUNCTIONS =====
+/**
+ * Add logout button to dashboard
+ */
+function addLogoutButton() {
+    var btnLogout = document.getElementById('btnLogout');
+    if (btnLogout) {
+        btnLogout.style.display = 'inline-flex';
+    }
+}
+
+/**
+ * Enable dashboard after successful login
+ */
+function enableDashboard() {
+    console.log('🔓 Enabling dashboard...');
+    // Controls will be enabled after data loads
+}
+
+// ===== DASHBOARD UTILITY FUNCTIONS =====
+
 function showAlert(message, type) {
     var container = document.getElementById('alertContainer');
     var alert = document.createElement('div');
@@ -836,6 +891,7 @@ function generateMockData() {
     return { data: data, years: years };
 }
 
+// ===== FETCH DATA =====
 async function fetchData() {
     var statusEl = document.getElementById('status');
     
@@ -846,11 +902,11 @@ async function fetchData() {
         var csvText = null;
         var usedProxy = false;
         
-        // Try direct fetch
+        // Try direct fetch first
         try {
             var controller = new AbortController();
-            var timeoutId = setTimeout(function() { controller.abort(); }, DASHBOARD_CONFIG.timeout);
-            var response = await fetch(DASHBOARD_CONFIG.sheetUrl, { 
+            var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
+            var response = await fetch(CONFIG.sheetUrl, { 
                 signal: controller.signal, 
                 headers: { 'Cache-Control': 'no-cache' } 
             });
@@ -863,13 +919,13 @@ async function fetchData() {
             console.log('❌ Direct fetch failed:', directError.message);
             
             // Try CORS proxies
-            for (var i = 0; i < DASHBOARD_CONFIG.corsProxies.length; i++) {
-                var proxy = DASHBOARD_CONFIG.corsProxies[i];
-                var proxyUrl = proxy + encodeURIComponent(DASHBOARD_CONFIG.sheetUrl);
+            for (var i = 0; i < CONFIG.corsProxies.length; i++) {
+                var proxy = CONFIG.corsProxies[i];
+                var proxyUrl = proxy + encodeURIComponent(CONFIG.sheetUrl);
                 
                 try {
                     var controller2 = new AbortController();
-                    var timeoutId2 = setTimeout(function() { controller2.abort(); }, DASHBOARD_CONFIG.timeout);
+                    var timeoutId2 = setTimeout(function() { controller2.abort(); }, CONFIG.timeout);
                     var response2 = await fetch(proxyUrl, { 
                         signal: controller2.signal,
                         headers: { 'Cache-Control': 'no-cache' }
@@ -890,16 +946,16 @@ async function fetchData() {
         }
         
         if (!csvText || csvText.length < 100) {
-            throw new Error('Data tidak valid');
+            throw new Error('Data tidak valid atau terlalu pendek');
         }
         
-        // Parse and extract
+        // Parse and extract data
         var parsed = parseCSV(csvText);
         database = extractData(parsed.matrix, parsed.headers, parsed.years);
         availableYears = parsed.years;
         
         if (availableYears.length === 0) {
-            throw new Error('Tidak ada data tahun');
+            throw new Error('Tidak ada data tahun ditemukan');
         }
         
         // Success
@@ -915,35 +971,41 @@ async function fetchData() {
         }
         
         isDataLoaded = true;
+        enableControls();
         sesuaikanFilter();
         
     } catch (error) {
         console.error('❌ All fetch methods failed:', error.message);
+        console.log('📊 Using mock data fallback...');
         
         // Fallback to mock data
-        if (DASHBOARD_CONFIG.useMockData) {
-            console.log('📊 Using mock data fallback');
-            var mock = generateMockData();
-            database = mock.data;
-            availableYears = mock.years;
-            isDataLoaded = true;
-            
-            var firstYear = availableYears[0];
-            var lastYear = availableYears[availableYears.length - 1];
-            statusEl.innerText = "⚠️ MODE SIMULASI - PERIODE " + firstYear + "-" + lastYear;
-            
-            showAlert('⚠️ <strong>Menggunakan data simulasi.</strong><br>' +
-                     'Google Sheets tidak dapat diakses.<br>' +
-                     '<small>Pastikan spreadsheet sudah di-Publish to Web</small>', 'warning');
-            
-            sesuaikanFilter();
-        } else {
-            statusEl.innerText = "❌ KONEKSI GAGAL: " + error.message;
-            showAlert('❌ Gagal memuat data: ' + error.message, 'error');
-        }
+        var mock = generateMockData();
+        database = mock.data;
+        availableYears = mock.years;
+        isDataLoaded = true;
+        
+        var firstYear = availableYears[0];
+        var lastYear = availableYears[availableYears.length - 1];
+        statusEl.innerText = "⚠️ MODE SIMULASI - PERIODE " + firstYear + "-" + lastYear;
+        
+        showAlert('⚠️ <strong>Menggunakan data simulasi.</strong><br>' +
+                 'Google Sheets tidak dapat diakses.<br>' +
+                 '<small>Pastikan spreadsheet sudah di-Publish to Web:<br>' +
+                 'File → Share → Publish to web → Entire Document → CSV</small>', 'warning');
+        
+        enableControls();
+        sesuaikanFilter();
     }
 }
 
+function enableControls() {
+    console.log('🔧 Enabling controls...');
+    document.getElementById('menuGrafik').disabled = false;
+    document.getElementById('filterTahun').disabled = false;
+    document.getElementById('btnDownload').disabled = false;
+}
+
+// ===== FILTER FUNCTIONS =====
 function sesuaikanFilter() {
     var menu = document.getElementById('menuGrafik').value;
     var filter = document.getElementById('filterTahun');
@@ -990,6 +1052,7 @@ function getYearsInRange(range) {
     return [range];
 }
 
+// ===== CHART RENDER =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -1055,10 +1118,10 @@ function updateChart() {
         
         config = {
             type: 'bar',
-            data: {
+             {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB', data: adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
                     { label: 'ADHK', data: adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
@@ -1070,7 +1133,7 @@ function updateChart() {
         
         config = {
             type: 'line',
-            data: {
+             {
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
@@ -1094,10 +1157,10 @@ function updateChart() {
         
         config = {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(distribusiData),
                 datasets: [{
-                    data: Object.values(distribusiData),
+                     Object.values(distribusiData),
                     backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
                     borderColor: isDark ? '#1e1e1e' : '#fff',
                     borderWidth: 3,
@@ -1143,6 +1206,7 @@ function updateChart() {
     document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
 }
 
+// ===== UI FUNCTIONS =====
 function toggleDarkMode() {
     document.body.classList.toggle('dark');
     if (currentChart) updateChart();
@@ -1157,8 +1221,8 @@ function downloadChart() {
     link.click();
 }
 
-// ===== INIT =====
-function init() {
+// ===== DASHBOARD INIT =====
+function initDashboard() {
     console.log('🚀 Dashboard initializing...');
     
     // Register Chart.js plugin
@@ -1166,38 +1230,48 @@ function init() {
         Chart.register(ChartDataLabels);
     }
     
-    // Check session
-    if (checkSession()) {
-        console.log('✅ Session valid, showing dashboard');
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('btnLogout').style.display = 'inline-flex';
-        enableDashboard();
-        fetchData();
-    } else {
-        console.log('⏳ No valid session, showing login');
-        blockDashboard();
+    // Setup logo fallback
+    var logoImg = document.getElementById('bpsLogo');
+    if (logoImg) {
+        logoImg.onerror = function() {
+            console.log('Logo BPS gagal load, menggunakan SVG fallback');
+            this.style.display = 'none';
+            document.getElementById('logoFallback').style.display = 'block';
+        };
     }
     
-    // Logo fallback
-    var logoImg = document.getElementById('bpsLogo');
-    logoImg.onerror = function() {
-        this.style.display = 'none';
-        document.getElementById('logoFallback').style.display = 'block';
-    };
+    // Fetch data
+    fetchData();
     
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            if (!document.getElementById('loginOverlay').classList.contains('hidden')) return;
-            downloadChart();
-        }
+    // Keyboard shortcut for download
+    document.addEventListener('keydown', function(e) { 
+        if (e.ctrlKey && e.key === 's') { 
+            e.preventDefault(); 
+            downloadChart(); 
+        } 
     });
     
-    console.log('✅ Initialization complete');
+    console.log('✅ Dashboard initialization complete');
 }
 
-// Auto-init
+// ===== MAIN INIT =====
+function init() {
+    console.log('🔐 App initializing...');
+    
+    // Check session first
+    if (checkSession()) {
+        console.log('✅ Valid session found');
+        document.getElementById('loginOverlay').classList.add('hidden');
+        addLogoutButton();
+        initDashboard();
+    } else {
+        console.log('⏳ No valid session - showing login');
+        // Dashboard content is blocked by login overlay
+        // Controls will be enabled after successful login
+    }
+}
+
+// Auto-init when DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
