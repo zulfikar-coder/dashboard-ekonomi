@@ -40,18 +40,28 @@
             box-sizing: border-box;
         }
 
+        /* ===== FONT TIMES NEW ROMAN UNTUK SELURUH DASHBOARD ===== */
         body { 
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-family: 'Times New Roman', Times, Georgia, serif; 
             background: linear-gradient(135deg, var(--bg) 0%, #f0f2f5 100%);
             color: var(--text); 
             padding: 0;
             text-transform: uppercase; 
             transition: all 0.3s ease;
             min-height: 100vh;
+            letter-spacing: 0.02em;
         }
 
         .dark body {
             background: linear-gradient(135deg, var(--bg) 0%, #1a1f2e 100%);
+        }
+
+        /* Override font untuk semua elemen */
+        h1, h2, h3, h4, h5, h6,
+        label, select, button, small,
+        .header, .controls, .card,
+        .chart-container, .alert {
+            font-family: 'Times New Roman', Times, Georgia, serif !important;
         }
 
         .header { 
@@ -170,6 +180,7 @@
             transition: all 0.3s ease;
             font-size: 0.9rem;
             text-transform: uppercase;
+            font-family: 'Times New Roman', Times, Georgia, serif;
         }
 
         select:hover {
@@ -202,6 +213,7 @@
             box-shadow: var(--shadow-sm);
             position: relative;
             overflow: hidden;
+            font-family: 'Times New Roman', Times, Georgia, serif;
         }
 
         button::before {
@@ -288,6 +300,7 @@
             margin-bottom: 16px;
             display: none;
             font-size: 0.85rem;
+            font-family: 'Times New Roman', Times, Georgia, serif;
         }
 
         .alert.show { display: block; animation: slideIn 0.3s ease; }
@@ -453,7 +466,6 @@ var isDataLoaded = false;
 // ===== CONFIG - DENGAN CORS PROXY =====
 var CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
-    // CORS Proxies untuk bypass CORS error
     corsProxies: [
         "https://api.allorigins.win/raw?url=",
         "https://corsproxy.io/?",
@@ -589,7 +601,7 @@ function generateMockData() {
         };
     });
     
-    return { data: data, years: years };
+    return {  data, years: years };
 }
 
 // ===== FETCH DATA DENGAN CORS PROXY =====
@@ -666,21 +678,21 @@ async function fetchData() {
             throw new Error('Tidak ada data tahun ditemukan');
         }
         
-        // Success
-console.log('✅ Data loaded:', availableYears);
-var firstYear = availableYears[0];
-var lastYear = availableYears[availableYears.length - 1];
-statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
-if (statusDot) statusDot.className = 'status-dot success';
-
-if (usedProxy) {
-    showAlert('✅ Data berhasil dimuat via CORS proxy. Beberapa fitur mungkin terbatas.', 'success');
-} else {
-    showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
-}
-
-isDataLoaded = true;
-sesuaikanFilter();
+        // Success - PERUBAHAN: TAMPILKAN PERIODE 2011-2026
+        console.log('✅ Data loaded:', availableYears);
+        var firstYear = availableYears[0];
+        var lastYear = availableYears[availableYears.length - 1];
+        statusEl.innerText = "DATABASE TERHUBUNG (AKTIF) - PERIODE " + firstYear + "-" + lastYear;
+        if (statusDot) statusDot.className = 'status-dot success';
+        
+        if (usedProxy) {
+            showAlert('✅ Data berhasil dimuat via CORS proxy. Beberapa fitur mungkin terbatas.', 'success');
+        } else {
+            showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
+        }
+        
+        isDataLoaded = true;
+        sesuaikanFilter();
         
     } catch (error) {
         console.error('❌ Semua metode fetch gagal:', error.message);
@@ -702,7 +714,7 @@ sesuaikanFilter();
         } else {
             statusEl.innerText = "KONEKSI GAGAL: " + error.message;
             if (statusDot) statusDot.className = 'status-dot error';
-            showAlert('❌ Gagal memuat data: ' + error.message, 'error');
+            showAlert('❌ Gagal memuat  ' + error.message, 'error');
         }
     }
 }
@@ -727,7 +739,7 @@ function sesuaikanFilter() {
         }
     } else {
         var lastYear = availableYears[availableYears.length - 1] || '2026';
-        var firstYear = availableYears[0] || '2019';
+        var firstYear = availableYears[0] || '2011';
         var opsi = [
             {text: "2021 - " + lastYear, val: "2021-" + lastYear}, 
             {text: "2016 - 2020", val: "2016-2020"}, 
@@ -775,10 +787,25 @@ function updateChart() {
         responsive: true, maintainAspectRatio: false,
         animation: { duration: 800, easing: 'easeOutQuart' },
         plugins: {
-            legend: { labels: { color: textColor, font: { weight: 'bold', size: 10 } } },
+            legend: { 
+                labels: { 
+                    color: textColor, 
+                    font: { 
+                        family: "'Times New Roman', Times, serif",
+                        weight: 'bold', 
+                        size: 10 
+                    } 
+                } 
+            },
             tooltip: {
-                backgroundColor: 'rgba(30,30,40,0.95)', titleColor: '#fff', bodyColor: '#eee',
-                borderColor: isDark ? '#555' : '#ddd', borderWidth: 1, padding: 10,
+                backgroundColor: 'rgba(30,30,40,0.95)', 
+                titleColor: '#fff', 
+                bodyColor: '#eee',
+                borderColor: isDark ? '#555' : '#ddd', 
+                borderWidth: 1, 
+                padding: 10,
+                titleFont: { family: "'Times New Roman', Times, serif", size: 11 },
+                bodyFont: { family: "'Times New Roman', Times, serif", size: 10 },
                 callbacks: {
                     label: function(ctx) {
                         var v = ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed;
@@ -798,7 +825,11 @@ function updateChart() {
                     if (menu === 'distribusi') return val.toFixed(1) + '%';
                     return val.toLocaleString('id-ID');
                 },
-                font: { weight: 'bold', size: 10 },
+                font: { 
+                    family: "'Times New Roman', Times, serif",
+                    weight: 'bold', 
+                    size: 10 
+                },
                 color: dataLabelColor,
                 backgroundColor: dataLabelBg,
                 borderColor: dataLabelBorder,
@@ -808,8 +839,21 @@ function updateChart() {
             }
         },
         scales: menu !== 'distribusi' ? {
-            y: { beginAtZero: true, ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
-            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } }
+            y: { 
+                beginAtZero: true, 
+                ticks: { 
+                    color: textColor, 
+                    font: { family: "'Times New Roman', Times, serif", size: 10 } 
+                }, 
+                grid: { color: gridColor } 
+            },
+            x: { 
+                ticks: { 
+                    color: textColor, 
+                    font: { family: "'Times New Roman', Times, serif", size: 10 } 
+                }, 
+                grid: { display: false } 
+            }
         } : {}
     };
 
@@ -823,7 +867,7 @@ function updateChart() {
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB', data: adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
                     { label: 'ADHK', data: adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
@@ -862,7 +906,7 @@ function updateChart() {
             data: {
                 labels: Object.keys(distribusiData),
                 datasets: [{
-                    data: Object.values(distribusiData),
+                     Object.values(distribusiData),
                     backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
                     borderColor: isDark ? '#1e1e1e' : '#fff',
                     borderWidth: 3,
@@ -876,7 +920,11 @@ function updateChart() {
                 plugins: {
                     legend: { 
                         position: 'bottom', 
-                        labels: { color: textColor, font: { weight: 'bold', size: 9 }, padding: 10 } 
+                        labels: { 
+                            color: textColor, 
+                            font: { family: "'Times New Roman', Times, serif", weight: 'bold', size: 9 }, 
+                            padding: 10 
+                        } 
                     },
                     tooltip: { 
                         backgroundColor: 'rgba(30,30,40,0.95)', 
@@ -892,7 +940,11 @@ function updateChart() {
                         formatter: function(v) { 
                             return v >= 5 ? v.toFixed(1)+'%' : ''; 
                         }, 
-                        font: { weight: 'bold', size: 11 }, 
+                        font: { 
+                            family: "'Times New Roman', Times, serif",
+                            weight: 'bold', 
+                            size: 11 
+                        }, 
                         color: '#fff' 
                     }
                 },
