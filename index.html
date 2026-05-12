@@ -6,6 +6,9 @@
     <title>DASHBOARD STATISTIK EKONOMI KOTA PALU</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
             --orange: #FF8C00; 
@@ -40,8 +43,8 @@
             box-sizing: border-box;
         }
 
-        /* ===== FONT TIMES NEW ROMAN UNTUK SEMUA ELEMEN ===== */
-        body, h1, h2, h3, h4, h5, h6, p, span, label, select, option, button, small, canvas, input {
+        /* ===== FONT TIMES NEW ROMAN UNTUK DASHBOARD ===== */
+        body, h1, h2, h3, h4, h5, h6, p, span, label, select, option, button, small, canvas {
             font-family: 'Times New Roman', Times, serif !important;
         }
 
@@ -59,123 +62,321 @@
             background: linear-gradient(135deg, var(--bg) 0%, #1a1f2e 100%);
         }
 
-        /* ===== LOGIN OVERLAY ===== */
+        /* ===== MODERN LOGIN OVERLAY ===== */
         #loginOverlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 20, 28, 0.95);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
             padding: 20px;
+            overflow: hidden;
+        }
+
+        #loginOverlay::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveGrid 20s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes moveGrid {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
         }
 
         #loginOverlay.hidden {
-            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
 
-        .login-box {
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-xl);
-            max-width: 420px;
+        .login-container {
+            position: relative;
+            z-index: 10;
             width: 100%;
-            text-align: center;
-            border-top: 4px solid var(--orange);
+            max-width: 450px;
+            animation: slideUp 0.6s ease;
         }
 
-        .login-logo {
-            width: 80px;
-            height: 80px;
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo-wrapper {
+            width: 88px;
+            height: 88px;
             margin: 0 auto 20px;
-            background: white;
-            border-radius: var(--radius-sm);
-            padding: 10px;
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            border-radius: 20px;
+            padding: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow);
+            box-shadow: 0 10px 25px -5px rgba(255, 140, 0, 0.4);
+            transform: rotate(-3deg);
+            transition: transform 0.3s ease;
         }
 
-        .login-logo img {
-            width: 60px;
-            height: 60px;
+        .login-logo-wrapper:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .login-logo-wrapper img {
+            width: 100%;
+            height: 100%;
             object-fit: contain;
         }
 
-        .login-box h2 {
-            margin: 0 0 8px;
-            color: var(--text);
-            font-size: 1.4rem;
+        .login-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.75rem;
             font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 8px;
+            letter-spacing: -0.5px;
         }
 
-        .login-box p {
-            margin: 0 0 25px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            opacity: 0.8;
+        .login-header p {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: #718096;
+            margin: 0;
+            font-weight: 400;
         }
 
         .login-form {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
         }
 
-        .login-form input {
-            padding: 14px 18px;
-            border: 2px solid var(--border);
-            border-radius: var(--radius-xs);
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            text-transform: none;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
             font-size: 1rem;
-            background: var(--card-bg);
-            color: var(--text);
-            transition: border-color 0.2s;
+            color: #2d3748;
+            background: white;
+            transition: all 0.2s;
+            text-transform: none;
         }
 
-        .login-form input:focus {
+        .input-wrapper input:focus {
             outline: none;
             border-color: var(--orange);
+            box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
         }
 
-        .login-form button {
-            padding: 14px;
+        .input-wrapper input::placeholder {
+            color: #a0aec0;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1.25rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .input-wrapper input:focus + .input-icon {
+            color: var(--orange);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 1.25rem;
+            transition: color 0.2s;
+        }
+
+        .password-toggle:hover {
+            color: var(--orange);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: -8px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: #4a5568;
+            cursor: pointer;
+            text-transform: none;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--orange);
+            cursor: pointer;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 16px;
             background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white;
             border: none;
-            border-radius: var(--radius-xs);
-            font-weight: 700;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
             font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
         }
 
-        .login-form button:hover {
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .login-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: var(--shadow);
+            box-shadow: 0 10px 25px -5px rgba(255, 140, 0, 0.4);
+        }
+
+        .login-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .login-error {
-            color: #dc2626;
-            font-size: 0.85rem;
-            margin-top: 12px;
+            background: #fed7d7;
+            border-left: 4px solid #fc8181;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: #c53030;
             display: none;
-            font-weight: 500;
+            animation: shake 0.3s;
+            text-transform: none;
         }
 
         .login-error.show {
             display: block;
-            animation: shake 0.3s;
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .login-footer p {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            text-transform: none;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* ===== DASHBOARD STYLES (Original Design) ===== */
@@ -451,6 +652,10 @@
         }
 
         @media (max-width: 768px) {
+            .login-card {
+                padding: 36px 28px;
+            }
+            
             .header {
                 flex-direction: column;
                 text-align: center;
@@ -521,26 +726,60 @@
 </head>
 <body>
 
-<!-- ===== LOGIN OVERLAY ===== -->
+<!-- ===== MODERN LOGIN OVERLAY ===== -->
 <div id="loginOverlay">
-    <div class="login-box">
-        <div class="login-logo">
-            <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" alt="BPS">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo-wrapper">
+                    <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" alt="BPS Logo">
+                </div>
+                <h1>Selamat Datang</h1>
+                <p>Dashboard Statistik Ekonomi Kota Palu</p>
+            </div>
+            
+            <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" placeholder="Masukkan username" required autocomplete="username" autofocus>
+                        <span class="input-icon">👤</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="Masukkan password" required autocomplete="current-password">
+                        <span class="input-icon">🔒</span>
+                        <button type="button" class="password-toggle" onclick="togglePassword()" title="Tampilkan/Sembunyikan password">👁️</button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Ingat saya</span>
+                    </label>
+                </div>
+                
+                <button type="submit" class="login-button" id="loginButton">
+                    Masuk Dashboard
+                </button>
+                
+                <div id="loginError" class="login-error">
+                    ❌ Username atau password salah. Silakan coba lagi.
+                </div>
+            </form>
+            
+            <div class="login-footer">
+                <p>© 2024 BPS Kota Palu. All rights reserved.</p>
+            </div>
         </div>
-        <h2>LOGIN DASHBOARD</h2>
-        <p>Masukkan kredensial untuk mengakses dashboard statistik ekonomi Kota Palu</p>
-        
-        <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
-            <input type="text" id="username" placeholder="Username" required autocomplete="username">
-            <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
-            <button type="submit">MASUK</button>
-        </form>
-        
-        <p id="loginError" class="login-error">❌ Username atau password salah</p>
     </div>
 </div>
 
-<!-- ===== DASHBOARD CONTENT (Hidden until login) ===== -->
+<!-- ===== DASHBOARD CONTENT ===== -->
 <div id="dashboardContent" style="display: none;">
     <div class="header">
         <div class="logo-container">
@@ -596,12 +835,12 @@
 </div>
 
 <script>
-// ===== LOGIN CONFIG (GANTI DENGAN KREDENSIAL ANDA) =====
+// ===== LOGIN CONFIG =====
 const LOGIN_CONFIG = {
     username: "admin",
     password: "bps2024",
     sessionKey: "dashboard_palukota_session",
-    sessionDuration: 24 * 60 * 60 * 1000 // 24 jam
+    sessionDuration: 24 * 60 * 60 * 1000
 };
 
 // ===== LOGIN FUNCTIONS =====
@@ -616,9 +855,22 @@ function checkSession() {
             localStorage.removeItem(LOGIN_CONFIG.sessionKey);
         }
     } catch(e) {
-        console.log('Session check error:', e);
+        console.error('Session error:', e);
     }
     return false;
+}
+
+function togglePassword() {
+    var passwordInput = document.getElementById('password');
+    var toggleBtn = document.querySelector('.password-toggle');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.textContent = '🙈';
+    } else {
+        passwordInput.type = 'password';
+        toggleBtn.textContent = '👁️';
+    }
 }
 
 function handleLogin(event) {
@@ -626,49 +878,67 @@ function handleLogin(event) {
     
     var username = document.getElementById('username').value.trim();
     var password = document.getElementById('password').value;
+    var rememberMe = document.getElementById('rememberMe').checked;
     var errorEl = document.getElementById('loginError');
+    var loginBtn = document.getElementById('loginButton');
     
-    if (username === LOGIN_CONFIG.username && password === LOGIN_CONFIG.password) {
-        // Simpan session
-        localStorage.setItem(LOGIN_CONFIG.sessionKey, JSON.stringify({
-            user: username,
-            timestamp: Date.now()
-        }));
-        
-        // Hide login, show dashboard
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('dashboardContent').style.display = 'block';
-        errorEl.classList.remove('show');
-        
-        // Init dashboard
-        console.log('✅ Login successful, initializing dashboard...');
-        initDashboard();
-    } else {
-        errorEl.classList.add('show');
-        var form = document.getElementById('loginForm');
-        form.style.animation = 'shake 0.3s';
-        setTimeout(function() { form.style.animation = ''; }, 300);
-        console.log('❌ Login failed');
-    }
+    // Show loading state
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="spinner"></span> Memproses...';
+    errorEl.classList.remove('show');
+    
+    // Simulate processing delay for better UX
+    setTimeout(function() {
+        if (username === LOGIN_CONFIG.username && password === LOGIN_CONFIG.password) {
+            // Save session
+            localStorage.setItem(LOGIN_CONFIG.sessionKey, JSON.stringify({
+                user: username,
+                timestamp: Date.now(),
+                rememberMe: rememberMe
+            }));
+            
+            // Hide login with animation
+            var overlay = document.getElementById('loginOverlay');
+            overlay.classList.add('hidden');
+            
+            setTimeout(function() {
+                overlay.style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                initDashboard();
+            }, 500);
+            
+        } else {
+            // Show error
+            errorEl.classList.add('show');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'Masuk Dashboard';
+            
+            // Clear password
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+        }
+    }, 800);
 }
 
 function logout() {
-    localStorage.removeItem(LOGIN_CONFIG.sessionKey);
-    location.reload();
+    if (confirm('Apakah Anda yakin ingin keluar?')) {
+        localStorage.removeItem(LOGIN_CONFIG.sessionKey);
+        location.reload();
+    }
 }
 
 function initAuth() {
     if (checkSession()) {
-        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('dashboardContent').style.display = 'block';
         initDashboard();
     } else {
-        document.getElementById('loginOverlay').classList.remove('hidden');
+        document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('dashboardContent').style.display = 'none';
     }
 }
 
-// ===== DASHBOARD VARIABLES & CONFIG =====
+// ===== DASHBOARD CODE (Same as before) =====
 var ctx = document.getElementById('mainChart');
 var currentChart = null;
 var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
@@ -686,7 +956,6 @@ var CONFIG = {
     useMockData: true
 };
 
-// ===== UTILITY FUNCTIONS =====
 function showAlert(message, type) {
     var container = document.getElementById('alertContainer');
     var alert = document.createElement('div');
@@ -812,10 +1081,9 @@ function generateMockData() {
         };
     });
     
-    return { data: data, years: years };
+    return {  data, years: years };
 }
 
-// ===== FETCH DATA =====
 async function fetchData() {
     var statusEl = document.getElementById('status');
     
@@ -825,7 +1093,6 @@ async function fetchData() {
         var csvText = null;
         var usedProxy = false;
         
-        // Coba fetch langsung
         try {
             var controller = new AbortController();
             var timeoutId = setTimeout(function() { controller.abort(); }, CONFIG.timeout);
@@ -841,7 +1108,6 @@ async function fetchData() {
         } catch (directError) {
             console.log('❌ Fetch langsung gagal:', directError.message);
             
-            // Coba CORS proxies
             for (var i = 0; i < CONFIG.corsProxies.length; i++) {
                 var proxy = CONFIG.corsProxies[i];
                 var proxyUrl = proxy + encodeURIComponent(CONFIG.sheetUrl);
@@ -871,7 +1137,6 @@ async function fetchData() {
             throw new Error('Data tidak valid');
         }
         
-        // Parse dan extract
         var parsed = parseCSV(csvText);
         database = extractData(parsed.matrix, parsed.headers, parsed.years);
         availableYears = parsed.years;
@@ -880,7 +1145,6 @@ async function fetchData() {
             throw new Error('Tidak ada data tahun');
         }
         
-        // Success
         console.log('✅ Data loaded:', availableYears);
         var firstYear = availableYears[0];
         var lastYear = availableYears[availableYears.length - 1];
@@ -893,7 +1157,6 @@ async function fetchData() {
     } catch (error) {
         console.error('❌ Fetch gagal:', error.message);
         
-        // Fallback ke mock data
         if (CONFIG.useMockData) {
             var mock = generateMockData();
             database = mock.data;
@@ -908,12 +1171,11 @@ async function fetchData() {
             sesuaikanFilter();
         } else {
             statusEl.innerText = "❌ KONEKSI GAGAL";
-            showAlert('❌ Gagal memuat data: ' + error.message, 'error');
+            showAlert('❌ Gagal memuat  ' + error.message, 'error');
         }
     }
 }
 
-// ===== FILTER FUNCTIONS =====
 function sesuaikanFilter() {
     var menu = document.getElementById('menuGrafik').value;
     var filter = document.getElementById('filterTahun');
@@ -960,7 +1222,6 @@ function getYearsInRange(range) {
     return [range];
 }
 
-// ===== CHART RENDER =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -1029,8 +1290,8 @@ function updateChart() {
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB', data: adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
-                    { label: 'ADHK', data: adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
+                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
+                    { label: 'ADHK',  adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
                 ]
             },
             options: JSON.parse(JSON.stringify(baseConfig))
@@ -1114,7 +1375,6 @@ function updateChart() {
     document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
 }
 
-// ===== UI FUNCTIONS =====
 function toggleDarkMode() {
     document.body.classList.toggle('dark');
     if (currentChart) updateChart();
@@ -1129,16 +1389,13 @@ function downloadChart() {
     link.click();
 }
 
-// ===== DASHBOARD INIT =====
 function initDashboard() {
     console.log('🚀 Dashboard initializing...');
     
-    // Register Chart.js plugin
     if (typeof ChartDataLabels !== 'undefined') {
         Chart.register(ChartDataLabels);
     }
     
-    // Logo fallback
     var logoImg = document.getElementById('bpsLogo');
     if (logoImg) {
         logoImg.onerror = function() {
@@ -1147,10 +1404,8 @@ function initDashboard() {
         };
     }
     
-    // Fetch data
     fetchData();
     
-    // Keyboard shortcut
     document.addEventListener('keydown', function(e) { 
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadChart(); } 
     });
@@ -1158,7 +1413,6 @@ function initDashboard() {
     console.log('✅ Dashboard initialized');
 }
 
-// ===== MAIN INIT =====
 function init() {
     initAuth();
 }
