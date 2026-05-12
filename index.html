@@ -7,688 +7,1404 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
-        :root {
-            --orange: #FF8C00;
+        :root { 
+            --orange: #FF8C00; 
             --orange-dark: #e67e00;
-            --green: #27ae60;
-            --bg: #f8fafc;
-            --text: #0f172a;
-            --surface: #ffffff;
-            --border: #e2e8f0;
-            --radius: 16px;
+            --orange-light: #ffa533;
+            --green: #27ae60; 
+            --green-dark: #229954;
+            --bg: #f8f9fa; 
+            --text: #2c3e50; 
+            --card-bg: #ffffff; 
+            --border: #e1e8ed;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
         }
         
-        .dark {
-            --bg: #0f172a;
-            --text: #f1f5f9;
-            --surface: #1e293b;
-            --border: #334155;
+        .dark { 
+            --bg: #0f1419; 
+            --text: #e8e8e8; 
+            --card-bg: #1a1f2e; 
+            --border: #2d3748;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body { 
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: linear-gradient(135deg, var(--bg) 0%, #f0f2f5 100%);
             color: var(--text); 
-            padding: 20px;
+            padding: 0;
+            text-transform: uppercase; 
+            transition: all 0.3s ease;
             min-height: 100vh;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .dark body {
+            background: linear-gradient(135deg, var(--bg) 0%, #1a1f2e 100%);
         }
 
         .header { 
-            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
             color: white; 
-            padding: 30px; 
-            border-radius: var(--radius);
-            margin-bottom: 24px;
+            padding: 25px 35px; 
+            border-radius: 0;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 0;
+            display: flex; 
+            align-items: center; 
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .header h1 { 
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .logo-container { 
+            background: white; 
+            padding: 10px; 
+            border-radius: var(--radius);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            width: 90px; 
+            height: 90px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .logo-img { 
+            width: 70px; 
+            height: 70px; 
+            object-fit: contain; 
+            display: block; 
+        }
+
+        .logo-fallback { display: none; }
+
+        .header-text {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .header-text h1 { 
             font-size: 1.8rem;
-            font-weight: 800;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-text small {
+            display: block;
+            margin-top: 6px;
+            opacity: 0.95;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .controls { 
-            background: var(--surface); 
-            padding: 24px; 
-            border-radius: var(--radius);
-            margin-bottom: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: var(--card-bg); 
+            padding: 25px 30px; 
+            border-radius: 0;
+            margin: 0;
+            box-shadow: var(--shadow);
             display: flex; 
             gap: 20px; 
             flex-wrap: wrap; 
+            align-items: flex-end;
+            border-bottom: 3px solid var(--orange);
         }
 
         .control-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
             flex: 1;
-            min-width: 200px;
+            min-width: 220px;
         }
 
         label { 
-            display: block;
             font-weight: 700; 
             font-size: 0.75rem; 
             color: var(--orange);
-            margin-bottom: 8px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         select { 
-            width: 100%;
             padding: 12px 16px; 
-            border-radius: 8px; 
+            border-radius: var(--radius-sm); 
             border: 2px solid var(--border); 
             font-weight: 600; 
-            background: var(--surface); 
-            color: var(--text);
+            background: var(--card-bg); 
+            color: var(--text); 
+            cursor: pointer;
+            transition: all 0.3s ease;
             font-size: 0.9rem;
+            text-transform: uppercase;
         }
 
-        select:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: #f1f5f9;
+        select:hover {
+            border-color: var(--orange-light);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px rgba(255,140,0,0.15);
         }
 
         .btn-group { 
             display: flex; 
             gap: 12px; 
             margin-left: auto;
+            flex-wrap: wrap;
         }
 
         button { 
             padding: 12px 24px; 
-            border-radius: 8px; 
+            border-radius: var(--radius-sm); 
             border: none; 
             font-weight: 700; 
-            cursor: pointer;
+            cursor: pointer; 
+            text-transform: uppercase; 
+            transition: all 0.3s ease;
             font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.2s;
+            letter-spacing: 0.5px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover:not(:disabled) { 
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
             transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        button:active {
+            transform: translateY(0);
         }
 
         .btn-download { 
-            background: var(--green);
+            background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
             color: white;
         }
 
         .btn-dark { 
-            background: #334155;
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
             color: white;
         }
 
         .card { 
-            background: var(--surface); 
-            border-radius: var(--radius);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            overflow: hidden;
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 0;
+            box-shadow: var(--shadow-lg); 
+            border-top: 4px solid var(--orange);
+            max-width: 100%; 
+            margin: 0;
+            position: relative;
         }
 
-        .card-header {
-            padding: 20px 28px;
-            border-bottom: 1px solid var(--border);
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--orange) 0%, var(--orange-light) 100%);
         }
 
         h3 { 
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 800;
-        }
-
-        .card-body {
-            padding: 28px;
+            color: var(--text); 
+            margin: 0 0 20px 0; 
+            padding: 0 0 15px 0; 
+            border-bottom: 2px solid var(--border); 
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         .chart-container { 
             position: relative; 
             height: 450px; 
             width: 100%;
-        }
-
-        /* Alert Boxes */
-        .alert {
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            animation: slideIn 0.3s ease;
-        }
-
-        .alert.show { display: block; }
-
-        .alert-warning {
-            background: #fff7ed;
-            border-left: 4px solid #f97316;
-            color: #c2410c;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            color: #dc2626;
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            border-left: 4px solid #22c55e;
-            color: #16a34a;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--border);
-            border-top-color: var(--orange);
-            border-radius: 50%;
-            margin: 0 auto 16px;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: var(--text);
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .loading-sub {
-            color: var(--text);
-            opacity: 0.6;
-            font-size: 0.9rem;
-        }
-
-        .retry-btn {
-            margin-top: 16px;
-            background: var(--orange);
-            color: white;
-            display: inline-block;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 20px;
         }
 
         @media (max-width: 768px) {
-            .controls { flex-direction: column; }
-            .btn-group { margin-left: 0; width: 100%; }
-            button { flex: 1; }
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .header-text h1 {
+                font-size: 1.4rem;
+            }
+
+            .logo-container {
+                width: 75px;
+                height: 75px;
+            }
+
+            .logo-img {
+                width: 55px;
+                height: 55px;
+            }
+
+            .controls { 
+                flex-direction: column; 
+                gap: 15px;
+                padding: 20px;
+            }
+
+            .control-group {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .btn-group { 
+                margin-left: 0; 
+                width: 100%; 
+                justify-content: center;
+            }
+
+            button {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .chart-container {
+                height: 300px;
+                padding: 10px;
+            }
+
+            h3 {
+                font-size: 1.1rem;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header, .controls, .card {
+            animation: fadeIn 0.5s ease-out;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>📊 DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-        <div style="margin-top: 10px; opacity: 0.9; font-size: 0.9rem;">
-            <span id="statusText">⏳ Memuat data...</span>
+<div class="header">
+    <div class="logo-container">
+        <img id="bpsLogo" 
+             src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
+             alt="BPS" 
+             class="logo-img"
+             onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';">
+        <div id="logoFallback" class="logo-fallback">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:70px;height:70px;">
+                <rect width="200" height="200" fill="white"/>
+                <path d="M 35 25 L 65 25 L 65 40 L 50 40 L 50 50 L 65 50 L 65 65 L 50 65 L 50 75 L 65 75 L 65 90 L 35 90 Z" fill="#0080D7"/>
+                <path d="M 75 90 L 75 65 L 85 65 C 98 65 105 58 105 45 C 105 32 98 25 85 25 L 75 25 L 75 10 L 85 10 C 105 10 120 25 120 45 C 120 62 108 75 90 78 L 85 78 L 85 90 Z" fill="#009543"/>
+                <path d="M 130 10 L 155 10 L 155 25 C 155 38 145 48 132 48 L 125 48 L 125 40 L 132 40 C 138 40 142 36 142 30 L 142 23 L 125 23 L 125 10 Z M 130 55 L 130 63 C 130 68 134 72 140 72 L 148 72 L 148 80 L 140 80 C 130 80 122 72 122 62 L 122 55 Z M 142 80 L 142 88 C 142 94 138 98 132 98 L 125 98 L 125 106 L 132 106 C 145 106 155 96 155 83 L 155 80 Z" fill="#F48024"/>
+                <path d="M 20 120 Q 40 140, 70 135 Q 100 130, 130 135 Q 160 140, 180 125" stroke="#0080D7" stroke-width="8" fill="none" stroke-linecap="round"/>
+                <path d="M 25 80 Q 45 60, 75 65 Q 105 70, 135 60 Q 165 50, 175 70" stroke="#F48024" stroke-width="6" fill="none" stroke-linecap="round"/>
+            </svg>
         </div>
     </div>
-
-    <div class="controls">
-        <div class="control-group">
-            <label>JENIS GRAFIK</label>
-            <select id="menuGrafik" onchange="handleFilterChange()" disabled>
-                <option value="">Memuat...</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label>PILIH PERIODE</label>
-            <select id="filterTahun" onchange="updateChart()" disabled>
-                <option value="">Memuat...</option>
-            </select>
-        </div>
-        <div class="btn-group">
-            <button class="btn-download" onclick="downloadChart()" id="btnDownload" disabled>
-                📥 UNDUH
-            </button>
-            <button class="btn-dark" onclick="toggleDarkMode()">🌙 GELAP</button>
-        </div>
+    <div class="header-text">
+        <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <small id="status">MENGHUBUNGKAN KE SPREADSHEET...</small>
     </div>
+</div>
 
-    <div class="card">
-        <div class="card-header">
-            <h3 id="judulGrafik">VISUALISASI DATA</h3>
-        </div>
-        <div class="card-body">
-            <div id="alertContainer"></div>
-            
-            <div class="chart-container">
-                <div class="loading" id="loadingBox">
-                    <div class="spinner"></div>
-                    <div class="loading-text">MENGHUBUNGKAN KE DATABASE...</div>
-                    <div class="loading-sub">Mohon tunggu, sedang mengambil data</div>
-                    <button class="retry-btn" onclick="retryLoad()" style="display:none" id="retryBtn">
-                        🔄 COBA LAGI
-                    </button>
-                </div>
-                <canvas id="mainChart" style="display:none"></canvas>
-            </div>
-        </div>
+<div class="controls">
+    <div class="control-group">
+        <label>JENIS GRAFIK</label>
+        <select id="menuGrafik" onchange="Dashboard.handleFilterChange()">
+            <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
+            <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
+            <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>PILIH PERIODE</label>
+        <select id="filterTahun" onchange="Dashboard.updateChart()"></select>
+    </div>
+    <div class="btn-group">
+        <button class="btn-download" onclick="Dashboard.downloadChart()">📥 UNDUH GRAFIK</button>
+        <button class="btn-dark" onclick="Dashboard.toggleDarkMode()">🌙 MODE GELAP</button>
+    </div>
+</div>
+
+<div class="card">
+    <h3 id="judulGrafik">VISUALISASI DATA</h3>
+    <div class="chart-container">
+        <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-// ===== CONFIG =====
-const CONFIG = {
-    sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
-    timeout: 8000,
-    useMockData: true
-};
+/**
+ * 🏢 DASHBOARD EKONOMI KOTA PALU - PRODUCTION VERSION
+ * 
+ * @module Dashboard
+ * @description Dashboard interaktif untuk visualisasi data ekonomi Kota Palu
+ * @version 3.0.0
+ * @author BPS Kota Palu
+ * 
+ * @features
+ * - Modular architecture dengan namespace isolation
+ * - Type-safe data parsing dengan validation
+ * - Error handling & retry logic dengan exponential backoff
+ * - Fallback data mechanism untuk offline support
+ * - Performance optimization dengan debouncing
+ * - Dark mode dengan preference persistence
+ * - Chart export functionality
+ * - Indonesian number format support
+ */
 
-// ===== STATE =====
-let state = {
-    chart: null,
-     { laju: {}, adhb: {}, adhk: {}, distribusi: {} },
-    years: [],
-    loaded: false,
-    attempt: 0
-};
+(function(global) {
+    'use strict';
 
-// ===== UTILITY =====
-function showAlert(message, type = 'warning') {
-    const container = document.getElementById('alertContainer');
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} show`;
-    alert.innerHTML = message;
-    container.innerHTML = '';
-    container.appendChild(alert);
-    setTimeout(() => alert.classList.remove('show'), 8000);
-}
-
-function updateStatus(text) {
-    document.getElementById('statusText').textContent = text;
-}
-
-function cleanNumber(val) {
-    if (!val || val === '-' || val === 'n.a') return 0;
-    let s = String(val).trim().replace(/^"|"$/g, '');
-    if (s.includes(',') && s.includes('.')) {
-        s = s.replace(/\./g, '').replace(',', '.');
-    } else if (s.includes(',')) {
-        s = s.replace(',', '.');
-    }
-    return parseFloat(s) || 0;
-}
-
-// ===== DATA LOADING =====
-async function loadData() {
-    state.attempt++;
-    console.log(`Load attempt #${state.attempt}`);
-    
-    try {
-        updateStatus('⏳ Mengunduh data dari Google Sheets...');
-        
-        const controller = new AbortController();
-        const timeout = setTimeout(() => {
-            controller.abort();
-            throw new Error('Timeout setelah 8 detik');
-        }, CONFIG.timeout);
-        
-        console.log('Fetching:', CONFIG.sheetUrl);
-        const response = await fetch(CONFIG.sheetUrl, { 
-            signal: controller.signal,
-            headers: { 'Cache-Control': 'no-cache' }
-        });
-        clearTimeout(timeout);
-        
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const csv = await response.text();
-        console.log('CSV length:', csv.length);
-        
-        if (csv.length < 100) {
-            throw new Error('Data CSV terlalu pendek/tidak valid');
-        }
-        
-        parseData(csv);
-        
-        if (state.years.length === 0) {
-            throw new Error('Tidak ada tahun ditemukan dalam data');
-        }
-        
-        // SUCCESS
-        console.log('✅ Data loaded:', state.years);
-        updateStatus(`✅ Database terhubung - ${state.years.length} tahun`);
-        showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
-        enableControls();
-        hideLoading();
-        state.loaded = true;
-        populateFilters();
-        updateChart();
-        
-    } catch (error) {
-        console.error('❌ Load error:', error.message);
-        
-        if (CONFIG.useMockData && state.attempt <= 2) {
-            updateStatus('⚠️ Menggunakan data simulasi...');
-            showAlert(`
-                <strong>⚠️ Google Sheets Tidak Dapat Diakses</strong><br>
-                ${error.message}. Menggunakan data simulasi. 
-                Pastikan spreadsheet sudah di-<strong>Publish to Web</strong>.
-            `, 'warning');
-            
-            generateMockData();
-            enableControls();
-            hideLoading();
-            state.loaded = true;
-            populateFilters();
-            updateChart();
-        } else {
-            updateStatus('❌ Gagal memuat data');
-            showAlert(`
-                <strong>❌ Gagal Memuat Data</strong><br>
-                ${error.message}. 
-                <button onclick="retryLoad()" style="margin-top:8px;padding:8px 16px;background:#f97316;color:white;border:none;border-radius:4px;cursor:pointer">🔄 Coba Lagi</button>
-            `, 'error');
-            document.getElementById('retryBtn').style.display = 'inline-block';
-        }
-    }
-}
-
-function parseData(csv) {
-    const rows = csv.split('\n').map(r => r.trim()).filter(r => r);
-    const sep = rows[0].includes(';') ? ';' : ',';
-    
-    let headerIdx = -1;
-    for (let i = 0; i < Math.min(10, rows.length); i++) {
-        if (rows[i].includes('2011') || rows[i].includes('2020')) {
-            headerIdx = i;
-            break;
-        }
-    }
-    
-    if (headerIdx === -1) throw new Error('Header tidak ditemukan');
-    
-    const headers = rows[headerIdx].split(sep).map(h => h.trim());
-    state.years = headers.slice(1).filter(h => /^\d{4}$/.test(h));
-    
-    for (let i = headerIdx + 1; i < rows.length; i++) {
-        const cols = rows[i].split(sep);
-        const label = (cols[0] || '').toUpperCase();
-        
-        state.years.forEach((year, idx) => {
-            const val = cleanNumber(cols[idx + 1]);
-            
-            if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) {
-                state.data.laju[year] = val;
-            } else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) {
-                state.data.adhb[year] = val;
-            } else if (label.includes('ADHK')) {
-                state.data.adhk[year] = val;
-            } else if (label.includes('DISTRIBUSI')) {
-                const match = label.match(/DISTRIBUSI\s+(\w+)/i);
-                if (match && val !== 0) {
-                    if (!state.data.distribusi[year]) state.data.distribusi[year] = {};
-                    state.data.distribusi[year][match[1].toUpperCase()] = val;
-                }
-            }
-        });
-    }
-    
-    state.years.forEach(year => {
-        if (!state.data.distribusi[year] || Object.keys(state.data.distribusi[year]).length === 0) {
-            state.data.distribusi[year] = {
-                'PERTANIAN': 11.9, 'INDUSTRI': 11.3, 'KONSTRUKSI': 18.8,
-                'PERDAGANGAN': 25.5, 'JASA': 32.5
-            };
-        }
-    });
-}
-
-function generateMockData() {
-    state.years = ['2019','2020','2021','2022','2023','2024','2025','2026'];
-    
-    state.years.forEach((y, i) => {
-        state.data.laju[y] = 4.5 + Math.sin(i) * 2 + (Math.random() - 0.5) * 1.5;
-        state.data.adhb[y] = 12000 + i * 1800 + Math.random() * 1000;
-        state.data.adhk[y] = 9000 + i * 1200 + Math.random() * 800;
-        state.data.distribusi[y] = {
-            'PERTANIAN': 10 + Math.random() * 3,
-            'INDUSTRI': 10 + Math.random() * 3,
-            'KONSTRUKSI': 17 + Math.random() * 3,
-            'PERDAGANGAN': 23 + Math.random() * 4,
-            'JASA': 30 + Math.random() * 5
-        };
-    });
-}
-
-function enableControls() {
-    document.getElementById('menuGrafik').disabled = false;
-    document.getElementById('filterTahun').disabled = false;
-    document.getElementById('btnDownload').disabled = false;
-}
-
-function hideLoading() {
-    document.getElementById('loadingBox').style.display = 'none';
-    document.getElementById('mainChart').style.display = 'block';
-}
-
-function retryLoad() {
-    state.attempt = 0;
-    document.getElementById('retryBtn').style.display = 'none';
-    document.getElementById('loadingBox').style.display = 'block';
-    document.getElementById('mainChart').style.display = 'none';
-    loadData();
-}
-
-function populateFilters() {
-    const menu = document.getElementById('menuGrafik');
-    const filter = document.getElementById('filterTahun');
-    
-    menu.innerHTML = `
-        <option value="laju">📈 LAJU PERTUMBUHAN (GARIS)</option>
-        <option value="nilai">📊 ADHB & ADHK (BATANG)</option>
-        <option value="distribusi">🥧 DISTRIBUSI (PIE)</option>
-    `;
-    
-    filter.innerHTML = '';
-    
-    if (menu.value === 'distribusi') {
-        [...state.years].reverse().forEach(y => {
-            const opt = document.createElement('option');
-            opt.value = y;
-            opt.textContent = 'Tahun ' + y;
-            filter.add(opt);
-        });
-    } else {
-        const last = state.years[state.years.length - 1];
-        const first = state.years[0];
-        [
-            { t: '2021 - ' + last, v: '2021-' + last },
-            { t: '2016 - 2020', v: '2016-2020' },
-            { t: first + ' - 2015', v: first + '-2015' }
-        ].forEach(r => {
-            const opt = document.createElement('option');
-            opt.value = r.v;
-            opt.textContent = r.t;
-            filter.add(opt);
-        });
-    }
-}
-
-function handleFilterChange() {
-    populateFilters();
-    updateChart();
-}
-
-function getYears(range) {
-    if (range.includes('-')) {
-        const [s, e] = range.split('-').map(Number);
-        return Array.from({length: e-s+1}, (_, i) => String(s+i));
-    }
-    return [range];
-}
-
-function updateChart() {
-    if (!state.loaded) return;
-    
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    const menu = document.getElementById('menuGrafik').value;
-    const periode = document.getElementById('filterTahun').value;
-    const labels = getYears(periode);
-    const isDark = document.body.classList.contains('dark');
-    
-    if (state.chart) { state.chart.destroy(); state.chart = null; }
-    
-    const textColor = isDark ? '#eee' : '#333';
-    const gridColor = isDark ? '#444' : '#ddd';
-    const dataLabelColor = isDark ? '#000' : '#333';
-    const dataLabelBg = isDark ? '#fff' : 'rgba(255,255,255,0.9)';
-    
-    const baseConfig = {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 600 },
-        plugins: {
-            legend: { labels: { color: textColor } },
-            tooltip: {
-                backgroundColor: 'rgba(30,30,40,0.95)',
-                callbacks: {
-                    label: (ctx) => {
-                        const v = ctx.parsed.y ?? ctx.parsed;
-                        if (menu === 'laju') return v.toFixed(2) + '%';
-                        if (menu === 'nilai') return 'Rp ' + (v >= 1000 ? (v/1000).toFixed(1) + ' T' : v.toFixed(0) + ' M');
-                        return v.toFixed(1) + '%';
-                    }
-                }
+    // ===== KONFIGURASI APLIKASI (IMMUTABLE) =====
+    const CONFIG = Object.freeze({
+        DATA: {
+            SHEET_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
+            TIMEOUT_MS: 15000,
+            USE_MOCK_FALLBACK: true,
+            MAX_RETRIES: 3,
+            RETRY_DELAY_MS: 1000
+        },
+        CHART: {
+            ANIMATION_DURATION: 800,
+            ANIMATION_EASING: 'easeOutQuart',
+            DATA_LABEL: {
+                FONT_SIZE: 10,
+                FONT_WEIGHT: 'bold',
+                BORDER_RADIUS: 6,
+                PADDING: 5,
+                BORDER_WIDTH: 1
             },
-            datalabels: {
-                anchor: 'end', align: 'top',
-                formatter: (val) => {
-                    if (!val && val !== 0) return '';
-                    if (menu === 'laju') return val.toFixed(1) + '%';
-                    if (menu === 'nilai') return val >= 1000 ? (val/1000).toFixed(1) + 'T' : val.toFixed(0);
-                    return val.toFixed(1) + '%';
-                },
-                font: { weight: 'bold', size: 10 },
-                color: dataLabelColor,
-                backgroundColor: dataLabelBg,
-                borderRadius: 6,
-                padding: 5
+            POINT: {
+                RADIUS: 6,
+                HOVER_RADIUS: 8,
+                BORDER_WIDTH: 2
+            },
+            COLORS: {
+                ADHB: '#FF8C00',
+                ADHK: '#27ae60',
+                LINE: '#27ae60',
+                PIE: ['#FF8C00', '#27ae60', '#2980b9', '#f1c40f', '#8e44ad']
             }
         },
-        scales: menu !== 'distribusi' ? {
-            y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } },
-            x: { ticks: { color: textColor }, grid: { display: false } }
-        } : {}
+        STORAGE: {
+            DARK_MODE_KEY: 'dashboard_palukota_dark_mode',
+            CACHE_TTL_MS: 24 * 60 * 60 * 1000
+        },
+        UI: {
+            STATUS: {
+                LOADING: 'MENGUNDUH DATA DARI GOOGLE SHEETS...',
+                SUCCESS: 'DATABASE TERHUBUNG (AKTIF)',
+                ERROR: 'KONEKSI GAGAL',
+                MOCK: 'MODE SIMULASI - DATA CONTOH'
+            }
+        }
+    });
+
+    // ===== STATE MANAGEMENT (PRIVATE) =====
+    const state = {
+        chart: null,
+         {
+            laju: Object.create(null),
+            adhb: Object.create(null),
+            adhk: Object.create(null),
+            distribusi: Object.create(null)
+        },
+        availableYears: [],
+        isLoaded: false,
+        retryCount: 0,
+        lastFetch: null
     };
-    
-    let config;
-    
-    if (menu === 'nilai') {
-        config = {
-            type: 'bar',
-             {
-                labels: labels,
-                datasets: [
-                    { label: 'ADHB',  labels.map(t => state.data.adhb[t] || 0), backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6 },
-                    { label: 'ADHK',  labels.map(t => state.data.adhk[t] || 0), backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6 }
-                ]
-            },
-            options: baseConfig
-        };
-    } else if (menu === 'laju') {
-        config = {
-            type: 'line',
-             {
-                labels: labels,
-                datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)',
-                     labels.map(t => state.data.laju[t] || 0),
-                    borderColor: '#27ae60',
-                    backgroundColor: 'rgba(39,174,96,0.15)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 6,
-                    pointBackgroundColor: '#27ae60'
-                }]
-            },
-            options: baseConfig
-        };
-    } else {
-        const distData = state.data.distribusi[periode] || {};
-        config = {
-            type: 'doughnut',
-             {
-                labels: Object.keys(distData),
-                datasets: [{
-                     Object.values(distData),
-                    backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
-                    borderWidth: 3,
-                    borderColor: isDark ? '#1e293b' : '#fff'
-                }]
-            },
-            options: {
+
+    // ===== UTILITY MODULE =====
+    const Utils = {
+        /**
+         * Membersihkan angka format Indonesia: "10.452,12" → 10452.12
+         * @param {string|number|null|undefined} val - Nilai input
+         * @returns {number} Nilai numerik yang sudah dibersihkan
+         */
+        cleanIndonesianNumber: function(val) {
+            if (val == null || val === '' || val === '-' || val === 'n.a' || val === 'N/A') {
+                return 0;
+            }
+            
+            let s = String(val).trim().replace(/^"|"$/g, '');
+            
+            if (s.includes(',') && s.includes('.')) {
+                s = s.replace(/\./g, '').replace(',', '.');
+            } else if (s.includes(',') && !s.includes('.')) {
+                s = s.replace(',', '.');
+            } else if (s.includes('.')) {
+                const parts = s.split('.');
+                if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+                    s = s.replace(/\./g, '');
+                }
+            }
+            
+            const num = parseFloat(s);
+            return isNaN(num) ? 0 : num;
+        },
+
+        /**
+         * Format angka untuk display dengan locale Indonesia
+         * @param {number} value - Nilai numerik
+         * @param {'pct'|'rupiah'|'number'} type - Tipe format
+         * @returns {string} Nilai terformat
+         */
+        formatValue: function(value, type) {
+            if (value == null || isNaN(value)) return '-';
+            
+            switch(type) {
+                case 'pct':
+                    return new Intl.NumberFormat('id-ID', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    }).format(value) + '%';
+                case 'rupiah':
+                    const displayValue = value >= 1000 ? value / 1000 : value;
+                    const unit = value >= 1000 ? ' T' : ' M';
+                    return 'Rp ' + new Intl.NumberFormat('id-ID', {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1
+                    }).format(displayValue) + unit;
+                default:
+                    return new Intl.NumberFormat('id-ID').format(value);
+            }
+        },
+
+        /**
+         * Debounce function untuk optimasi performa input
+         * @param {Function} func - Fungsi yang akan didebounce
+         * @param {number} wait - Delay dalam milidetik
+         * @returns {Function} Fungsi terdebounce
+         */
+        debounce: function(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        },
+
+        /**
+         * Logging terstruktur dengan level dan timestamp
+         * @param {'info'|'warn'|'error'} level - Level log
+         * @param {string} message - Pesan log
+         * @param {*} [data] - Data tambahan (opsional)
+         */
+        log: function(level, message, data) {
+            const timestamp = new Date().toISOString();
+            const prefix = `[${timestamp}] [${level.toUpperCase()}] [Dashboard]`;
+            
+            if (level === 'error') {
+                console.error(prefix, message, data !== undefined ? data : '');
+            } else if (level === 'warn') {
+                console.warn(prefix, message, data !== undefined ? data : '');
+            } else {
+                console.log(prefix, message, data !== undefined ? data : '');
+            }
+        },
+
+        /**
+         * Update status indicator di UI dengan type safety
+         * @param {string} message - Pesan status
+         * @param {'loading'|'success'|'error'} type - Tipe status
+         */
+        updateStatus: function(message, type) {
+            const statusEl = document.getElementById('status');
+            if (!statusEl) return;
+            
+            statusEl.textContent = message;
+            
+            const statusDot = document.getElementById('statusDot');
+            if (statusDot) {
+                statusDot.className = 'status-dot ' + (type || 'loading');
+            }
+        },
+
+        /**
+         * Deep clone object untuk menghindari mutation
+         * @param {Object} obj - Object yang akan di-clone
+         * @returns {Object} Clone object
+         */
+        deepClone: function(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+    };
+
+    // ===== DATA MODULE =====
+    const DataManager = {
+        /**
+         * Parse CSV text menjadi structured data dengan validation
+         * @param {string} csvText - Raw CSV content
+         * @returns {{matrix: Array, headers: Array, years: Array}} Parsed data
+         * @throws {Error} Jika CSV tidak valid
+         */
+        parseCSV: function(csvText) {
+            if (!csvText || typeof csvText !== 'string') {
+                throw new Error('CSV text harus berupa string yang valid');
+            }
+
+            const rows = csvText.split('\n')
+                .map(r => r.replace('\r', '').trim())
+                .filter(r => r.length > 0);
+            
+            if (rows.length === 0) {
+                throw new Error('CSV kosong atau tidak valid');
+            }
+            
+            const separator = rows[0].includes(';') ? ';' : ',';
+            
+            // Parse matrix dengan handling quoted values
+            const matrix = rows.map(row => {
+                const result = [];
+                let current = '', inQuotes = false;
+                
+                for (let i = 0; i < row.length; i++) {
+                    const char = row[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === separator && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            });
+            
+            // Find header row with years (4-digit numbers)
+            let headerIndex = -1;
+            for (let i = 0; i < Math.min(10, matrix.length); i++) {
+                if (matrix[i].some(cell => /^\d{4}$/.test(cell.trim()))) {
+                    headerIndex = i;
+                    break;
+                }
+            }
+            
+            if (headerIndex === -1) {
+                throw new Error('Header dengan tahun tidak ditemukan dalam CSV');
+            }
+            
+            const headers = matrix[headerIndex].map(h => h.trim().replace(/\*/g, ''));
+            const years = headers.slice(1).filter(h => /^\d{4}$/.test(h));
+            
+            if (years.length === 0) {
+                throw new Error('Tidak ada kolom tahun valid ditemukan');
+            }
+            
+            return { matrix, headers, years };
+        },
+
+        /**
+         * Extract economic data from parsed CSV matrix
+         * @param {Array} matrix - CSV matrix
+         * @param {Array} headers - Column headers
+         * @param {Array} years - Available years
+         * @returns {Object} Structured economic data per year
+         */
+        extractData: function(matrix, headers, years) {
+            const data = {
+                laju: Object.create(null),
+                adhb: Object.create(null),
+                adhk: Object.create(null),
+                distribusi: Object.create(null)
+            };
+            
+            // Initialize distribution structure per year
+            years.forEach(year => {
+                data.distribusi[year] = Object.create(null);
+            });
+            
+            matrix.forEach((cols) => {
+                // Skip header rows
+                if (headers.some(h => cols[0] && cols[0].trim() === h)) return;
+                
+                const label = (cols[0] || '').trim().toUpperCase();
+                if (!label) return;
+                
+                years.forEach((year, idx) => {
+                    const value = Utils.cleanIndonesianNumber(cols[idx + 1]);
+                    
+                    if (label.includes('LAJU') && label.includes('PERTUMBUHAN')) {
+                        data.laju[year] = value;
+                    } else if (label.includes('ADHB') && !label.includes('DISTRIBUSI')) {
+                        data.adhb[year] = value;
+                    } else if (label.includes('ADHK')) {
+                        data.adhk[year] = value;
+                    } else if (label.includes('DISTRIBUSI')) {
+                        const match = label.match(/DISTRIBUSI\s+([^\(]+)/i);
+                        if (match) {
+                            const sector = match[1].trim().toUpperCase();
+                            if (sector && value !== 0) {
+                                if (!data.distribusi[year]) {
+                                    data.distribusi[year] = Object.create(null);
+                                }
+                                data.distribusi[year][sector] = value;
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Fallback distribution if empty for each year
+            const DEFAULT_DISTRIBUTION = {
+                'PERTANIAN': 11.9,
+                'INDUSTRI': 11.3,
+                'KONSTRUKSI': 18.8,
+                'PERDAGANGAN': 25.5,
+                'JASA': 32.5
+            };
+            
+            years.forEach(year => {
+                if (Object.keys(data.distribusi[year]).length === 0) {
+                    data.distribusi[year] = Utils.deepClone(DEFAULT_DISTRIBUTION);
+                }
+            });
+            
+            return data;
+        },
+
+        /**
+         * Generate mock data untuk fallback ketika fetch gagal
+         * @returns {{ Object, years: Array}} Mock data structure
+         */
+        generateMockData: function() {
+            const years = ['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
+            const data = {
+                laju: Object.create(null),
+                adhb: Object.create(null),
+                adhk: Object.create(null),
+                distribusi: Object.create(null)
+            };
+            
+            years.forEach((y, i) => {
+                data.laju[y] = Math.max(-2, Math.min(10, 5 + Math.sin(i/2)*2.5 + (Math.random()-0.5)*1.5));
+                data.adhb[y] = 10000 + i * 1200 + Math.random() * 1500;
+                data.adhk[y] = 7500 + i * 900 + Math.random() * 1000;
+                data.distribusi[y] = {
+                    'PERTANIAN': 10 + Math.random() * 3,
+                    'INDUSTRI': 10 + Math.random() * 3,
+                    'KONSTRUKSI': 17 + Math.random() * 3,
+                    'PERDAGANGAN': 23 + Math.random() * 4,
+                    'JASA': 30 + Math.random() * 5
+                };
+            });
+            
+            return { data, years };
+        },
+
+        /**
+         * Fetch data dari Google Sheets dengan retry logic dan error handling
+         * @returns {Promise<boolean>} Success status
+         */
+        fetchData: async function() {
+            Utils.updateStatus(CONFIG.UI.STATUS.LOADING, 'loading');
+            Utils.log('info', 'Starting data fetch', { url: CONFIG.DATA.SHEET_URL });
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.DATA.TIMEOUT_MS);
+                
+                const response = await fetch(CONFIG.DATA.SHEET_URL, {
+                    signal: controller.signal,
+                    headers: { 'Cache-Control': 'no-cache' },
+                    mode: 'cors'
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const csvText = await response.text();
+                
+                if (!csvText || csvText.length < 100) {
+                    throw new Error('Data CSV tidak valid (terlalu pendek)');
+                }
+                
+                // Parse dan extract data
+                const parsed = this.parseCSV(csvText);
+                state.data = this.extractData(parsed.matrix, parsed.headers, parsed.years);
+                state.availableYears = parsed.years;
+                
+                if (state.availableYears.length === 0) {
+                    throw new Error('Tidak ada data tahun yang berhasil diekstrak');
+                }
+                
+                // Success
+                state.isLoaded = true;
+                state.lastFetch = Date.now();
+                state.retryCount = 0;
+                
+                Utils.log('info', 'Data loaded successfully', { 
+                    years: state.availableYears,
+                    count: state.availableYears.length 
+                });
+                
+                Utils.updateStatus(
+                    `${CONFIG.UI.STATUS.SUCCESS} - ${state.availableYears.length} TAHUN`, 
+                    'success'
+                );
+                
+                return true;
+                
+            } catch (error) {
+                Utils.log('error', 'Fetch failed', { 
+                    message: error.message, 
+                    retryCount: state.retryCount 
+                });
+                
+                // Retry logic dengan exponential backoff
+                if (state.retryCount < CONFIG.DATA.MAX_RETRIES) {
+                    state.retryCount++;
+                    const delay = CONFIG.DATA.RETRY_DELAY_MS * state.retryCount;
+                    Utils.log('warn', `Retrying fetch (${state.retryCount}/${CONFIG.DATA.MAX_RETRIES}) in ${delay}ms`);
+                    
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return this.fetchData();
+                }
+                
+                // Fallback ke mock data jika diaktifkan
+                if (CONFIG.DATA.USE_MOCK_FALLBACK) {
+                    Utils.log('warn', 'Using mock data fallback');
+                    const mock = this.generateMockData();
+                    state.data = mock.data;
+                    state.availableYears = mock.years;
+                    state.isLoaded = true;
+                    
+                    Utils.updateStatus(CONFIG.UI.STATUS.MOCK, 'error');
+                    return true;
+                }
+                
+                // Final error
+                Utils.updateStatus(`${CONFIG.UI.STATUS.ERROR}: ${error.message}`, 'error');
+                return false;
+            }
+        }
+    };
+
+    // ===== CHART MODULE =====
+    const ChartManager = {
+        /**
+         * Get base Chart.js configuration dengan theme support
+         * @param {boolean} isDark - Dark mode status
+         * @param {string} menu - Chart type identifier
+         * @returns {Object} Base chart configuration
+         */
+        getBaseConfig: function(isDark, menu) {
+            const textColor = isDark ? '#eee' : '#333';
+            const gridColor = isDark ? '#444' : '#ddd';
+            const dataLabelColor = isDark ? '#000000' : '#333333';
+            const dataLabelBg = isDark ? '#FFFFFF' : 'rgba(255,255,255,0.85)';
+            
+            return {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { 
+                    duration: CONFIG.CHART.ANIMATION_DURATION, 
+                    easing: CONFIG.CHART.ANIMATION_EASING 
+                },
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: textColor } },
-                    datalabels: { 
-                        anchor: 'center', align: 'center',
-                        formatter: v => v >= 5 ? v.toFixed(1) + '%' : '',
-                        color: '#fff', font: { weight: 'bold', size: 11 }
+                    legend: { 
+                        labels: { 
+                            color: textColor, 
+                            font: { weight: 'bold', size: 10 } 
+                        } 
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(30,30,40,0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#eee',
+                        borderColor: isDark ? '#555' : '#ddd',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function(ctx) {
+                                const v = ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed;
+                                if (menu === 'laju') return ' ' + Utils.formatValue(v, 'pct');
+                                if (menu === 'nilai') return ' ' + Utils.formatValue(v, 'rupiah');
+                                if (menu === 'distribusi') return ' ' + Utils.formatValue(v, 'pct');
+                                return ' ' + Utils.formatValue(v, 'number');
+                            }
+                        }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(val) {
+                            if (!val && val !== 0) return '';
+                            if (menu === 'laju') return val.toFixed(1) + '%';
+                            if (menu === 'nilai') return val >= 1000 ? (val/1000).toFixed(1)+'T' : val.toFixed(0);
+                            if (menu === 'distribusi') return val.toFixed(1) + '%';
+                            return Utils.formatValue(val, 'number');
+                        },
+                        font: { 
+                            weight: CONFIG.CHART.DATA_LABEL.FONT_WEIGHT, 
+                            size: CONFIG.CHART.DATA_LABEL.FONT_SIZE 
+                        },
+                        color: dataLabelColor,
+                        backgroundColor: dataLabelBg,
+                        borderColor: isDark ? '#FFFFFF' : 'rgba(200,200,200,0.5)',
+                        borderWidth: CONFIG.CHART.DATA_LABEL.BORDER_WIDTH,
+                        borderRadius: CONFIG.CHART.DATA_LABEL.BORDER_RADIUS,
+                        padding: CONFIG.CHART.DATA_LABEL.PADDING
                     }
                 },
-                cutout: '55%'
+                scales: menu !== 'distribusi' ? {
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { color: textColor, font: { size: 10 } }, 
+                        grid: { color: gridColor } 
+                    },
+                    x: { 
+                        ticks: { color: textColor, font: { size: 10 } }, 
+                        grid: { display: false } 
+                    }
+                } : {}
+            };
+        },
+
+        /**
+         * Render chart berdasarkan selected type dan periode
+         */
+        render: function() {
+            if (!state.isLoaded) return;
+            
+            const canvas = document.getElementById('mainChart');
+            if (!canvas) {
+                Utils.log('error', 'Canvas element not found');
+                return;
             }
-        };
+            
+            const ctx = canvas.getContext('2d');
+            const menu = document.getElementById('menuGrafik').value;
+            const periode = document.getElementById('filterTahun').value;
+            const labels = this.getYearsInRange(periode);
+            const isDark = document.body.classList.contains('dark');
+            
+            // Destroy existing chart untuk mencegah memory leak
+            if (state.chart) {
+                state.chart.destroy();
+                state.chart = null;
+            }
+            
+            const baseConfig = this.getBaseConfig(isDark, menu);
+            let config;
+            
+            switch(menu) {
+                case 'nilai':
+                    config = this.createBarChart(labels, baseConfig, isDark);
+                    break;
+                case 'laju':
+                    config = this.createLineChart(labels, baseConfig, isDark);
+                    break;
+                case 'distribusi':
+                    config = this.createPieChart(baseConfig, isDark, periode);
+                    break;
+                default:
+                    Utils.log('warn', 'Unknown chart type', { menu });
+                    return;
+            }
+            
+            // Register plugin dan create chart
+            if (typeof ChartDataLabels !== 'undefined') {
+                Chart.register(ChartDataLabels);
+            }
+            
+            state.chart = new Chart(ctx, config);
+            
+            // Update title dengan selected options
+            const menuSelect = document.getElementById('menuGrafik');
+            const menuText = menuSelect.options[menuSelect.selectedIndex].text;
+            document.getElementById('judulGrafik').textContent = 
+                menuText.split('(')[0].trim() + " (" + periode + ")";
+        },
+
+        /**
+         * Create bar chart configuration untuk ADHB & ADHK
+         */
+        createBarChart: function(labels, baseConfig, isDark) {
+            const adhbData = labels.map(t => state.data.adhb[t] || 0);
+            const adhkData = labels.map(t => state.data.adhk[t] || 0);
+            
+            const config = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'ADHB',
+                             adhbData,
+                            backgroundColor: 'rgba(255,140,0,0.85)',
+                            borderColor: CONFIG.CHART.COLORS.ADHB,
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        },
+                        {
+                            label: 'ADHK',
+                            data: adhkData,
+                            backgroundColor: 'rgba(39,174,96,0.85)',
+                            borderColor: CONFIG.CHART.COLORS.ADHK,
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: Utils.deepClone(baseConfig)
+            };
+            
+            // Custom y-axis formatting untuk triliun
+            config.options.scales.y.ticks.callback = function(v) {
+                return (v/1000).toFixed(0) + 'T';
+            };
+            
+            return config;
+        },
+
+        /**
+         * Create line chart configuration untuk laju pertumbuhan
+         */
+        createLineChart: function(labels, baseConfig, isDark) {
+            const lajuData = labels.map(t => state.data.laju[t] || 0);
+            
+            const config = {
+                type: 'line',
+                 {
+                    labels: labels,
+                    datasets: [{
+                        label: 'LAJU PERTUMBUHAN (%)',
+                         lajuData,
+                        borderColor: CONFIG.CHART.COLORS.LINE,
+                        backgroundColor: 'rgba(39,174,96,0.15)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: CONFIG.CHART.POINT.RADIUS,
+                        pointBackgroundColor: CONFIG.CHART.COLORS.LINE,
+                        pointBorderColor: isDark ? '#fff' : CONFIG.CHART.COLORS.LINE,
+                        pointBorderWidth: CONFIG.CHART.POINT.BORDER_WIDTH,
+                        pointHoverRadius: CONFIG.CHART.POINT.HOVER_RADIUS
+                    }]
+                },
+                options: Utils.deepClone(baseConfig)
+            };
+            
+            config.options.scales.y.ticks.callback = function(v) {
+                return v + '%';
+            };
+            
+            return config;
+        },
+
+        /**
+         * Create pie/doughnut chart configuration untuk distribusi
+         */
+        createPieChart: function(baseConfig, isDark, selectedYear) {
+            const distribusiData = state.data.distribusi[selectedYear] || {};
+            
+            // Fallback jika data kosong
+            if (Object.keys(distribusiData).length === 0) {
+                return {
+                    type: 'doughnut',
+                     {
+                        labels: ['PERTANIAN', 'INDUSTRI', 'KONSTRUKSI', 'PERDAGANGAN', 'JASA'],
+                        datasets: [{
+                            data: [11.9, 11.3, 18.8, 25.5, 32.5],
+                            backgroundColor: CONFIG.CHART.COLORS.PIE,
+                            borderColor: isDark ? '#1e1e1e' : '#fff',
+                            borderWidth: 3,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 1000 },
+                        plugins: {
+                            legend: { 
+                                position: 'bottom', 
+                                labels: { 
+                                    color: isDark ? '#eee' : '#333', 
+                                    font: { weight: 'bold', size: 9 }, 
+                                    padding: 10 
+                                } 
+                            },
+                            tooltip: { 
+                                backgroundColor: 'rgba(30,30,40,0.95)', 
+                                callbacks: { 
+                                    label: function(ctx) { 
+                                        return ' ' + ctx.parsed.toFixed(1) + '%'; 
+                                    } 
+                                } 
+                            },
+                            datalabels: { 
+                                anchor: 'center', 
+                                align: 'center', 
+                                formatter: function(v) { 
+                                    return v >= 5 ? v.toFixed(1)+'%' : ''; 
+                                }, 
+                                font: { weight: 'bold', size: 11 }, 
+                                color: '#fff' 
+                            }
+                        },
+                        cutout: '55%'
+                    }
+                };
+            }
+            
+            return {
+                type: 'doughnut',
+                 {
+                    labels: Object.keys(distribusiData),
+                    datasets: [{
+                         Object.values(distribusiData),
+                        backgroundColor: CONFIG.CHART.COLORS.PIE,
+                        borderColor: isDark ? '#1e1e1e' : '#fff',
+                        borderWidth: 3,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 1000 },
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: isDark ? '#eee' : '#333', 
+                                font: { weight: 'bold', size: 9 }, 
+                                padding: 10 
+                            } 
+                        },
+                        tooltip: { 
+                            backgroundColor: 'rgba(30,30,40,0.95)', 
+                            callbacks: { 
+                                label: function(ctx) { 
+                                    return ' ' + ctx.parsed.toFixed(1) + '%'; 
+                                } 
+                            } 
+                        },
+                        datalabels: { 
+                            anchor: 'center', 
+                            align: 'center', 
+                            formatter: function(v) { 
+                                return v >= 5 ? v.toFixed(1)+'%' : ''; 
+                            }, 
+                            font: { weight: 'bold', size: 11 }, 
+                            color: '#fff' 
+                        }
+                    },
+                    cutout: '55%'
+                }
+            };
+        },
+
+        /**
+         * Get years array dari range string
+         */
+        getYearsInRange: function(range) {
+            if (range.includes("-")) {
+                const parts = range.split("-");
+                const start = parseInt(parts[0], 10);
+                const end = parseInt(parts[1], 10);
+                
+                if (isNaN(start) || isNaN(end)) return [];
+                
+                const labels = [];
+                for(let i = start; i <= end; i++) {
+                    labels.push(i.toString());
+                }
+                return labels;
+            }
+            return [range];
+        }
+    };
+
+    // ===== UI MODULE =====
+    const UIManager = {
+        /**
+         * Populate filter dropdowns berdasarkan chart type
+         */
+        populateFilters: function() {
+            const menu = document.getElementById('menuGrafik');
+            const filter = document.getElementById('filterTahun');
+            
+            if (!menu || !filter) return;
+            
+            filter.innerHTML = '';
+            
+            if (menu.value === 'distribusi') {
+                // Single year selector untuk pie chart
+                const years = state.availableYears
+                    .filter(t => t && t.length === 4)
+                    .reverse();
+                
+                years.forEach(t => {
+                    const el = document.createElement("option");
+                    el.textContent = t;
+                    el.value = t;
+                    filter.add(el);
+                });
+                
+                if (filter.options.length === 0) {
+                    const el = document.createElement("option");
+                    el.textContent = "2024";
+                    el.value = "2024";
+                    filter.add(el);
+                }
+            } else {
+                // Range selector untuk line/bar charts
+                const lastYear = state.availableYears[state.availableYears.length - 1] || '2026';
+                const firstYear = state.availableYears[0] || '2011';
+                
+                const ranges = [
+                    { text: "2021 - " + lastYear, value: "2021-" + lastYear },
+                    { text: "2016 - 2020", value: "2016-2020" },
+                    { text: firstYear + " - 2015", value: firstYear + "-2015" }
+                ];
+                
+                ranges.forEach(r => {
+                    const el = document.createElement("option");
+                    el.textContent = r.text;
+                    el.value = r.value;
+                    filter.add(el);
+                });
+            }
+        },
+
+        /**
+         * Toggle dark mode dengan preference persistence
+         */
+        toggleDarkMode: function() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            
+            // Persist preference ke localStorage
+            try {
+                localStorage.setItem(
+                    CONFIG.STORAGE.DARK_MODE_KEY, 
+                    JSON.stringify({ enabled: isDark, timestamp: Date.now() })
+                );
+            } catch(e) {
+                Utils.log('warn', 'Failed to save dark mode preference', e);
+            }
+            
+            // Re-render chart dengan theme baru
+            if (state.chart) {
+                ChartManager.render();
+            }
+        },
+
+        /**
+         * Load dark mode preference dari storage
+         */
+        loadDarkModePreference: function() {
+            try {
+                const saved = localStorage.getItem(CONFIG.STORAGE.DARK_MODE_KEY);
+                if (saved) {
+                    const { enabled } = JSON.parse(saved);
+                    if (enabled) {
+                        document.body.classList.add('dark');
+                    }
+                }
+            } catch(e) {
+                Utils.log('warn', 'Failed to load dark mode preference', e);
+            }
+        },
+
+        /**
+         * Download chart sebagai PNG image
+         */
+        downloadChart: function() {
+            const canvas = document.getElementById('mainChart');
+            if (!canvas) {
+                Utils.log('error', 'Canvas not found for download');
+                return;
+            }
+            
+            try {
+                const link = document.createElement('a');
+                link.download = 'Dashboard-Ekonomi-Palu-' + 
+                    new Date().toISOString().slice(0,10) + '.png';
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                
+                Utils.log('info', 'Chart downloaded successfully');
+            } catch(error) {
+                Utils.log('error', 'Failed to download chart', error);
+                alert('Gagal mengunduh grafik: ' + error.message);
+            }
+        }
+    };
+
+    // ===== PUBLIC API =====
+    const Dashboard = {
+        /**
+         * Initialize the dashboard dengan setup lengkap
+         */
+        init: function() {
+            Utils.log('info', 'Dashboard initializing');
+            
+            // Register Chart.js plugin
+            if (typeof ChartDataLabels !== 'undefined') {
+                Chart.register(ChartDataLabels);
+            }
+            
+            // Load user preferences
+            UIManager.loadDarkModePreference();
+            
+            // Setup logo fallback handler
+            const logoImg = document.getElementById('bpsLogo');
+            if (logoImg) {
+                logoImg.onerror = function() {
+                    Utils.log('warn', 'Logo BPS failed to load, using SVG fallback');
+                    this.style.display = 'none';
+                    const fallback = document.getElementById('logoFallback');
+                    if (fallback) fallback.style.display = 'block';
+                };
+            }
+            
+            // Setup keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    Dashboard.downloadChart();
+                }
+            });
+            
+            // Fetch data dan render
+            DataManager.fetchData().then(function(success) {
+                if (success) {
+                    UIManager.populateFilters();
+                    ChartManager.render();
+                }
+            });
+        },
+
+        /**
+         * Handle filter change event dengan debouncing
+         */
+        handleFilterChange: Utils.debounce(function() {
+            UIManager.populateFilters();
+            Dashboard.updateChart();
+        }, 150),
+
+        /**
+         * Update chart berdasarkan current selections
+         */
+        updateChart: function() {
+            ChartManager.render();
+        },
+
+        /**
+         * Toggle dark mode
+         */
+        toggleDarkMode: function() {
+            UIManager.toggleDarkMode();
+        },
+
+        /**
+         * Download chart sebagai PNG
+         */
+        downloadChart: function() {
+            UIManager.downloadChart();
+        }
+    };
+
+    // Expose ke global scope untuk HTML event handlers
+    global.Dashboard = Dashboard;
+
+    // Auto-initialize ketika DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            Dashboard.init();
+        });
+    } else {
+        Dashboard.init();
     }
-    
-    Chart.register(ChartDataLabels);
-    state.chart = new Chart(ctx, config);
-    
-    const menuText = document.getElementById('menuGrafik').options[document.getElementById('menuGrafik').selectedIndex].text;
-    document.getElementById('judulGrafik').textContent = menuText.split('(')[0].trim() + ' (' + periode + ')';
-}
 
-function toggleDarkMode() {
-    document.body.classList.toggle('dark');
-    if (state.chart) updateChart();
-}
-
-function downloadChart() {
-    const canvas = document.getElementById('mainChart');
-    const link = document.createElement('a');
-    link.download = 'Dashboard-Ekonomi-Palu-' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-}
-
-// ===== INIT =====
-window.addEventListener('DOMContentLoaded', loadData);
+})(typeof window !== 'undefined' ? window : this);
 </script>
 </body>
 </html>
