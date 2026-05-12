@@ -6,30 +6,21 @@
     <title>DASHBOARD STATISTIK EKONOMI KOTA PALU</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --orange: #FF8C00;
             --orange-dark: #e67e00;
-            --orange-light: #ffa033;
             --green: #27ae60;
-            --green-dark: #219a52;
             --bg: #f8fafc;
             --text: #0f172a;
-            --text-muted: #64748b;
             --surface: #ffffff;
             --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            --radius: 20px;
-            --radius-sm: 14px;
-            --radius-xs: 10px;
+            --radius: 16px;
         }
         
         .dark {
             --bg: #0f172a;
             --text: #f1f5f9;
-            --text-muted: #94a3b8;
             --surface: #1e293b;
             --border: #334155;
         }
@@ -37,182 +28,95 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg) 0%, #f1f5f9 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
             color: var(--text); 
-            padding: 0;
-            text-transform: uppercase; 
+            padding: 20px;
             min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .dark body {
-            background: linear-gradient(135deg, var(--bg) 0%, #1e293b 100%);
         }
 
         .container {
-            max-width: 1320px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 28px 32px;
         }
 
         .header { 
-            background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+            background: linear-gradient(135deg, var(--orange), var(--orange-dark));
             color: white; 
-            padding: 32px 40px; 
+            padding: 30px; 
             border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            margin-bottom: 28px;
-            display: flex; 
-            align-items: center; 
-            gap: 28px;
+            margin-bottom: 24px;
         }
 
-        .logo-container { 
-            background: white; 
-            padding: 14px; 
-            border-radius: var(--radius-sm);
-            width: 92px; 
-            height: 92px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-        }
-
-        .logo-img { 
-            width: 70px; 
-            height: 70px; 
-            object-fit: contain; 
-        }
-
-        .header-text h1 { 
-            font-size: clamp(1.5rem, 4vw, 2rem);
+        .header h1 { 
+            font-size: 1.8rem;
             font-weight: 800;
             margin: 0;
-            line-height: 1.2;
-        }
-
-        .header-text small {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 12px;
-            opacity: 0.98;
-            font-size: 0.88rem;
-            font-weight: 600;
-            background: rgba(255,255,255,0.22);
-            padding: 6px 16px;
-            border-radius: 9999px;
-        }
-
-        .status-dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: #fbbf24;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .status-dot.success { 
-            background: #22c55e; 
-            animation: none;
-        }
-
-        .status-dot.error { 
-            background: #ef4444; 
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
         }
 
         .controls { 
             background: var(--surface); 
-            padding: 26px 34px; 
+            padding: 24px; 
             border-radius: var(--radius);
-            margin-bottom: 28px;
-            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             display: flex; 
-            gap: 24px; 
+            gap: 20px; 
             flex-wrap: wrap; 
-            align-items: flex-end;
-            border: 1px solid var(--border);
-        }
-
-        .controls::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 34px;
-            right: 34px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange), var(--orange-light), var(--orange));
-            border-radius: 0 0 6px 6px;
         }
 
         .control-group { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px;
             flex: 1;
-            min-width: 220px;
+            min-width: 200px;
         }
 
         label { 
+            display: block;
             font-weight: 700; 
             font-size: 0.75rem; 
             color: var(--orange);
-            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
 
         select { 
-            padding: 14px 20px; 
-            border-radius: var(--radius-xs); 
+            width: 100%;
+            padding: 12px 16px; 
+            border-radius: 8px; 
             border: 2px solid var(--border); 
             font-weight: 600; 
             background: var(--surface); 
-            color: var(--text); 
-            cursor: pointer;
-            font-size: 0.875rem;
-            min-height: 48px;
+            color: var(--text);
+            font-size: 0.9rem;
         }
 
         select:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--orange);
+            background: #f1f5f9;
         }
 
         .btn-group { 
             display: flex; 
-            gap: 14px; 
+            gap: 12px; 
             margin-left: auto;
         }
 
         button { 
-            padding: 14px 26px; 
-            border-radius: var(--radius-xs); 
+            padding: 12px 24px; 
+            border-radius: 8px; 
             border: none; 
             font-weight: 700; 
-            cursor: pointer; 
-            font-size: 0.875rem;
+            cursor: pointer;
+            font-size: 0.85rem;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            min-height: 48px;
-            transition: all 0.2s;
+            gap: 8px;
+            transition: transform 0.2s;
         }
 
         button:hover:not(:disabled) { 
-            transform: translateY(-2px); 
-            box-shadow: var(--shadow-lg); 
+            transform: translateY(-2px);
         }
 
         button:disabled {
@@ -221,55 +125,81 @@
         }
 
         .btn-download { 
-            background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+            background: var(--green);
             color: white;
         }
 
         .btn-dark { 
-            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            background: #334155;
             color: white;
         }
 
         .card { 
             background: var(--surface); 
             border-radius: var(--radius);
-            box-shadow: var(--shadow-lg); 
-            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .card-header {
-            padding: 24px 36px 20px;
+            padding: 20px 28px;
             border-bottom: 1px solid var(--border);
         }
 
         h3 { 
-            color: var(--text); 
             margin: 0;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 800;
         }
 
         .card-body {
-            padding: 28px 36px 32px;
+            padding: 28px;
         }
 
         .chart-container { 
             position: relative; 
-            height: 480px; 
+            height: 450px; 
             width: 100%;
-            background: var(--bg);
-            border-radius: var(--radius-sm);
-            padding: 24px;
         }
 
-        /* Loading State */
-        .loading-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            gap: 20px;
+        /* Alert Boxes */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert.show { display: block; }
+
+        .alert-warning {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            color: #c2410c;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            color: #dc2626;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            color: #16a34a;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
         }
 
         .spinner {
@@ -278,6 +208,7 @@
             border: 4px solid var(--border);
             border-top-color: var(--orange);
             border-radius: 50%;
+            margin: 0 auto 16px;
             animation: spin 0.8s linear infinite;
         }
 
@@ -286,50 +217,28 @@
         }
 
         .loading-text {
-            color: var(--text-muted);
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .loading-sub {
+            color: var(--text);
+            opacity: 0.6;
             font-size: 0.9rem;
-            text-align: center;
         }
 
-        .error-box {
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            padding: 16px 20px;
-            border-radius: var(--radius-xs);
-            margin-bottom: 20px;
-            color: #dc2626;
-            display: none;
-        }
-
-        .error-box.show {
-            display: block;
-        }
-
-        .success-box {
-            background: #f0fdf4;
-            border-left: 4px solid #22c55e;
-            padding: 16px 20px;
-            border-radius: var(--radius-xs);
-            margin-bottom: 20px;
-            color: #16a34a;
-            display: none;
-        }
-
-        .success-box.show {
-            display: block;
+        .retry-btn {
+            margin-top: 16px;
+            background: var(--orange);
+            color: white;
+            display: inline-block;
         }
 
         @media (max-width: 768px) {
-            .container { padding: 18px 20px; }
-            .header { flex-direction: column; text-align: center; padding: 26px 24px; gap: 20px; }
-            .header-text h1 { font-size: 1.4rem; }
-            .logo-container { width: 78px; height: 78px; }
-            .logo-img { width: 60px; height: 60px; }
-            .controls { flex-direction: column; gap: 18px; padding: 22px 24px; }
-            .control-group { width: 100%; }
+            .controls { flex-direction: column; }
             .btn-group { margin-left: 0; width: 100%; }
             button { flex: 1; }
-            .chart-container { height: 340px; padding: 16px; }
         }
     </style>
 </head>
@@ -337,17 +246,9 @@
 
 <div class="container">
     <div class="header">
-        <div class="logo-container">
-            <img src="https://raw.githubusercontent.com/zulfikar-coder/dashboard-ekonomi/main/logo-bps.png" 
-                 alt="BPS" class="logo-img"
-                 onerror="this.style.display='none'">
-        </div>
-        <div class="header-text">
-            <h1>DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
-            <small id="status">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusText">MEMUAT DATA...</span>
-            </small>
+        <h1>📊 DASHBOARD STATISTIK EKONOMI KOTA PALU</h1>
+        <div style="margin-top: 10px; opacity: 0.9; font-size: 0.9rem;">
+            <span id="statusText">⏳ Memuat data...</span>
         </div>
     </div>
 
@@ -366,9 +267,9 @@
         </div>
         <div class="btn-group">
             <button class="btn-download" onclick="downloadChart()" id="btnDownload" disabled>
-                📥 UNDUH GRAFIK
+                📥 UNDUH
             </button>
-            <button class="btn-dark" onclick="toggleDarkMode()">🌙 MODE GELAP</button>
+            <button class="btn-dark" onclick="toggleDarkMode()">🌙 GELAP</button>
         </div>
     </div>
 
@@ -377,12 +278,16 @@
             <h3 id="judulGrafik">VISUALISASI DATA</h3>
         </div>
         <div class="card-body">
-            <div id="errorBox" class="error-box"></div>
-            <div id="successBox" class="success-box"></div>
+            <div id="alertContainer"></div>
+            
             <div class="chart-container">
-                <div class="loading-wrapper" id="loadingWrapper">
+                <div class="loading" id="loadingBox">
                     <div class="spinner"></div>
-                    <div class="loading-text">Menghubungkan ke database...</div>
+                    <div class="loading-text">MENGHUBUNGKAN KE DATABASE...</div>
+                    <div class="loading-sub">Mohon tunggu, sedang mengambil data</div>
+                    <button class="retry-btn" onclick="retryLoad()" style="display:none" id="retryBtn">
+                        🔄 COBA LAGI
+                    </button>
                 </div>
                 <canvas id="mainChart" style="display:none"></canvas>
             </div>
@@ -394,7 +299,7 @@
 // ===== CONFIG =====
 const CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
-    timeout: 10000,
+    timeout: 8000,
     useMockData: true
 };
 
@@ -403,10 +308,25 @@ let state = {
     chart: null,
      { laju: {}, adhb: {}, adhk: {}, distribusi: {} },
     years: [],
-    loaded: false
+    loaded: false,
+    attempt: 0
 };
 
 // ===== UTILITY =====
+function showAlert(message, type = 'warning') {
+    const container = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} show`;
+    alert.innerHTML = message;
+    container.innerHTML = '';
+    container.appendChild(alert);
+    setTimeout(() => alert.classList.remove('show'), 8000);
+}
+
+function updateStatus(text) {
+    document.getElementById('statusText').textContent = text;
+}
+
 function cleanNumber(val) {
     if (!val || val === '-' || val === 'n.a') return 0;
     let s = String(val).trim().replace(/^"|"$/g, '');
@@ -418,70 +338,81 @@ function cleanNumber(val) {
     return parseFloat(s) || 0;
 }
 
-function showMessage(id, text, type) {
-    const el = document.getElementById(id);
-    el.textContent = text;
-    el.className = (type === 'error' ? 'error-box' : 'success-box') + ' show';
-    setTimeout(() => el.classList.remove('show'), 6000);
-}
-
-function updateStatus(text, type) {
-    const dot = document.getElementById('statusDot');
-    const txt = document.getElementById('statusText');
-    txt.textContent = text;
-    dot.className = 'status-dot ' + (type || 'loading');
-}
-
 // ===== DATA LOADING =====
 async function loadData() {
+    state.attempt++;
+    console.log(`Load attempt #${state.attempt}`);
+    
     try {
-        updateStatus('MENGUNDUH DATA...', 'loading');
+        updateStatus('⏳ Mengunduh data dari Google Sheets...');
         
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), CONFIG.timeout);
+        const timeout = setTimeout(() => {
+            controller.abort();
+            throw new Error('Timeout setelah 8 detik');
+        }, CONFIG.timeout);
         
+        console.log('Fetching:', CONFIG.sheetUrl);
         const response = await fetch(CONFIG.sheetUrl, { 
             signal: controller.signal,
             headers: { 'Cache-Control': 'no-cache' }
         });
         clearTimeout(timeout);
         
-        if (!response.ok) throw new Error('HTTP ' + response.status);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const csv = await response.text();
-        if (csv.length < 100) throw new Error('Data tidak valid');
+        console.log('CSV length:', csv.length);
+        
+        if (csv.length < 100) {
+            throw new Error('Data CSV terlalu pendek/tidak valid');
+        }
         
         parseData(csv);
         
-        if (state.years.length === 0) throw new Error('Tidak ada data tahun');
+        if (state.years.length === 0) {
+            throw new Error('Tidak ada tahun ditemukan dalam data');
+        }
         
-        // Success
-        updateStatus('DATABASE TERHUBUNG - ' + state.years.length + ' TAHUN', 'success');
-        showMessage('successBox', '✅ Data berhasil dimuat dari Google Sheets!');
+        // SUCCESS
+        console.log('✅ Data loaded:', state.years);
+        updateStatus(`✅ Database terhubung - ${state.years.length} tahun`);
+        showAlert('✅ Data berhasil dimuat dari Google Sheets!', 'success');
         enableControls();
-        document.getElementById('loadingWrapper').style.display = 'none';
-        document.getElementById('mainChart').style.display = 'block';
+        hideLoading();
         state.loaded = true;
         populateFilters();
         updateChart();
         
     } catch (error) {
-        console.error('Load error:', error);
+        console.error('❌ Load error:', error.message);
         
-        if (CONFIG.useMockData) {
-            updateStatus('MODE SIMULASI - DATA CONTOH', 'error');
-            showMessage('errorBox', '⚠️ Menggunakan data simulasi (Google Sheets tidak dapat diakses). Pastikan spreadsheet sudah di-Publish to Web.');
+        if (CONFIG.useMockData && state.attempt <= 2) {
+            updateStatus('⚠️ Menggunakan data simulasi...');
+            showAlert(`
+                <strong>⚠️ Google Sheets Tidak Dapat Diakses</strong><br>
+                ${error.message}. Menggunakan data simulasi. 
+                Pastikan spreadsheet sudah di-<strong>Publish to Web</strong>.
+            `, 'warning');
+            
             generateMockData();
             enableControls();
-            document.getElementById('loadingWrapper').style.display = 'none';
-            document.getElementById('mainChart').style.display = 'block';
+            hideLoading();
             state.loaded = true;
             populateFilters();
             updateChart();
         } else {
-            updateStatus('GAGAL MEMUAT DATA', 'error');
-            showMessage('errorBox', '❌ Gagal: ' + error.message);
-            document.getElementById('loadingWrapper').innerHTML = '<div class="loading-text">Gagal memuat data. Silakan refresh halaman.</div>';
+            updateStatus('❌ Gagal memuat data');
+            showAlert(`
+                <strong>❌ Gagal Memuat Data</strong><br>
+                ${error.message}. 
+                <button onclick="retryLoad()" style="margin-top:8px;padding:8px 16px;background:#f97316;color:white;border:none;border-radius:4px;cursor:pointer">🔄 Coba Lagi</button>
+            `, 'error');
+            document.getElementById('retryBtn').style.display = 'inline-block';
         }
     }
 }
@@ -490,7 +421,6 @@ function parseData(csv) {
     const rows = csv.split('\n').map(r => r.trim()).filter(r => r);
     const sep = rows[0].includes(';') ? ';' : ',';
     
-    // Find header
     let headerIdx = -1;
     for (let i = 0; i < Math.min(10, rows.length); i++) {
         if (rows[i].includes('2011') || rows[i].includes('2020')) {
@@ -504,7 +434,6 @@ function parseData(csv) {
     const headers = rows[headerIdx].split(sep).map(h => h.trim());
     state.years = headers.slice(1).filter(h => /^\d{4}$/.test(h));
     
-    // Parse data
     for (let i = headerIdx + 1; i < rows.length; i++) {
         const cols = rows[i].split(sep);
         const label = (cols[0] || '').toUpperCase();
@@ -528,7 +457,6 @@ function parseData(csv) {
         });
     }
     
-    // Fallback
     state.years.forEach(year => {
         if (!state.data.distribusi[year] || Object.keys(state.data.distribusi[year]).length === 0) {
             state.data.distribusi[year] = {
@@ -537,8 +465,6 @@ function parseData(csv) {
             };
         }
     });
-    
-    console.log('Data loaded:', state.years);
 }
 
 function generateMockData() {
@@ -558,11 +484,23 @@ function generateMockData() {
     });
 }
 
-// ===== UI FUNCTIONS =====
 function enableControls() {
     document.getElementById('menuGrafik').disabled = false;
     document.getElementById('filterTahun').disabled = false;
     document.getElementById('btnDownload').disabled = false;
+}
+
+function hideLoading() {
+    document.getElementById('loadingBox').style.display = 'none';
+    document.getElementById('mainChart').style.display = 'block';
+}
+
+function retryLoad() {
+    state.attempt = 0;
+    document.getElementById('retryBtn').style.display = 'none';
+    document.getElementById('loadingBox').style.display = 'block';
+    document.getElementById('mainChart').style.display = 'none';
+    loadData();
 }
 
 function populateFilters() {
@@ -570,9 +508,9 @@ function populateFilters() {
     const filter = document.getElementById('filterTahun');
     
     menu.innerHTML = `
-        <option value="laju">LAJU PERTUMBUHAN EKONOMI (GARIS)</option>
-        <option value="nilai">NILAI ADHB & ADHK (BATANG)</option>
-        <option value="distribusi">DISTRIBUSI ADHB (PIE)</option>
+        <option value="laju">📈 LAJU PERTUMBUHAN (GARIS)</option>
+        <option value="nilai">📊 ADHB & ADHK (BATANG)</option>
+        <option value="distribusi">🥧 DISTRIBUSI (PIE)</option>
     `;
     
     filter.innerHTML = '';
@@ -587,12 +525,11 @@ function populateFilters() {
     } else {
         const last = state.years[state.years.length - 1];
         const first = state.years[0];
-        const ranges = [
+        [
             { t: '2021 - ' + last, v: '2021-' + last },
             { t: '2016 - 2020', v: '2016-2020' },
             { t: first + ' - 2015', v: first + '-2015' }
-        ];
-        ranges.forEach(r => {
+        ].forEach(r => {
             const opt = document.createElement('option');
             opt.value = r.v;
             opt.textContent = r.t;
@@ -614,7 +551,6 @@ function getYears(range) {
     return [range];
 }
 
-// ===== CHART =====
 function updateChart() {
     if (!state.loaded) return;
     
@@ -629,14 +565,14 @@ function updateChart() {
     const textColor = isDark ? '#eee' : '#333';
     const gridColor = isDark ? '#444' : '#ddd';
     const dataLabelColor = isDark ? '#000' : '#333';
-    const dataLabelBg = isDark ? '#fff' : 'rgba(255,255,255,0.85)';
+    const dataLabelBg = isDark ? '#fff' : 'rgba(255,255,255,0.9)';
     
     const baseConfig = {
         responsive: true,
         maintainAspectRatio: false,
         animation: { duration: 600 },
         plugins: {
-            legend: { labels: { color: textColor, font: { weight: 'bold' } } },
+            legend: { labels: { color: textColor } },
             tooltip: {
                 backgroundColor: 'rgba(30,30,40,0.95)',
                 callbacks: {
@@ -644,8 +580,7 @@ function updateChart() {
                         const v = ctx.parsed.y ?? ctx.parsed;
                         if (menu === 'laju') return v.toFixed(2) + '%';
                         if (menu === 'nilai') return 'Rp ' + (v >= 1000 ? (v/1000).toFixed(1) + ' T' : v.toFixed(0) + ' M');
-                        if (menu === 'distribusi') return v.toFixed(1) + '%';
-                        return v.toLocaleString('id-ID');
+                        return v.toFixed(1) + '%';
                     }
                 }
             },
@@ -655,8 +590,7 @@ function updateChart() {
                     if (!val && val !== 0) return '';
                     if (menu === 'laju') return val.toFixed(1) + '%';
                     if (menu === 'nilai') return val >= 1000 ? (val/1000).toFixed(1) + 'T' : val.toFixed(0);
-                    if (menu === 'distribusi') return val.toFixed(1) + '%';
-                    return val.toLocaleString('id-ID');
+                    return val.toFixed(1) + '%';
                 },
                 font: { weight: 'bold', size: 10 },
                 color: dataLabelColor,
@@ -685,7 +619,6 @@ function updateChart() {
             },
             options: baseConfig
         };
-        config.options.scales.y.ticks.callback = v => (v/1000).toFixed(0) + 'T';
     } else if (menu === 'laju') {
         config = {
             type: 'line',
@@ -693,7 +626,7 @@ function updateChart() {
                 labels: labels,
                 datasets: [{
                     label: 'LAJU PERTUMBUHAN (%)',
-                    data: labels.map(t => state.data.laju[t] || 0),
+                     labels.map(t => state.data.laju[t] || 0),
                     borderColor: '#27ae60',
                     backgroundColor: 'rgba(39,174,96,0.15)',
                     borderWidth: 3,
@@ -705,7 +638,6 @@ function updateChart() {
             },
             options: baseConfig
         };
-        config.options.scales.y.ticks.callback = v => v + '%';
     } else {
         const distData = state.data.distribusi[periode] || {};
         config = {
@@ -716,7 +648,7 @@ function updateChart() {
                      Object.values(distData),
                     backgroundColor: ['#FF8C00','#27ae60','#2980b9','#f1c40f','#8e44ad'],
                     borderWidth: 3,
-                    borderColor: isDark ? '#1a1f2e' : '#fff'
+                    borderColor: isDark ? '#1e293b' : '#fff'
                 }]
             },
             options: {
