@@ -938,13 +938,14 @@ function initAuth() {
     }
 }
 
-// ===== DASHBOARD CODE (Same as before) =====
+// ===== DASHBOARD VARIABLES =====
 var ctx = document.getElementById('mainChart');
 var currentChart = null;
 var database = { laju: {}, adhb: {}, adhk: {}, distribusi: {} };
 var availableYears = [];
 var isDataLoaded = false;
 
+// ===== CONFIG =====
 var CONFIG = {
     sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV7Av7slh5mSdhPbe1pp2ttvv2jCc992JE_t1KaVRBzj0m2_NfYRplK6evfXaG1g/pub?output=csv",
     corsProxies: [
@@ -956,6 +957,7 @@ var CONFIG = {
     useMockData: true
 };
 
+// ===== UTILITY FUNCTIONS =====
 function showAlert(message, type) {
     var container = document.getElementById('alertContainer');
     var alert = document.createElement('div');
@@ -1222,6 +1224,7 @@ function getYearsInRange(range) {
     return [range];
 }
 
+// ===== CHART RENDER - DIPERBAIKI ✅ =====
 function updateChart() {
     if (!isDataLoaded) return;
     
@@ -1281,6 +1284,8 @@ function updateChart() {
     };
 
     var config;
+    
+    // ===== BAR CHART - ADHB & ADHK ✅ =====
     if (menu === 'nilai') {
         var adhbData = labels.map(function(t) { return database.adhb[t] || 0; });
         var adhkData = labels.map(function(t) { return database.adhk[t] || 0; });
@@ -1290,13 +1295,31 @@ function updateChart() {
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'ADHB',  adhbData, backgroundColor: 'rgba(255,140,0,0.85)', borderColor: '#FF8C00', borderWidth: 2, borderRadius: 6, borderSkipped: false },
-                    { label: 'ADHK',  adhkData, backgroundColor: 'rgba(39,174,96,0.85)', borderColor: '#27ae60', borderWidth: 2, borderRadius: 6, borderSkipped: false }
+                    { 
+                        label: 'ADHB', 
+                        data: adhbData,  // ✅ FIXED: Added "data:"
+                        backgroundColor: 'rgba(255,140,0,0.85)', 
+                        borderColor: '#FF8C00', 
+                        borderWidth: 2, 
+                        borderRadius: 6, 
+                        borderSkipped: false 
+                    },
+                    { 
+                        label: 'ADHK', 
+                        data: adhkData,  // ✅ FIXED: Added "data:"
+                        backgroundColor: 'rgba(39,174,96,0.85)', 
+                        borderColor: '#27ae60', 
+                        borderWidth: 2, 
+                        borderRadius: 6, 
+                        borderSkipped: false 
+                    }
                 ]
             },
             options: JSON.parse(JSON.stringify(baseConfig))
         };
         config.options.scales.y.ticks.callback = function(v) { return (v/1000).toFixed(0)+'T'; };
+        
+    // ===== LINE CHART - LAJU PERTUMBUHAN ✅ =====
     } else if (menu === 'laju') {
         var lajuData = labels.map(function(t) { return database.laju[t] || 0; });
         
@@ -1305,14 +1328,25 @@ function updateChart() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'LAJU PERTUMBUHAN (%)', data: lajuData,
-                    borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.15)', borderWidth: 3, fill: true, tension: 0.4,
-                    pointRadius: 6, pointBackgroundColor: '#27ae60', pointBorderColor: isDark ? '#fff' : '#27ae60', pointBorderWidth: 2, pointHoverRadius: 8
+                    label: 'LAJU PERTUMBUHAN (%)', 
+                    data: lajuData,  // ✅ FIXED: Added "data:"
+                    borderColor: '#27ae60', 
+                    backgroundColor: 'rgba(39,174,96,0.15)', 
+                    borderWidth: 3, 
+                    fill: true, 
+                    tension: 0.4,
+                    pointRadius: 6, 
+                    pointBackgroundColor: '#27ae60', 
+                    pointBorderColor: isDark ? '#fff' : '#27ae60', 
+                    pointBorderWidth: 2, 
+                    pointHoverRadius: 8
                 }]
             },
             options: JSON.parse(JSON.stringify(baseConfig))
         };
         config.options.scales.y.ticks.callback = function(v) { return v+'%'; };
+        
+    // ===== PIE CHART - DISTRIBUSI =====
     } else if (menu === 'distribusi') {
         var selectedYear = periode;
         var distribusiData = database.distribusi[selectedYear] || {};
@@ -1375,6 +1409,7 @@ function updateChart() {
     document.getElementById('judulGrafik').innerText = menuText + " (" + periode + ")";
 }
 
+// ===== UI FUNCTIONS =====
 function toggleDarkMode() {
     document.body.classList.toggle('dark');
     if (currentChart) updateChart();
@@ -1389,6 +1424,7 @@ function downloadChart() {
     link.click();
 }
 
+// ===== DASHBOARD INIT =====
 function initDashboard() {
     console.log('🚀 Dashboard initializing...');
     
@@ -1413,6 +1449,7 @@ function initDashboard() {
     console.log('✅ Dashboard initialized');
 }
 
+// ===== MAIN INIT =====
 function init() {
     initAuth();
 }
